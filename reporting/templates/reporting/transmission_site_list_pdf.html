@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transmission Sites Report</title>
+    <style>
+        /* ================== NOUVELLE CORRECTION ================== */
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm; /* Marge encore plus petite */
+        }
+        body { 
+            font-family: sans-serif; 
+            font-size: 6px; /* 👈 Réduit de 8px à 6px. */
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            border: 1px solid #dddddd; 
+            padding: 2px; /* 👈 Réduit de 4px à 2px. */
+            text-align: left; 
+            word-wrap: break-word;
+        }
+        th { 
+            background-color: #f2f2f2; 
+            white-space: nowrap;
+        }
+        /* ======================================================= */
+    </style>
+</head>
+<body>
+    <h1>Transmission Sites Report</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Link</th>
+                <th>Site A</th>
+                <th>Site B</th>
+                <th>Project Name</th>
+                <th>Pays</th>
+                <th>Departement</th>
+                <th>Commune</th>
+                <th>Annee</th>
+                <th>Mois</th>
+                <th>Type de radio</th>
+                <th>Type d'antenne</th>
+                <th>Type d'enclosure</th>
+                <th>Indoor equipement (BB/ML)</th>
+                <th>INSTALLATION</th>
+                <th>ALLIGNEMENT</th>
+                <th>EHS SITE A</th>
+                <th>EHS SITE B</th>
+                <th>QA STE A</th>
+                <th>QA SITE B</th>
+                <th>QA STATUT SITE A</th>
+                <th>QA STATUS SITE B</th>
+                <th>ATP STATUT SITE A</th>
+                <th>ATP STATUT SITE B</th>
+                <th>COMMENT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for link in links %}
+            <tr>
+                <td>{{ link.link_id }}</td>
+                <td>{{ link.site_a.name }}</td>
+                <td>{{ link.site_b.name }}</td>
+                <td>{{ link.site_a.project.name }}</td>
+                <td>{{ link.site_a.project.country.name }}</td>
+                <td>{{ link.site_a.departement.name|default:"" }}</td>
+                <td>{{ link.site_a.location }}</td>
+                <td>{{ link.created_at|date:"Y" }}</td>
+                <td>{{ link.created_at|date:"m" }}</td>
+                <td>
+                    {% for radio in link.site_a.radio_configurations.all %}
+                        {{ radio.radio_type.name }} ({{ radio.quantity }}){% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ link.site_a.antenna_type.name|default:"" }}</td>
+                <td>{{ link.site_a.enclosure_type.name|default:"" }}</td>
+                <td>{{ link.site_a.bb_ml.name|default:"" }}</td>
+                <td>{{ link.site_a.installation_status }}</td>
+                <td>{{ "N/A" }}</td>
+                <td>{{ link.site_a.ehs_status }}</td>
+                <td>{{ link.site_b.ehs_status }}</td>
+                <td>{{ link.site_a.qa_result }}</td>
+                <td>{{ link.site_b.qa_result }}</td>
+                <td>{{ link.site_a.qa_result }}</td>
+                <td>{{ link.site_b.qa_result }}</td>
+                <td>{{ link.site_a.atp_status }}</td>
+                <td>{{ link.site_b.atp_status }}</td>
+                <td>{{ link.site_a.comment }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

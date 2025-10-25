@@ -1,0 +1,289 @@
+{% extends "core/base.html" %}
+{% load humanize %}
+
+{% block title %}Tableau des Projets{% endblock %}
+
+{% block content %}
+
+{# ================== CORRECTION ICI ================== #}
+{# Le style est maintenant À L'INTÉRIEUR du block content #}
+<style>
+    .project-row.hidden {
+        display: none;
+    }
+</style>
+{# ==================================================== #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">📊 Tableau des Projets</h1>
+    <div class="d-flex gap-2">
+        {% if is_cm %}
+            <a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm">
+                <i class="me-1">➕</i> Nouveau Projet
+            </a>
+        {% endif %}
+        <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="me-1">📋</i> Vue Liste
+        </a>
+        
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        {# ⬇️ MODIFICATION DE LA GRILLE DES FILTRES ⬇️ #}
+        <div class="row g-2 align-items-center">
+            <div class="col-md-2"> {# Modifié de 4 à 3 #}
+                <label class="form-label">🔍 Recherche</label>
+                <input type="text" class="form-control" placeholder="Nom, client..." id="search-input">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">🏷️ Statut</label>
+                <select class="form-select" id="status-filter">
+                    <option value="">Tous</option>
+                    <option value="active">Actif</option>
+                    <option value="completed">Terminé</option>
+                    <option value="inactive">Inactif</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">🌍 Pays</label>
+                <select class="form-select" id="country-filter">
+                    <option value="">Tous</option>
+                    {% for country in countries %}
+                        <option value="{{ country.code }}">{{ country.name }} ({{ country.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">🧑 Coordinateur</label>
+                <select class="form-select" id="coordinator-filter">
+                    <option value="">Tous</option>
+                    {% for coordinator in coordinators %}
+                        <option value="{{ coordinator.username }}">{{ coordinator.get_full_name|default:coordinator.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            {# ⬇️ NOUVEAU : Filtre Année ⬇️ #}
+            <div class="col-md-2">
+                <label class="form-label">🗓️ Année</label>
+                <select class="form-select" id="year-filter">
+                    <option value="">Toutes</option>
+                    {% for year in available_years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# ⬇️ NOUVEAU : Filtre Mois ⬇️ #}
+            <div class="col-md-1">
+                <label class="form-label">🌙 Mois</label>
+                <select class="form-select" id="month-filter">
+                    <option value="">Tous</option>
+                    {% for month in available_months %}
+                        <option value="{{ month.value }}">{{ month.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end"> {# Modifié de 2 à 1 #}
+                <a href="{% url 'projects:project_table' %}" class="btn btn-outline-secondary btn-sm w-100" title="Réinitialiser les filtres" id="reset-filters">
+                    <i class="fas fa-undo"></i>
+                </a>
+            </div>
+            
+        </div>
+        {# ⬆️ FIN DE LA MODIFICATION DE LA GRILLE ⬆️ #}
+    </div>
+</div>
+
+<div class="alert alert-info py-2" role="alert">
+    Projets affichés: <strong id="projects-count">{{ projects|length }}</strong> / {{ total_projects }}
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Nom du Projet</th>
+                        <th>Client</th>
+                        <th>Pays</th>
+                        <th>Coordinateur</th>
+                        <th class="text-center">Sites (Actif/Total)</th>
+                        <th class="text-center">Progression</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="projects-container">
+                    {% for project in projects %}
+                    {# ⬇️ AJOUT DES ATTRIBUTS DATA-YEAR ET DATA-MONTH ⬇️ #}
+                    <tr class="project-row" 
+                        data-name="{{ project.name|lower }}" 
+                        data-client="{{ project.client.name|lower|default:'' }}"
+                        data-status="{% if project.is_active and not project.is_completed %}active{% elif project.is_completed %}completed{% else %}inactive{% endif %}"
+                        data-country="{{ project.country.code }}"
+                        data-coordinator="{{ project.coordinator.username }}"
+                        data-year="{{ project.start_date.year }}"
+                        data-month="{{ project.start_date.month }}"
+                    >
+                    {# ⬆️ FIN DE L'AJOUT DES ATTRIBUTS ⬆️ #}
+                        <td>
+                            <a href="{% url 'projects:project_detail' pk=project.pk %}" class="text-primary fw-bold text-decoration-none">
+                                {{ project.name }}
+                            </a>
+                        </td>
+                        <td>{{ project.client.name|default:"-" }}</td>
+                        <td>{{ project.country.code }}</td>
+                        <td>{{ project.coordinator.get_full_name|default:project.coordinator.username }}</td>
+                        <td class="text-center">
+                            {{ project.active_sites_count|default:"0" }}/{{ project.site_count }}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="me-2">{{ project.global_progress|floatformat:"1" }}%</span>
+                                <div class="progress" style="width: 80px; height: 10px;">
+                                    <div class="progress-bar {% if project.global_progress >= 100 %}bg-success{% else %}bg-info{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ project.global_progress|floatformat:"0" }}%;" 
+                                         aria-valuenow="{{ project.global_progress|floatformat:"0" }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if project.is_completed %}bg-success{% elif project.is_active %}bg-primary{% else %}bg-danger{% endif %}">
+                                {% if project.is_completed %}Terminé
+                                {% elif project.is_active %}Actif
+                                {% else %}Inactif
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-sm btn-outline-info" title="Voir Détails">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>Aucun projet trouvé. Vérifiez vos filtres ou vos affectations de pays.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('--- Démarrage de l\'initialisation des filtres "live" ---');
+
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const countryFilter = document.getElementById('country-filter');
+    const coordinatorFilter = document.getElementById('coordinator-filter');
+    
+    {# ⬇️ NOUVEAU : Récupérer les nouveaux filtres ⬇️ #}
+    const yearFilter = document.getElementById('year-filter');
+    const monthFilter = document.getElementById('month-filter');
+    
+    const projectsContainer = document.getElementById('projects-container');
+    const projectsCount = document.getElementById('projects-count');
+    const resetFiltersButton = document.getElementById('reset-filters');
+    
+    if (!projectsContainer) return; 
+
+    const projectRows = Array.from(projectsContainer.querySelectorAll('.project-row')); 
+    
+    function filterProjects() {
+        console.log('>>> EXECUTION: filterProjects() en cours...');
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value.trim();        
+        const countryValue = countryFilter.value.trim();      
+        const coordinatorValue = coordinatorFilter.value.trim(); 
+        
+        {# ⬇️ NOUVEAU : Lire les valeurs des nouveaux filtres ⬇️ #}
+        const yearValue = yearFilter.value.trim();
+        const monthValue = monthFilter.value.trim();
+        
+        let visibleCount = 0;
+
+        projectRows.forEach(row => {
+            const name = (row.getAttribute('data-name') || '').toLowerCase().trim();
+            const client = (row.getAttribute('data-client') || '').toLowerCase().trim();
+            const country = (row.getAttribute('data-country') || '').trim();         
+            const coordinator = (row.getAttribute('data-coordinator') || '').trim(); 
+            const status = (row.getAttribute('data-status') || '').trim();           
+
+            {# ⬇️ NOUVEAU : Récupérer les attributs data des lignes ⬇️ #}
+            const year = (row.getAttribute('data-year') || '').trim();
+            const month = (row.getAttribute('data-month') || '').trim();
+
+            const matchesSearch = !searchTerm || name.includes(searchTerm) || client.includes(searchTerm);
+            const matchesStatus = !statusValue || status === statusValue;
+            const matchesCountry = !countryValue || country === countryValue;
+            const matchesCoordinator = !coordinatorValue || coordinator === coordinatorValue;
+            
+            {# ⬇️ NOUVEAU : Conditions de match pour les dates ⬇️ #}
+            const matchesYear = !yearValue || year === yearValue;
+            const matchesMonth = !monthValue || month === monthValue;
+
+            {# ⬇️ NOUVEAU : Mettre à jour la condition de visibilité ⬇️ #}
+            const isVisible = matchesSearch && matchesStatus && matchesCountry && matchesCoordinator && matchesYear && matchesMonth;
+
+            // C'est cette ligne qui va maintenant fonctionner
+            row.classList.toggle('hidden', !isVisible);
+
+            if (isVisible) {
+                visibleCount++;
+            }
+        });
+
+        projectsCount.textContent = visibleCount;
+        console.log(`<<< FIN: ${visibleCount} projets visibles.`);
+    }
+
+    // On attache les écouteurs aux champs eux-mêmes
+    searchInput.addEventListener('input', filterProjects);
+    statusFilter.addEventListener('change', filterProjects);
+    countryFilter.addEventListener('change', filterProjects);
+    coordinatorFilter.addEventListener('change', filterProjects);
+    
+    {# ⬇️ NOUVEAU : Attacher les écouteurs pour les dates ⬇️ #}
+    yearFilter.addEventListener('change', filterProjects);
+    monthFilter.addEventListener('change', filterProjects);
+    
+    
+    // Gestion de la réinitialisation
+    if (resetFiltersButton) {
+        resetFiltersButton.addEventListener('click', function(e) {
+            // Pas besoin de e.preventDefault() car on veut recharger la page
+            searchInput.value = '';
+            statusFilter.value = '';
+            countryFilter.value = '';
+            coordinatorFilter.value = '';
+            
+            {# ⬇️ NOUVEAU : Réinitialiser les filtres de date ⬇️ #}
+            yearFilter.value = '';
+            monthFilter.value = '';
+        });
+    }
+
+    // Exécuter le filtre une fois au chargement
+    filterProjects();
+});
+</script>
+{% endblock %}

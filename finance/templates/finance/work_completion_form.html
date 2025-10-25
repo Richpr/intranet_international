@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+
+{% block title %}Saisir l'Avancement{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Saisir les Heures/Achèvement</h1>
+    <p class="lead">Pays actif: {{ country_code }} - Enregistrez les travaux effectués.</p>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="form-text text-danger">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-success mt-3">Enregistrer le Travail</button>
+                <a href="{% url 'finance:work_record_list' %}" class="btn btn-outline-secondary mt-3">Annuler</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

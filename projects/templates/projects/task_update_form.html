@@ -1,0 +1,101 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %} 
+{% load static %}
+
+{% block title %}Mise à Jour Tâche{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="me-2">🛠️</i> Mise à Jour de la Tâche
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Site: <strong>{{ task.site.site_id_client }}</strong> | 
+                    Projet: <strong>{{ task.site.project.name }}</strong> |
+                    Assigné à: <strong>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</strong>
+                </p>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <h5 class="text-primary mt-3">Informations de la Tâche</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.task_type|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.status|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.progress_percentage|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Progression visuelle</label>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ form.instance.progress_percentage|default:0 }}%"
+                                         aria-valuenow="{{ form.instance.progress_percentage|default:0 }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        {{ form.instance.progress_percentage|default:0 }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <strong>Date limite:</strong> {{ task.due_date|date:"d M Y" }} |
+                            <strong>Créée le:</strong> {{ task.created_at|date:"d M Y" }}
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'projects:project_detail' pk=task.site.project.pk %}" class="btn btn-outline-secondary">
+                            Annuler / Retour au Projet
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="me-1">💾</i> Enregistrer la Mise à Jour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mise à jour automatique de la barre de progression
+    const progressInput = document.getElementById('id_progress_percentage');
+    const progressBar = document.querySelector('.progress-bar');
+    
+    if (progressInput && progressBar) {
+        progressInput.addEventListener('input', function() {
+            const value = this.value;
+            progressBar.style.width = value + '%';
+            progressBar.setAttribute('aria-valuenow', value);
+            progressBar.textContent = value + '%';
+        });
+    }
+});
+</script>
+{% endblock %}

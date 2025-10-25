@@ -1,0 +1,306 @@
+{% extends "core/base.html" %}
+{% load humanize %}
+
+{% block title %}Détail Site: {{ site.site_id_client }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📍 {{ site.site_id_client }} - {{ site.name }}</h1>
+    
+    <div class="d-flex gap-2">
+        <a href="{% url 'projects:project_detail' pk=site.project.pk %}" class="btn btn-secondary">
+            <i class="me-1">📋</i> Retour au Projet
+        </a>
+        {# Bouton Modifier - UNIQUEMENT pour coordinateur et superuser #}
+        {% if user.is_superuser or user == site.project.coordinator %}
+        <a href="{% url 'projects:site_update' pk=site.pk %}" class="btn btn-warning">
+            <i class="me-1">✏️</i> Modifier
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Cartes de statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ site.progress_percentage|default:0 }}%</h3>
+                <small>Progression</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ total_tasks }}</h3>
+                <small>Tâches Total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ completed_tasks }}</h3>
+                <small>Tâches Terminées</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ active_tasks }}</h3>
+                <small>Tâches Actives</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informations du site -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">📋 Informations du Site</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>🏷️ ID Client:</strong></td>
+                        <td class="fw-bold">{{ site.site_id_client }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>📝 Nom:</strong></td>
+                        <td>{{ site.name }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>📍 Localisation:</strong></td>
+                        <td>{{ site.location|default:"Non spécifiée" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>🏗️ Type de Site:</strong></td>
+                        <td>
+                            {% if site.site_type %}
+                                <span class="badge bg-info">{{ site.site_type.name }}</span>
+                            {% else %}
+                                <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>🔧 Type d'Installation:</strong></td>
+                        <td>
+                            {% if site.installation_type %}
+                                <span class="badge bg-secondary">{{ site.installation_type.name }}</span>
+                            {% else %}
+                                <span class="text-muted">Non défini</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">👥 Équipe & Projet</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>📋 Projet:</strong></td>
+                        <td>
+                            <a href="{% url 'projects:project_detail' pk=site.project.pk %}" class="text-decoration-none">
+                                {{ site.project.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>🌍 Pays:</strong></td>
+                        <td>{{ site.project.country.name }} ({{ site.project.country.code }})</td>
+                    </tr>
+                    <tr>
+                        <td><strong>👤 Team Lead:</strong></td>
+                        <td>
+                            {% if site.team_lead %}
+                                {{ site.team_lead.get_full_name|default:site.team_lead.username }}
+                            {% else %}
+                                <span class="text-muted">Non assigné</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>📊 Statut:</strong></td>
+                        <td>
+                            {% if site.progress_percentage == 100 %}
+                                <span class="badge bg-success">Terminé</span>
+                            {% elif site.progress_percentage > 0 %}
+                                <span class="badge bg-primary">En cours</span>
+                            {% else %}
+                                <span class="badge bg-secondary">À faire</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>⚠️ Dernière Inspection:</strong></td>
+                        <td>
+                            {% if last_inspection %}
+                                <span class="badge {% if last_inspection.resultat_inspection == 'FTR' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ last_inspection.get_resultat_inspection_display }}
+                                </span>
+                                <small class="text-muted">({{ last_inspection.date_inspection|date:"d/m/Y" }})</small>
+                            {% else %}
+                                <span class="badge bg-secondary">Aucune inspection</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tâches du site -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📝 Tâches ({{ tasks.count }})</h5>
+        {# Bouton Nouvelle Tâche - UNIQUEMENT pour coordinateur et superuser #}
+        {% if user.is_superuser or user == site.project.coordinator %}
+        <a href="{% url 'projects:task_create' site_pk=site.pk %}" class="btn btn-sm btn-primary">
+            <i class="me-1">➕</i> Nouvelle Tâche
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Assigné à</th>
+                        <th>Statut</th>
+                        <th>Progression</th>
+                        <th>Date limite</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'projects:task_update' pk=task.pk %}" class="text-decoration-none fw-bold">
+                                {{ task.description|truncatewords:10 }}
+                            </a>
+                            {% if task.is_paid_relevant %}
+                                <span class="badge bg-success ms-1">Paie</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.task_type %}
+                                <span class="badge bg-info">{{ task.task_type.name }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</small>
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if task.status == 'COMPLETED' %}bg-success
+                                {% elif task.status == 'IN_PROGRESS' %}bg-primary
+                                {% elif task.status == 'TO_DO' %}bg-secondary
+                                {% else %}bg-warning{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                    <div class="progress-bar" style="width: {{ task.progress_percentage }}%"></div>
+                                </div>
+                                <small>{{ task.progress_percentage }}%</small>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="{% if task.due_date < today %}text-danger{% endif %}">
+                                {{ task.due_date|date:"d/m/Y" }}
+                            </small>
+                        </td>
+                        <td>
+                            <a href="{% url 'projects:task_update' pk=task.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="fas fa-tasks fa-2x mb-2"></i>
+                            <p>Aucune tâche pour ce site</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Inspections du site -->
+<div class="card">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">⚠️ Inspections ({{ inspections.count }})</h5>
+        {# Bouton Inspection - visible pour coordinateur, team lead et superuser #}
+        {% if user.is_superuser or user == site.project.coordinator or user == site.team_lead %}
+        <a href="{% url 'projects:inspection_create' site_pk=site.pk %}" class="btn btn-sm btn-light">
+            <i class="me-1">➕</i> Nouvelle Inspection
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Type</th>
+                        <th>Inspecteur</th>
+                        <th>Date</th>
+                        <th>Résultat</th>
+                        <th>Commentaires</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inspection in inspections %}
+                    <tr>
+                        <td>{{ inspection.get_type_inspection_display }}</td>
+                        <td>
+                            <small>{{ inspection.inspector.get_full_name|default:inspection.inspector.username }}</small>
+                        </td>
+                        <td>
+                            <small>{{ inspection.date_inspection|date:"d/m/Y" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge {% if inspection.resultat_inspection == 'FTR' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ inspection.get_resultat_inspection_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ inspection.commentaires|truncatewords:5|default:"-" }}</small>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                            <p>Aucune inspection pour ce site</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

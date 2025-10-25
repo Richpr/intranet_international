@@ -1,0 +1,375 @@
+{% extends "core/base.html" %}
+
+{% block title %}Tableau de Bord NG{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1 text-primary">Tableau de Bord</h1>
+                <p class="text-muted mb-0">
+                    Bienvenue, **{{ user.get_full_name|default:user.username }}** ! Votre rôle principal est : <span class="fw-bold text-success">{{ main_role }}</span>
+                </p>
+            </div>
+            <div class="badge-countries">
+                {% for country in user_countries %}
+                    <span class="badge bg-primary me-1">{% if user_countries|length > 1 %}🌍{% else %}{{ country.code }}{% endif %}</span>
+                {% empty %}
+                    <span class="badge bg-danger">AUCUN PAYS ACTIF</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <hr>
+
+        {% if is_cm %}
+        <h2 class="h4 text-primary mb-3">Synthèse Opérationnelle Multi-Pays</h2>
+        <div class="row mb-4">
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">📁</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Projets Actifs</small>
+                                <h3 class="mb-0">{{ cm_stats.total_projects }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">📍</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Sites Gérés</small>
+                                <h3 class="mb-0">{{ cm_stats.total_sites }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">✅</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Sites First Time Right (FTR)</small>
+                                <h3 class="mb-0">{{ cm_stats.sites_ftr }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-danger rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">❌</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Sites Not First Time Right (NFTR)</small>
+                                <h3 class="mb-0">{{ cm_stats.sites_n_ftr }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        {% endif %} 
+
+
+        {% if is_coordinator and not is_cm %}
+        <h2 class="h4 text-warning mb-3">Coordination Opérationnelle</h2>
+        <div class="row mb-4">
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-primary me-3">📋</i>
+                            <div>
+                                <small class="text-muted">Mes Projets</small>
+                                <h3 class="mb-0">{{ coordinator_project_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-info me-3">📍</i>
+                            <div>
+                                <small class="text-muted">Sites Coordonnés</small>
+                                <h3 class="mb-0">{{ coordinator_sites_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-12 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-warning me-3">📝</i>
+                            <div>
+                                <small class="text-muted">Sites en attente de Tâches</small>
+                                <h3 class="mb-0">{{ sites_to_plan_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if sites_to_plan %}
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                Sites à Planifier
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for site in sites_to_plan %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-secondary me-2">{{ site.project.country.code }}</span>
+                        <strong>{{ site.site_id_client }}</strong> ({{ site.project.name }})
+                        <small class="text-muted ms-3">Team Lead: {{ site.team_lead.get_full_name|default:"Non Assigné" }}</small>
+                    </div>
+                    <a href="{% url 'projects:task_create' site_pk=site.pk %}" class="btn btn-sm btn-success">
+                        <i class="me-1">➕</i> Créer Tâche
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endif %}
+
+
+        {% if is_team_lead and not is_coordinator %}
+        <h2 class="h4 text-info mb-3">Supervision de Sites</h2>
+        <div class="row mb-4">
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-primary me-3">👷</i>
+                            <div>
+                                <small class="text-muted">Sites sous ma responsabilité</small>
+                                <h3 class="mb-0">{{ tl_assigned_sites_count }}</h3> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-info me-3">📝</i>
+                            <div>
+                                <small class="text-muted">Tâches actives sur mes sites</small>
+                                <h3 class="mb-0">{{ tl_active_tasks_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-12 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-danger me-3">⏰</i>
+                            <div>
+                                <small class="text-muted">Tâches en retard</small>
+                                <h3 class="mb-0">{{ tl_overdue_tasks_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if tl_overdue_tasks_count > 0 %}
+        <div class="alert alert-danger mb-4">
+            ⚠️ **{{ tl_overdue_tasks_count }} tâches** sont en retard sur vos sites. Veuillez les prioriser avec vos équipes.
+        </div>
+        {% endif %}
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 text-primary mb-0">Sites et Tâches Assignées (Détail)</h3>
+            <a href="{% url 'projects:team_lead_tasks_by_site' %}" class="btn btn-sm btn-warning">
+                <i class="me-1">👀</i> Voir toutes les tâches par Site
+            </a>
+        </div>
+        <div class="card shadow mb-4">
+            <div class="card-body p-0">
+                <div class="accordion accordion-flush" id="sitesAccordionTL">
+                    
+                    {% for site in tl_assigned_sites %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingSite{{ site.pk }}">
+                            <button class="accordion-button fw-bold {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSite{{ site.pk }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseSite{{ site.pk }}">
+                                <span class="badge bg-secondary me-2">{{ site.project.country.code }}</span>
+                                {{ site.site_id_client }} (Projet: {{ site.project.name }})
+                                <span class="ms-auto badge bg-primary">{{ site.active_tasks_list|length }} Tâche{% if site.active_tasks_list|length > 1 %}s{% endif %} active{% if site.active_tasks_list|length > 1 %}s{% endif %}</span>
+                            </button>
+                        </h2>
+                        <div id="collapseSite{{ site.pk }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="headingSite{{ site.pk }}" data-bs-parent="#sitesAccordionTL">
+                            <ul class="list-group list-group-flush">
+                                {% with today=date.today %}
+                                {% for task in site.active_tasks_list %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center {% if task.due_date < today %}bg-light-danger{% endif %}">
+                                    <div>
+                                        <span class="badge bg-warning me-2">{{ task.get_status_display }}</span>
+                                        <a href="{% url 'projects:task_update' pk=task.pk %}" class="fw-bold text-decoration-none">
+                                            {{ task.description }}
+                                        </a>
+                                        <small class="text-muted ms-3">Assigné à: {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if task.due_date < today %}
+                                        <span class="badge bg-danger me-2">EN RETARD</span>
+                                        {% endif %}
+                                        <small class="text-muted">Limite : {{ task.due_date|date:"d M Y" }}</small>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-muted text-center py-3">🎉 Aucune tâche active sur ce site.</li>
+                                {% endfor %}
+                                {% endwith %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fs-4">🚫</i>
+                        <p class="mb-0 mt-2">Aucun site ne vous a été assigné en tant que Team Lead.</p>
+                    </div>
+                    {% endfor %}
+                    
+                </div>
+            </div>
+        </div>
+        
+        <hr class="my-4">
+
+        {% endif %}
+
+
+        {% if is_field_team and not is_team_lead %}
+        <h2 class="h4 text-success mb-3">Mon Plan de Travail</h2>
+        <div class="row mb-4">
+            
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-warning me-3">📝</i>
+                            <div>
+                                <small class="text-muted">Tâches Actives (À faire/En cours)</small>
+                                <h3 class="mb-0">{{ my_active_tasks_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-6 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-danger me-3">🚨</i>
+                            <div>
+                                <small class="text-muted">Tâches en Retard</small>
+                                <h3 class="mb-0">{{ my_overdue_tasks_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-4 col-md-12 mb-3">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fs-1 text-success me-3">💪</i>
+                            <div>
+                                <small class="text-muted">Tâches terminées aujourd'sui</small>
+                                <h3 class="mb-0">{{ my_completed_tasks_today }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                Mes Tâches Actives et Prioritaires
+            </div>
+            <ul class="list-group list-group-flush">
+                {% with today=date.today %}
+                {% for task in my_tasks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center {% if task.due_date < today %}bg-light-danger{% endif %}">
+                    <div>
+                        <span class="badge bg-primary me-2">{{ task.site.project.country.code }}</span>
+                        <a href="{% url 'projects:task_update' pk=task.pk %}" class="fw-bold text-decoration-none">
+                            {{ task.description }}
+                        </a>
+                        <small class="text-muted ms-3">Site : {{ task.site.site_id_client }}</small>
+                    </div>
+                    <div class="text-end">
+                        {% if task.due_date < today %}
+                        <span class="badge bg-danger me-2">EN RETARD</span>
+                        {% endif %}
+                        <small class="text-muted">Limite : {{ task.due_date|date:"d M Y" }}</small>
+                        <a href="{% url 'projects:task_update' pk=task.pk %}" class="btn btn-sm btn-info ms-2">
+                            <i class="me-1">✏️</i> Mettre à jour
+                        </a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted text-center py-4">
+                    <i class="fs-4 text-success">🎉</i>
+                    <p class="mb-0 mt-2">Félicitations, vous n'avez aucune tâche en cours !</p>
+                </li>
+                {% endfor %}
+                {% endwith %}
+            </ul>
+        </div>
+        {% endif %}
+        
+    </div>
+</div>
+{% endblock %}

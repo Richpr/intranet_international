@@ -1,0 +1,42 @@
+{% extends "core/base.html" %} 
+{% load crispy_forms_tags %} 
+{# Assurez-vous d'avoir installé django-crispy-forms dans votre environnement pour utiliser crispy_forms_tags #}
+
+{% block title %}
+    Ajouter une Dépense Quotidienne
+{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Formulaire d'Ajout de Dépense</h4>
+                </div>
+                <div class="card-body">
+                    
+                    {# Le formulaire pointe vers la même URL pour la soumission #}
+                    <form method="post">
+                        {% csrf_token %} 
+                        
+                        {# Affiche tous les champs du formulaire en utilisant le style Crispy Forms #}
+                        {{ form|crispy }}
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-success me-md-2">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            {# Bouton pour annuler et revenir à la liste des dépenses #}
+                            <a href="{% url 'finance:expense_list' %}" class="btn btn-secondary">
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

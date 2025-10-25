@@ -1,0 +1,235 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %} 
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Modification Site{% else %}Ajouter un Site{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">
+                    <i class="me-2">📍</i> 
+                    {% if form.instance.pk %}
+                        Modification du Site : <strong>{{ form.instance.site_id_client }}</strong>
+                    {% else %}
+                        Ajouter un Site au Projet : <strong>{{ project.name }}</strong> ({{ project.country.code }})
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate id="site-form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors or radio_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            <h5>Erreurs de validation :</h5>
+                            <ul>
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                                {% for error in radio_formset.non_form_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {{ form|crispy }}
+
+                    {% comment %} 
+                        Bloc pour la configuration Radio
+                    {% endcomment %}
+                    <hr>
+                    <fieldset class="form-group border p-3">
+                        <legend class="w-auto px-2">Configuration Radio (RRH/BBU)</legend>
+                        
+                        {{ radio_formset.management_form }}
+                        
+                        <div id="radio-container">
+                            {% for form in radio_formset %}
+                                <div class="radio-item p-3 mb-2 rounded bg-light border">
+                                    <div class="d-flex justify-content-end mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove">Supprimer</button>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-5">{{ form.radio_type|as_crispy_field }}</div>
+                                        <div class="col-md-5">{{ form.quantity|as_crispy_field }}</div>
+                                        <div class="col-md-2 d-none">{{ form.DELETE|as_crispy_field }}</div>
+                                        <div class="col-md-2 d-none">{{ form.id|as_crispy_field }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div id="radio-empty-form" style="display: none;">
+                            <div class="radio-item p-3 mb-2 rounded bg-light border">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove">Supprimer</button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-5">{{ radio_formset.empty_form.radio_type|as_crispy_field }}</div>
+                                    <div class="col-md-5">{{ radio_formset.empty_form.quantity|as_crispy_field }}</div>
+                                    <div class="col-md-2 d-none">{{ radio_formset.empty_form.DELETE|as_crispy_field }}</div>
+                                    <div class="col-md-2 d-none">{{ radio_formset.empty_form.id|as_crispy_field }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="add-radio" class="btn btn-info btn-sm mt-3">Ajouter une Configuration Radio</button>
+                    
+                    </fieldset>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if form.instance.pk %}Sauvegarder les Modifications{% else %}Créer le Site{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // =================================================================
+    // LOGIQUE DE REDIRECTION TRANSMISSION (Vanilla JS)
+    // =================================================================
+    const installationTypeField = document.getElementById('id_installation_type');
+    
+    if (installationTypeField) {
+        // ◀️ MODIFIEZ CET ID SI NÉCESSAIRE (par ex: '1', '2', '3'...)
+        const transmissionId = '2'; 
+        const redirectUrl = "{% url 'projects:transmission_link_create' project.pk %}";
+
+        installationTypeField.addEventListener('change', function() {
+            const selectedId = this.value; 
+            
+            if (selectedId === transmissionId) {
+                if (confirm('Vous allez être redirigé vers la configuration Transmission pour créer les sites A et B. Voulez-vous continuer ?')) {
+                    window.location.href = redirectUrl;
+                } else {
+                    this.value = ''; // Réinitialiser la sélection
+                }
+            }
+        });
+
+        const siteForm = document.getElementById('site-form');
+        if (siteForm) {
+            siteForm.addEventListener('submit', function(e) {
+                const selectedId = installationTypeField.value;
+                if (selectedId === transmissionId) {
+                    e.preventDefault();
+                    alert('Veuillez compléter la configuration Transmission avant de continuer.');
+                    return false;
+                }
+            });
+        }
+    }
+
+    // =================================================================
+    // LOGIQUE DU FORMSET RADIO (Finale et Robuste)
+    // =================================================================
+    const container = document.getElementById('radio-container');
+    const addButton = document.getElementById('add-radio');
+    const emptyFormTemplate = document.getElementById('radio-empty-form');
+
+    // Obtenir le préfixe dynamiquement pour la robustesse
+    const formsetPrefix = '{{ radio_formset.prefix }}';
+    const totalFormsInput = document.getElementById('id_' + formsetPrefix + '-TOTAL_FORMS');
+
+    // Vérification que tous les éléments existent
+    if (!container || !addButton || !emptyFormTemplate || !totalFormsInput) {
+        console.error("Échec de l'initialisation du formset radio. Éléments manquants :");
+        console.log("Container:", !!container);
+        console.log("AddButton:", !!addButton);
+        console.log("EmptyForm:", !!emptyFormTemplate);
+        console.log("TotalFormsInput (id=" + 'id_' + formsetPrefix + '-TOTAL_FORMS' + "):", !!totalFormsInput);
+        return; // Arrête le script
+    }
+
+    let radioCount = parseInt(totalFormsInput.value);
+
+    // La fonction pour ajouter un formulaire
+    function addRadio() {
+        try {
+            // 1. Cloner le *contenu* du modèle vide
+            const newFormHtml = emptyFormTemplate.innerHTML;
+            
+            // 2. Remplacer le préfixe Django par le nouvel index
+            const newIndex = radioCount;
+            const formHtml = newFormHtml.replace(/__prefix__/g, newIndex); 
+
+            // 3. Créer un nouvel élément div et y insérer le HTML
+            const newFormElement = document.createElement('div');
+            newFormElement.innerHTML = formHtml;
+            const radioItem = newFormElement.firstElementChild; 
+
+            // 4. Ajouter le nouvel item au conteneur
+            container.appendChild(radioItem);
+
+            // 5. Mettre à jour le compteur
+            radioCount++;
+            totalFormsInput.value = radioCount;
+
+            // 6. Attacher l'écouteur au nouveau bouton "Supprimer"
+            radioItem.querySelector('.btn-remove').addEventListener('click', handleRemoveClick);
+            
+            // 7. Mettre la quantité par défaut à 1
+            const newQuantityInput = radioItem.querySelector('input[name$="-quantity"]');
+            if (newQuantityInput && newQuantityInput.value === '') {
+                 newQuantityInput.value = '1';
+            }
+        } catch (e) {
+            console.error("Erreur lors de l'ajout du formulaire radio:", e);
+            alert("Une erreur est survenue. Vérifiez la console (F12).");
+        }
+    }
+
+    // La fonction pour supprimer un formulaire
+    function handleRemoveClick() {
+        const radioItem = this.closest('.radio-item');
+        // Cherche le champ "DELETE"
+        const deleteInput = radioItem.querySelector('input[name$="-DELETE"]');
+        
+        if (deleteInput) {
+            // Si le formulaire vient de la base de données, on le marque pour suppression
+            deleteInput.value = 'on';
+            deleteInput.checked = true;
+            radioItem.style.display = 'none'; // On le cache
+        } else {
+            // Si c'est un nouveau formulaire (pas encore sauvegardé), on le supprime juste
+            radioItem.remove();
+        }
+    }
+
+    // --- Attachement des événements ---
+
+    // 1. Au bouton "Ajouter"
+    addButton.addEventListener('click', addRadio);
+
+    // 2. Aux boutons "Supprimer" déjà présents sur la page (pour le mode "Modifier")
+    document.querySelectorAll('#radio-container .btn-remove').forEach(btn => {
+        btn.addEventListener('click', handleRemoveClick);
+    });
+    
+    // 3. Validation de la quantité
+    container.addEventListener('input', function(e) {
+        if (e.target.name && e.target.name.includes('-quantity')) {
+            const value = parseInt(e.target.value);
+            if (isNaN(value) || value < 1) {
+                e.target.value = 1;
+            }
+        }
+    });
+    
+});
+</script>
+{% endblock extra_js %}

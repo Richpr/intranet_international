@@ -1,0 +1,341 @@
+{% extends "core/base.html" %}
+
+{% block title %}Détail : {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ project.name }} ({{ project.country.code }})</h1>
+    
+    <div class="d-flex gap-2">
+        <a href="{% url 'projects:project_table' %}" class="btn btn-secondary">
+            <i class="me-1">📊</i> Retour au Tableau
+        </a>
+
+        {# ⬅️ NOUVEAU BOUTON D'ÉDITION POUR CM/COORDONNATEUR/SUPERUSER #}
+        {% if can_edit_project %}
+            <a href="{% url 'projects:project_update' pk=project.pk %}" class="btn btn-info">
+                <i class="me-1">✏️</i> Modifier le Projet
+            </a>
+        {% endif %}
+
+        {# Bouton Nouveau Site - UNIQUEMENT pour coordinateur et superuser #}
+        {% if user.is_superuser or user == project.coordinator %}
+            {% if is_transmission_project %}
+                <a href="{% url 'projects:transmission_link_create' project_pk=project.pk %}" class="btn btn-danger">
+                    <i class="me-1">🔗</i> Nouvelle Liaison
+                </a>
+            {% else %}
+                <a href="{% url 'projects:site_create' project_pk=project.pk %}" class="btn btn-success">
+                    <i class="me-1">📍</i> Nouveau Site
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ global_progress|default:0 }}%</h3>
+                <small>Progression Globale</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ sites|length }}</h3>
+                <small>Sites Total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ completed_sites }}</h3>
+                <small>Sites Terminés</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-0">{{ active_tasks }}</h3>
+                <small>Tâches Actives</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">📋 Informations du Projet</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>🏷️ Client:</strong></td>
+                        {# ================== CORRECTION ICI ================== #}
+                        <td>{{ project.client.name|default:"-" }}</td>
+                        {# ==================================================== #}
+                    </tr>
+                    <tr>
+                        <td><strong>🌍 Pays:</strong></td>
+                        <td>{{ project.country.name }} ({{ project.country.code }})</td>
+                    </tr>
+                    <tr>
+                        <td><strong>👤 Coordinateur:</strong></td>
+                        <td>{{ project.coordinator.get_full_name|default:project.coordinator.username }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>📅 Début:</strong></td>
+                        <td>{{ project.start_date|date:"d F Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>📅 Fin estimée:</strong></td>
+                        <td>{{ project.end_date|date:"d F Y"|default:"Non définie" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>📊 Statut:</strong></td>
+                        <td>
+                            {% if project.is_completed %}
+                                <span class="badge bg-success">Terminé</span>
+                            {% elif project.is_active %}
+                                <span class="badge bg-primary">Actif</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📍 Sites du Projet ({{ sites|length }})</h5>
+        <div>
+            <button class="btn btn-sm btn-light" id="toggle-filters">
+                <i class="me-1">🔍</i> Filtres
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body border-bottom d-none" id="filters-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">ID Site</label>
+                <input type="text" class="form-control form-control-sm" id="filter-site-id" placeholder="Rechercher...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Team Lead</label>
+                <select class="form-select form-select-sm" id="filter-team-lead">
+                    <option value="">Tous</option>
+                    {% for lead in team_leads %}
+                    <option value="{{ lead.id }}">{{ lead.get_full_name|default:lead.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Progression</label>
+                <select class="form-select form-select-sm" id="filter-progress">
+                    <option value="">Tous</option>
+                    <option value="100">100% Terminé</option>
+                    <option value="50">≥ 50%</option>
+                    <option value="0">En cours</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary btn-sm w-100" id="reset-site-filters">
+                    <i class="me-1">🔄</i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="sites-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Site</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Team Lead</th>
+                        <th>Progression</th>
+                        <th>Tâches</th>
+                        <th>Dernière Inspection</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for site in sites %}
+                    <tr data-site-id="{{ site.site_id_client|lower }}" 
+                        data-team-lead="{{ site.team_lead.id|default:'' }}"
+                        data-progress="{{ site.progress_percentage|default:0 }}">
+                        <td class="fw-bold">
+                            <a href="{% url 'projects:site_detail' pk=site.pk %}" class="text-decoration-none text-dark">
+                                {{ site.site_id_client }}
+                            </a>
+                        </td>
+                        <td>{{ site.name }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ site.site_type.name|default:"N/A" }}</span>
+                        </td>
+                        <td>
+                            {% if site.team_lead %}
+                                <small>{{ site.team_lead.get_full_name|default:site.team_lead.username }}</small>
+                            {% else %}
+                                <span class="text-muted">Non assigné</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                    <div class="progress-bar {% if site.progress_percentage == 100 %}bg-success{% elif site.progress_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}" 
+                                         style="width: {{ site.progress_percentage|default:0 }}%">
+                                    </div>
+                                </div>
+                                <small class="text-nowrap">{{ site.progress_percentage|default:0 }}%</small>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if site.tasks.count > 0 %}bg-primary{% else %}bg-secondary{% endif %}">
+                                {{ site.tasks.count }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if site.last_inspection_result == 'FTR' %}
+                                <span class="badge bg-success">FTR</span>
+                            {% elif site.last_inspection_result == 'NFTR' %}
+                                <span class="badge bg-danger">NFTR</span>
+                            {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if site.progress_percentage == 100 %}
+                                <span class="badge bg-success">Terminé</span>
+                            {% elif site.progress_percentage > 0 %}
+                                <span class="badge bg-primary">En cours</span>
+                            {% else %}
+                                <span class="badge bg-secondary">À faire</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {# Bouton Tâche - UNIQUEMENT pour coordinateur et superuser #}
+                                {% if user.is_superuser or user == site.project.coordinator %}
+                                <a href="{% url 'projects:task_create' site_pk=site.pk %}" class="btn btn-outline-primary" title="Ajouter tâche">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {# Bouton Inspection - visible pour coordinateur, team lead et superuser #}
+                                {% if user.is_superuser or user == site.project.coordinator or user == site.team_lead %}
+                                <a href="{% url 'projects:inspection_create' site_pk=site.pk %}" class="btn btn-outline-danger" title="Inspection">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {# Bouton Modifier - UNIQUEMENT pour coordinateur et superuser #}
+                                {% if user.is_superuser or user == site.project.coordinator %}
+                                <a href="{% url 'projects:site_update' pk=site.pk %}" class="btn btn-outline-secondary" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                            <p>Aucun site trouvé pour ce projet</p>
+                            {% if user.is_superuser or user == project.coordinator %}
+                            <a href="{% url 'projects:site_create' project_pk=project.pk %}" class="btn btn-primary">
+                                Créer un premier site
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle filters
+    const toggleFilters = document.getElementById('toggle-filters');
+    const filtersSection = document.getElementById('filters-section');
+    
+    toggleFilters.addEventListener('click', function() {
+        filtersSection.classList.toggle('d-none');
+    });
+
+    // Site filtering
+    const siteIdFilter = document.getElementById('filter-site-id');
+    const teamLeadFilter = document.getElementById('filter-team-lead');
+    const progressFilter = document.getElementById('filter-progress');
+    const resetSiteFilters = document.getElementById('reset-site-filters');
+    const siteRows = document.querySelectorAll('#sites-table tbody tr');
+
+    function filterSites() {
+        const siteIdValue = siteIdFilter.value.toLowerCase();
+        const teamLeadValue = teamLeadFilter.value;
+        const progressValue = progressFilter.value;
+
+        siteRows.forEach(row => {
+            const siteId = row.getAttribute('data-site-id');
+            const teamLead = row.getAttribute('data-team-lead');
+            const progress = parseInt(row.getAttribute('data-progress'));
+
+            const matchesSiteId = siteId.includes(siteIdValue);
+            const matchesTeamLead = !teamLeadValue || teamLead === teamLeadValue;
+            let matchesProgress = true;
+
+            if (progressValue === '100') {
+                matchesProgress = progress === 100;
+            } else if (progressValue === '50') {
+                matchesProgress = progress >= 50;
+            } else if (progressValue === '0') {
+                matchesProgress = progress < 100 && progress > 0;
+            }
+
+            if (matchesSiteId && matchesTeamLead && matchesProgress) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    siteIdFilter.addEventListener('input', filterSites);
+    teamLeadFilter.addEventListener('change', filterSites);
+    progressFilter.addEventListener('change', filterSites);
+
+    resetSiteFilters.addEventListener('click', function() {
+        siteIdFilter.value = '';
+        teamLeadFilter.value = '';
+        progressFilter.value = '';
+        filterSites();
+    });
+});
+</script>
+{% endblock %}

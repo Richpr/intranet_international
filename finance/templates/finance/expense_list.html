@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+
+{% block title %}Dépenses Quotidiennes{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Dépenses Quotidiennes</h1>
+        <a href="{% url 'finance:expense_create' %}" class="btn btn-success">Ajouter une Dépense</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Pays</th>
+                <th>Site (Projet)</th>
+                <th>Description</th>
+                <th>Montant</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.date|date:"d M Y" }}</td>
+                <td>{{ expense.country.code }}</td>
+                <td>{{ expense.site.site_id_client|default:"Général" }}</td>
+                <td>{{ expense.description }}</td>
+                <td>{{ expense.amount }}</td>
+                <td>{% if expense.is_approved %}<span class="badge bg-success">Approuvée</span>{% else %}<span class="badge bg-warning text-dark">En Attente</span>{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">Aucune dépense trouvée pour vos pays.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

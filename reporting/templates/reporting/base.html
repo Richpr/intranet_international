@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+
+{% block title %}Rapports{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4 text-primary">Rapports</h1>
+        
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'ran_site_list' %}active{% endif %}" href="{% url 'reporting:ran_site_list' %}">Sites RAN</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'transmission_site_list' %}active{% endif %}" href="{% url 'reporting:transmission_site_list' %}">Sites de Transmission</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'survey_site_list' %}active{% endif %}" href="{% url 'reporting:survey_site_list' %}">Sites de Survey</a>
+            </li>
+        </ul>
+
+        {% block reporting_content %}
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}

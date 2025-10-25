@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %} 
+{% load static %}
+
+{% block title %}Créer une Inspection{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="me-2">⚠️</i> Enregistrer une Nouvelle Inspection
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Inspection pour le site : 
+                    <strong>{{ site.site_id_client }} (Projet: {{ site.project.name }})</strong>
+                </p>
+                <hr>
+                
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <h5 class="text-danger mt-3">Détails de l'Inspection</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.type_inspection|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.resultat_inspection|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.date_inspection|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.rapport_photos_url|as_crispy_field }} 
+                        </div>
+                    </div>
+
+                    {{ form.commentaires|as_crispy_field }}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'projects:project_detail' pk=site.project.pk %}" class="btn btn-outline-secondary">
+                            Annuler / Retour au Projet
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="me-1">✔️</i> Valider l'Inspection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

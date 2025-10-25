@@ -1,0 +1,110 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Ajouter une Tâche{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="me-2">📝</i> Assignation d'une Nouvelle Tâche
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Création de tâche pour le site : 
+                    <strong>{{ site.site_id_client }} (Projet: {{ site.project.name }})</strong>
+                </p>
+                
+                <form method="post" novalidate id="task-form">
+                    {% csrf_token %}
+                    
+                    <h5 class="text-primary mt-3">Type de Tâche</h5>
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.task_type|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div id="task-type-info" class="alert alert-info d-none mt-2">
+                        <small>
+                            <strong>Description:</strong> <span id="type-description"></span><br>
+                            <strong>Durée estimée:</strong> <span id="type-duration"></span> heures
+                        </small>
+                    </div>
+                    
+                    <h5 class="text-primary mt-3">Détails Complémentaires</h5>
+                    <div class="row">
+                        <div class="col-12">
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.assigned_to|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.due_date|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.expected_duration_hours|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.is_paid_relevant|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'projects:project_detail' pk=site.project.pk %}" class="btn btn-outline-secondary">
+                            Annuler / Retour au Projet
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="me-1">✏️</i> Créer et Assigner la Tâche
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taskTypeSelect = document.getElementById('id_task_type');
+    const durationInput = document.getElementById('id_expected_duration_hours');
+    const infoDiv = document.getElementById('task-type-info');
+    const typeDescription = document.getElementById('type-description');
+    const typeDuration = document.getElementById('type-duration');
+    
+    taskTypeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const description = selectedOption.getAttribute('data-description') || 'Aucune description disponible';
+        const duration = selectedOption.getAttribute('data-duration') || '';
+        
+        // Afficher les informations
+        typeDescription.textContent = description;
+        typeDuration.textContent = duration || 'Non définie';
+        infoDiv.classList.remove('d-none');
+        
+        // Pré-remplir la durée si disponible
+        if (duration && !durationInput.value) {
+            durationInput.value = duration;
+        }
+    });
+    
+    // Déclencher l'événement au chargement si une valeur est déjà sélectionnée
+    if (taskTypeSelect.value) {
+        taskTypeSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

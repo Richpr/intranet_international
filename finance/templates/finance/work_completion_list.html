@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+
+{% block title %}Historique des Achèvements{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Achèvements de Travail (Paie Terrain)</h1>
+    <a href="{% url 'finance:work_record_create' %}" class="btn btn-primary mb-3">
+        + Nouvel Enregistrement
+    </a>
+    
+    {% if work_records %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Employé</th>
+                    <th>Tâche</th>
+                    <th>Heures</th>
+                    <th>Achèvement (%)</th>
+                    
+                    <th>Taux/H</th>
+                    <th>Coût (Paie)</th>
+                    
+                    <th>Saisi par</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in work_records %}
+                <tr>
+                    <td>{{ record.date|date:"Y-m-d" }}</td>
+                    <td>{{ record.user.username }}</td>
+                    
+                    <td>{{ record.task.name }} ({{ record.task.site_task.first.site.name }})</td>
+                    
+                    <td>{{ record.duration_hours|default:"N/A" }}</td>
+                    <td>{{ record.completion_percentage|default:"N/A" }}</td>
+                    
+                    <td>{{ record.hourly_rate_used|floatformat:2|default:"N/A" }}</td>
+                    <td><strong>{{ record.cost|floatformat:2|default:"0.00" }}</strong></td>
+                    
+                    <td>{{ record.created_by.username }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-info">
+            Aucun enregistrement de travail trouvé pour les pays actifs.
+        </div>
+    {% endif %}
+
+{% endblock %}

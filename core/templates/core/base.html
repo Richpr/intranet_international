@@ -1,0 +1,453 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Intranet NG{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        :root {
+            --header-height: 60px;
+            --sidebar-width: 260px;
+            
+            /* Couleurs NG - Basées sur votre logo */
+            --primary-blue: #1D64B5;
+            --secondary-blue: #2B90D9;
+            --light-blue: #D1E0F1;
+            --primary-orange: #F4A900;
+            --accent-yellow: #FFD166;
+            
+            /* Couleurs dérivées */
+            --sidebar-active-bg: var(--light-blue);
+            --sidebar-active-text: var(--primary-blue);
+            --content-bg: #f8fafc;
+            --success-color: #27ae60;
+            --warning-color: var(--primary-orange);
+            --danger-color: #e74c3c;
+        }
+
+        /* Structure Responsive CORRIGÉE */
+        body {
+            background-color: var(--content-bg);
+            padding-top: var(--header-height);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+        
+        /* Navbar fixe CORRIGÉE */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%) !important;
+            border-bottom: 3px solid var(--primary-orange);
+            box-shadow: 0 2px 10px rgba(29, 100, 181, 0.3);
+            height: var(--header-height);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: var(--accent-yellow) !important;
+        }
+
+        /* Sidebar CORRIGÉE - position correcte */
+        #sidebar-wrapper {
+            position: fixed;
+            top: var(--header-height); /* Commence juste sous la navbar */
+            bottom: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--light-blue);
+            z-index: 1020;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            /* Pas de padding-top pour éviter tout chevauchement */
+        }
+
+        @media (max-width: 768px) {
+            #sidebar-wrapper {
+                transform: translateX(-100%);
+            }
+            #sidebar-wrapper.mobile-open {
+                transform: translateX(0);
+            }
+            #page-content-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+
+        /* Liens sidebar CORRIGÉS */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 14px 20px 14px 15px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .sidebar-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .sidebar-link:hover {
+            color: var(--primary-blue);
+            background-color: rgba(29, 100, 181, 0.08);
+            border-left-color: var(--secondary-blue);
+        }
+
+        .sidebar-link.active {
+            color: var(--primary-blue) !important;
+            background-color: var(--light-blue) !important;
+            border-left: 4px solid var(--primary-orange) !important;
+            font-weight: 700;
+        }
+
+        /* Zone de contenu CORRIGÉE */
+        #page-content-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            padding: 25px;
+            min-height: calc(100vh - var(--header-height));
+            background-color: var(--content-bg);
+            transition: all 0.3s ease;
+            margin-top: 0; /* Pas de marge en haut car la navbar est fixed */
+        }
+
+        /* Badges NG */
+        .badge.bg-primary { background-color: var(--primary-blue) !important; }
+        .badge.bg-secondary { background-color: var(--secondary-blue) !important; }
+        .badge.bg-warning { background-color: var(--primary-orange) !important; color: white !important; }
+        .badge.bg-success { background-color: var(--success-color) !important; }
+
+        /* Boutons NG */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(29, 100, 181, 0.3);
+        }
+
+        .btn-warning {
+            background-color: var(--primary-orange);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-warning:hover {
+            background-color: var(--accent-yellow);
+            color: #2c3e50;
+        }
+
+        /* Cartes avec style NG */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(29, 100, 181, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid var(--light-blue);
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(29, 100, 181, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+            border: none;
+        }
+
+        /* Progress bars NG */
+        .progress {
+            height: 10px;
+            background-color: var(--light-blue);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-orange) 0%, var(--accent-yellow) 100%);
+            transition: width 0.6s ease;
+        }
+
+        /* Alertes avec couleurs NG */
+        .alert-info {
+            background-color: var(--light-blue);
+            border-color: var(--secondary-blue);
+            color: var(--primary-blue);
+        }
+
+        .alert-warning {
+            background-color: rgba(244, 169, 0, 0.1);
+            border-color: var(--primary-orange);
+            color: #8a6200;
+        }
+
+        /* Correction pour le dropdown dans navbar */
+        .navbar-nav .dropdown-menu {
+            margin-top: 10px;
+        }
+
+        /* Style pour le bouton menu mobile */
+        #sidebarToggle {
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-sm d-lg-none" id="sidebarToggle" style="border: 1px solid rgba(255,255,255,0.3); color: white;">
+                ☰
+            </button>
+            
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
+                <span style="font-size: 1.5em; margin-right: 10px;">🏢</span>
+                <div>
+                    <div>Intranet NG</div>
+                    <small class="opacity-75" style="font-size: 0.7em; font-weight: 400;">Multi-Pays</small>
+                </div>
+            </a>
+            
+            <div class="d-flex ms-auto">
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                <span class="me-2">👤</span>
+                                <strong>{{ user.username }}</strong>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">⚙️ Administration</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form id="logout-form" method="POST" action="{% url 'logout' %}">
+                                        {% csrf_token %}
+                                        <a class="dropdown-item text-danger" href="#" onclick="document.getElementById('logout-form').submit(); return false;">
+                                            🚪 Déconnexion
+                                        </a>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Connexion</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="sidebar-wrapper">
+        <ul class="sidebar-nav list-group list-group-flush">
+            <li class="sidebar-item sidebar-title mt-3">
+                <span class="text-uppercase text-muted small fw-bold px-3">Menu</span>
+            </li>
+
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                    <i class="fas fa-tachometer-alt me-2"></i> Tableau de Bord
+                </a>
+            </li>
+
+            <li class="sidebar-item">
+                <a class="sidebar-link" data-bs-toggle="collapse" href="#projets-collapse" role="button" aria-expanded="false" aria-controls="projets-collapse">
+                    <i class="fas fa-project-diagram me-2"></i> Projets <i class="fas fa-chevron-down float-end"></i>
+                </a>
+                <div class="collapse" id="projets-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'projects' in request.path %}active{% endif %}" href="{% url 'projects:project_table' %}">
+                                <i class="fas fa-table me-2"></i> Projets & Sites
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                            {% for group in user.groups.all %}
+                                {% if group.name == 'Team_Lead' %}
+                                <li class="sidebar-item">
+                                    <a class="sidebar-link {% if 'team_lead_tasks' in request.resolver_match.url_name %}active{% endif %}" 
+                                       href="{% url 'projects:team_lead_tasks_by_site' %}">
+                                        <i class="fas fa-tasks me-2"></i> Mes Tâches
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        {% if is_cm %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'project_create' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'projects:project_create' %}">
+                                <i class="fas fa-plus-circle me-2"></i> Créer un Projet
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if is_coordinator %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="#">
+                                <i class="fas fa-clipboard-check me-2"></i> Rapports Inspections
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </li>
+
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'reporting' in request.path %}active{% endif %}" href="{% url 'reporting:ran_site_list' %}">
+                    <i class="fas fa-chart-bar me-2"></i> Rapports
+                </a>
+            </li>
+
+            {% if has_finance_menu_access %}
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'finance' in request.path %}active{% endif %}" href="{% url 'finance:finance_dashboard' %}">
+                    <i class="fas fa-wallet me-2"></i> Finance & Paie
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="sidebar-item">
+                <a class="sidebar-link" data-bs-toggle="collapse" href="#account-collapse" role="button" aria-expanded="false" aria-controls="account-collapse">
+                    <i class="fas fa-user-circle me-2"></i> Mon Compte <i class="fas fa-chevron-down float-end"></i>
+                </a>
+                <div class="collapse" id="account-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="#">
+                                <i class="fas fa-user-edit me-2"></i> Mon Profil
+                            </a>
+                        </li>
+                        {% if user.is_staff %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{% url 'admin:index' %}">
+                                <i class="fas fa-user-shield me-2"></i> Administration
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+        
+    <div id="page-content-wrapper">
+        <div class="container-fluid">
+            <div id="loadingIndicator" class="d-none">
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <span class="ms-3 fw-medium text-primary">Chargement en cours...</span>
+                </div>
+            </div>
+
+            <div id="mainContent">
+                {% if messages %}
+                    <div id="messages-container" class="mt-2">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button typebutton" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Menu mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar-wrapper').classList.toggle('mobile-open');
+        });
+
+        // Gestion des états de chargement
+        function showLoading() {
+            document.getElementById('loadingIndicator').classList.remove('d-none');
+            document.getElementById('mainContent').style.opacity = '0.6';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').classList.add('d-none');
+            document.getElementById('mainContent').style.opacity = '1';
+        }
+
+        // Cacher le chargement une fois la page prête
+        document.addEventListener('DOMContentLoaded', function() {
+            hideLoading();
+            
+            // Fermer la sidebar sur mobile quand on clique sur un lien
+            if (window.innerWidth < 768) {
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.addEventListener('click', function() {
+                        document.getElementById('sidebar-wrapper').classList.remove('mobile-open');
+                    });
+                });
+            }
+        });
+
+        // Fermer la sidebar quand on redimensionne au-dessus de 768px
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                document.getElementById('sidebar-wrapper').classList.remove('mobile-open');
+            }
+        });
+    </script>
+
+    <script>
+        // Chevron rotation for sidebar dropdowns
+        document.querySelectorAll('.sidebar-link[data-bs-toggle="collapse"]').forEach(link => {
+            link.addEventListener('click', function() {
+                const icon = this.querySelector('.fa-chevron-down');
+                icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+        });
+    </script>
+
+    {% block extra_js %}
+    {% endblock extra_js %}
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% comment %} Fichier : projects/partials/project_list_partial.html {% endcomment %}
+<div class="row" id="projects-container">
+    {% for project in projects %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h5 class="mb-0 text-truncate">
+                        <a href="{% url 'projects:project_detail' pk=project.pk %}" class="text-primary text-decoration-none">
+                            {{ project.name }}
+                        </a>
+                    </h5>
+                    <span class="badge bg-secondary">{{ project.country.code }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text mb-2">
+                        {# ================== CORRECTION ICI ================== #}
+                        <small class="text-muted">Client:</small> {{ project.client.name|default:"-" }}<br>
+                        {# ==================================================== #}
+                        <small class="text-muted">Type:</small> {{ project.project_type.name }}<br>
+                        <small class="text-muted">Coordinateur:</small> {{ project.coordinator.get_full_name|default:project.coordinator.username }}
+                    </p>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Sites (Total):</small>
+                        <span class="fw-bold">{{ project.site_count }}</span>
+                    </div>
+
+                    <div class="progress-wrapper">
+                        <small class="text-muted">Progression Globale:</small>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar {% if project.global_progress >= 100 %}bg-success{% else %}bg-info{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ project.global_progress|floatformat:"0" }}%;" 
+                                 aria-valuenow="{{ project.global_progress|floatformat:"0" }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <small class="float-end fw-bold {% if project.global_progress >= 100 %}text-success{% else %}text-info{% endif %}">
+                            {{ project.global_progress|floatformat:"1" }}%
+                        </small>
+                    </div>
+
+                    <hr>
+
+                    <p class="text-center mb-0">
+                        <span class="badge {% if project.is_completed %}bg-success{% elif project.is_active %}bg-primary{% else %}bg-danger{% endif %}">
+                            {% if project.is_completed %}Terminé
+                            {% elif project.is_active %}Actif
+                            {% else %}Inactif
+                            {% endif %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="fas fa-exclamation-triangle me-2"></i> Aucun projet trouvé. Vérifiez vos filtres ou vos affectations de pays.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if projects.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if projects.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&{{ request.GET.urlencode | cut:'page=' }}" aria-label="First">
+                    &laquo;&laquo;
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ projects.previous_page_number }}&{{ request.GET.urlencode | cut:'page=' }}" aria-label="Previous">
+                    &laquo;
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in projects.paginator.page_range %}
+            {% if projects.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > projects.number|add:'-3' and num < projects.number|add:'3' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode | cut:'page=' }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if projects.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ projects.next_page_number }}&{{ request.GET.urlencode | cut:'page=' }}" aria-label="Next">
+                    &raquo;
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ projects.paginator.num_pages }}&{{ request.GET.urlencode | cut:'page=' }}" aria-label="Last">
+                    &raquo;&raquo;
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

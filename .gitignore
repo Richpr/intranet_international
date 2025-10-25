@@ -1,0 +1,23 @@
+# Environnement virtuel
+venv/
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+
+# Base de données locale
+
+
+# Fichiers statiques collectés par Django
+staticfiles/
+
+# Fichiers uploadés par les utilisateurs (Média)
+media/
+
+# Fichiers de log ou d'erreurs
+*.log
+erreur.txt
+
+# Fichiers d'IDE (Visual Studio Code, PyCharm...)
+.vscode/
+.idea/

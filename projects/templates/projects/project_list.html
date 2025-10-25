@@ -1,0 +1,146 @@
+{% extends "core/base.html" %}
+{% load humanize %}
+
+{% block title %}Liste des Projets{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">📊 Tableau des Projets</h1>
+    <div class="d-flex gap-2">
+        {% if is_cm %}
+            <a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Nouveau Projet
+            </a>
+        {% else %}
+            <button class="btn btn-secondary btn-sm" disabled title="Seul le Country Manager peut créer un nouveau projet.">
+                <i class="fas fa-plus me-1"></i> Nouveau Projet
+            </button>
+        {% endif %}
+        <a href="{% url 'projects:project_table' %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-table me-1"></i> Vue Tableau
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'projects:project_list' %}" id="filter-form">
+            <div class="row g-2 align-items-center">
+                
+                {# ⬇️ MODIFIÉ : col-md-4 -> col-md-2 ⬇️ #}
+                <div class="col-md-2">
+                    <label class="form-label">🔍 Recherche</label>
+                    <input type="text" class="form-control form-control-sm" name="q" value="{{ filters.q }}" placeholder="🔍 Rechercher par nom ou client...">
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">🏷️ Statut</label>
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="">Tous statuts</option>
+                        <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Actif</option>
+                        <option value="completed" {% if filters.status == 'completed' %}selected{% endif %}>Terminé</option>
+                        <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactif</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">🌍 Pays</label>
+                    <select class="form-select form-select-sm" name="country">
+                        
+                        <option value="">Tous pays</option>
+                        {% for country in countries %}
+                            <option value="{{ country.code }}" {% if filters.country == country.code %}selected{% endif %}>{{ country.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">🧑 Coordinateur</label>
+                    <select class="form-select form-select-sm" name="coordinator">
+                        <option value="">Tous coordinateurs</option>
+                        {% for coordinator in coordinators %}
+                            <option value="{{ coordinator.username }}" {% if filters.coordinator == coordinator.username %}selected{% endif %}>{{ coordinator.get_full_name|default:coordinator.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# ⬇️ NOUVEAU : Filtre Année ⬇️ #}
+                <div class="col-md-1">
+                    <label class="form-label">🗓️ Année</label>
+                    <select class="form-select form-select-sm" name="year">
+                        <option value="">Toutes</option>
+                        {% for year in available_years %}
+                            <option value="{{ year }}" {% if filters.year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# ⬇️ NOUVEAU : Filtre Mois ⬇️ #}
+                <div class="col-md-1">
+                    <label class="form-label">🌙 Mois</label>
+                    <select class="form-select form-select-sm" name="month">
+                        <option value="">Tous</option>
+                        {% for month in available_months %}
+                            <option value="{{ month.value }}" {% if filters.month == month.value|stringformat:"s" %}selected{% endif %}>{{ month.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Filtrer</button>
+                    <a href="{% url 'projects:project_list' %}" class="btn btn-outline-secondary btn-sm w-100" title="Réinitialiser les filtres">
+                        <i class="fas fa-undo"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="project-list-container">
+    {% include "projects/partials/project_list_partial.html" %}
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filter-form');
+    const container = document.getElementById('project-list-container');
+
+    async function fetchProjectList(url) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const html = await response.text();
+            container.innerHTML = html;
+            window.history.pushState({path: url}, '', url);
+        } catch (error) {
+            console.error('Erreur lors du chargement de la liste des projets:', error);
+            // Optionnel: afficher un message d'erreur à l'utilisateur
+        }
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        const url = `{% url 'projects:project_list' %}?${params.toString()}`;
+        fetchProjectList(url);
+    });
+
+    // Gérer les clics sur les liens de pagination
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('#project-list-container .pagination a')) {
+            e.preventDefault();
+            const url = e.target.href;
+            fetchProjectList(url);
+        }
+    });
+});
+</script>
+{% endblock %}

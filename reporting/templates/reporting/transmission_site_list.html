@@ -1,0 +1,138 @@
+{% extends "reporting/base.html" %}
+
+{% block reporting_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Sites de Transmission</h5>
+        <div class="btn-group">
+            {# CORRECTION : Utilisation de request.GET.urlencode pour passer tous les filtres #}
+            <a href="{% url 'reporting:transmission_site_list_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-danger">PDF</a>
+            <a href="{% url 'reporting:transmission_site_list_excel' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-success">Excel</a>
+        </div>
+    </div>
+    <div class="card-body">
+        {# CORRECTION : Formulaire mis à jour avec tous les filtres #}
+        <form method="get" class="row g-3 align-items-end mb-3">
+            <div class="col-md-2">
+                <label for="country" class="form-label">Filtrer par pays :</label>
+                <select name="country" id="country" class="form-select">
+                    <option value="">Tous les pays</option>
+                    {% for country in countries %}
+                        <option value="{{ country.id }}" {% if country.id|stringformat:"s" == selected_country_id %}selected{% endif %}>
+                            {{ country.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="project" class="form-label">Projet :</label>
+                <select name="project" id="project" class="form-select">
+                    <option value="">Tous les projets</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}" {% if project.id|stringformat:"s" == selected_project_id %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="year" class="form-label">Année :</label>
+                <select name="year" id="year" class="form-select">
+                    <option value="">Toutes</option>
+                    {% for year in years %}
+                        <option value="{{ year }}" {% if year|stringformat:"s" == selected_year %}selected{% endif %}>
+                            {{ year }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="month" class="form-label">Mois :</label>
+                <select name="month" id="month" class="form-select">
+                    <option value="">Tous</option>
+                    {% for month in months %}
+                        <option value="{{ month }}" {% if month|stringformat:"s" == selected_month %}selected{% endif %}>
+                            {{ month }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                <a href="{% url 'reporting:transmission_site_list' %}" class="btn btn-secondary w-100">Réinitialiser</a>
+            </div>
+        </form>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Link</th>
+                        <th>Site A</th>
+                        <th>Site B</th>
+                        <th>Project Name</th>
+                        <th>Pays</th>
+                        <th>Departement</th>
+                        <th>Commune</th>
+                        <th>Annee</th>
+                        <th>Mois</th>
+                        <th>Radio Type</th>
+                        <th>Antenna Type</th>
+                        <th>RBS Type</th>
+                        <th>Indoor (BB/ML)</th>
+                        <th>INSTALLATION</th>
+                        <th>ALLIGNEMENT</th>
+                        <th>EHS SITE A</th>
+                        <th>EHS SITE B</th>
+                        <th>QA STE A</th>
+                        <th>QA SITE B</th>
+                        <th>QA STATUT SITE A</th>
+                        <th>QA STATUS SITE B</th>
+                        <th>ATP STATUT SITE A</th>
+                        <th>ATP STATUT SITE B</th>
+                        <th>COMMENT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in links %}
+                    <tr class="align-middle">
+                        <td>{{ link.link_id }}</td>
+                        <td>{{ link.site_a.name }}</td>
+                        <td>{{ link.site_b.name }}</td>
+                        <td>{{ link.site_a.project.name }}</td>
+                        <td>{{ link.site_a.project.country.name }}</td>
+                        <td>{{ link.site_a.departement.name|default:"" }}</td>
+                        <td>{{ link.site_a.location }}</td>
+                        <td>{{ link.created_at|date:"Y" }}</td>
+                        <td>{{ link.created_at|date:"m" }}</td>
+                        <td>
+                            {% for radio in link.site_a.radio_configurations.all %}
+                                {{ radio.radio_type.name }} ({{ radio.quantity }}){% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ link.site_a.antenna_type.name|default:"" }}</td>
+                        <td>{{ link.site_a.enclosure_type.name|default:"" }}</td>
+                        <td>{{ link.site_a.bb_ml.name|default:"" }}</td>
+                        <td><span class="badge bg-primary">{{ link.site_a.installation_status }}</span></td>
+                        <td><span class="badge bg-secondary">{{ "N/A" }}</span></td>
+                        <td><span class="badge bg-primary">{{ link.site_a.ehs_status }}</span></td>
+                        <td><span class="badge bg-primary">{{ link.site_b.ehs_status }}</span></td>
+                        <td><span class="badge bg-info">{{ link.site_a.qa_result }}</span></td>
+                        <td><span class="badge bg-info">{{ link.site_b.qa_result }}</span></td>
+                        <td><span class="badge bg-info">{{ link.site_a.qa_result }}</span></td>
+                        <td><span class="badge bg-info">{{ link.site_b.qa_result }}</span></td>
+                        <td><span class="badge bg-success">{{ link.site_a.atp_status }}</span></td>
+                        <td><span class="badge bg-success">{{ link.site_b.atp_status }}</span></td>
+                        <td>{{ link.site_a.comment }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

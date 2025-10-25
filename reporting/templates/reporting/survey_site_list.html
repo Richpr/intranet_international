@@ -1,0 +1,110 @@
+{% extends "reporting/base.html" %}
+
+{% block reporting_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Sites de Survey</h5>
+        <div class="btn-group">
+            {# CORRECTION : Utilisation de request.GET.urlencode pour passer tous les filtres #}
+            <a href="{% url 'reporting:survey_site_list_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-danger">PDF</a>
+            <a href="{% url 'reporting:survey_site_list_excel' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-success">Excel</a>
+        </div>
+    </div>
+    <div class="card-body">
+        {# CORRECTION : Formulaire mis à jour avec tous les filtres #}
+        <form method="get" class="row g-3 align-items-end mb-3">
+            <div class="col-md-2">
+                <label for="country" class="form-label">Filtrer par pays :</label>
+                <select name="country" id="country" class="form-select">
+                    <option value="">Tous les pays</option>
+                    {% for country in countries %}
+                        <option value="{{ country.id }}" {% if country.id|stringformat:"s" == selected_country_id %}selected{% endif %}>
+                            {{ country.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="project" class="form-label">Projet :</label>
+                <select name="project" id="project" class="form-select">
+                    <option value="">Tous les projets</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}" {% if project.id|stringformat:"s" == selected_project_id %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="year" class="form-label">Année :</label>
+                <select name="year" id="year" class="form-select">
+                    <option value="">Toutes</option>
+                    {% for year in years %}
+                        <option value="{{ year }}" {% if year|stringformat:"s" == selected_year %}selected{% endif %}>
+                            {{ year }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="month" class="form-label">Mois :</label>
+                <select name="month" id="month" class="form-select">
+                    <option value="">Tous</option>
+                    {% for month in months %}
+                        <option value="{{ month }}" {% if month|stringformat:"s" == selected_month %}selected{% endif %}>
+                            {{ month }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                <a href="{% url 'reporting:survey_site_list' %}" class="btn btn-secondary w-100">Réinitialiser</a>
+            </div>
+        </form>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nom du site</th>
+                        <th>Id du site</th>
+                        <th>Pays</th>
+                        <th>Departement</th>
+                        <th>Commune</th>
+                        <th>Type de site</th>
+                        <th>Project Name</th>
+                        <th>Annee</th>
+                        <th>Mois</th>
+                        <th>SURVEY STATUT</th>
+                        <th>RAPPORT STATUT</th>
+                        <th>COMMENT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for site in sites %}
+                    <tr class="align-middle">
+                        <td>{{ site.name }}</td>
+                        <td>{{ site.site_id_client }}</td>
+                        <td>{{ site.project.country.name }}</td>
+                        <td>{{ site.departement.name|default:"" }}</td>
+                        <td>{{ site.location }}</td>
+                        <td>{{ site.site_type.name|default:"" }}</td>
+                        <td>{{ site.project.name }}</td>
+                        <td>{{ site.start_date|date:"Y" }}</td>
+                        <td>{{ site.start_date|date:"m" }}</td>
+                        <td><span class="badge bg-warning">{{ "N/A" }}</span></td>
+                        <td><span class="badge bg-warning">{{ "N/A" }}</span></td>
+                        <td>{{ site.comment }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

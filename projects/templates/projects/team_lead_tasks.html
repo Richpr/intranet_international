@@ -1,0 +1,121 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Mes Tâches par Site{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">🛠️ Mes Tâches Actives</h1>
+    <a href="{% url 'home' %}" class="btn btn-secondary">
+        <i class="fas fa-home me-1"></i> Retour au Tableau de Bord
+    </a>
+</div>
+
+<p class="text-muted">
+    Liste des tâches en cours ou à faire qui vous sont directement assignées ou sur vos sites managés.
+</p>
+
+{% if tasks %}
+    {% for task in tasks %}
+        {% ifchanged task.site %}
+            {% if not forloop.first %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light-warning text-dark d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Site: 
+                        <a href="{% url 'projects:site_detail' pk=task.site.pk %}" class="text-decoration-none text-dark fw-bold">
+                            {{ task.site.site_id_client }}
+                        </a>
+                        <small class="ms-3 text-muted">({{ task.site.project.name }} - {{ task.site.project.country.code }})</small>
+                    </div>
+                    <div>
+                        {% if task.site.team_lead == user %}
+                            <span class="badge bg-success me-2">Team Lead</span>
+                        {% endif %}
+                        <a href="{% url 'projects:inspection_create' site_pk=task.site.pk %}" class="btn btn-sm btn-danger me-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Inspection
+                        </a>
+                        <a href="{% url 'projects:site_detail' pk=task.site.pk %}" class="btn btn-sm btn-primary me-2">
+                            <i class="fas fa-eye me-1"></i> Détails Site
+                        </a>
+                        <a href="{% url 'projects:project_detail' pk=task.site.project.pk %}" class="btn btn-sm btn-info">
+                            <i class="fas fa-clipboard-list me-1"></i> Voir Projet
+                        </a>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+        {% endifchanged %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center {% if task.due_date < today %}bg-light-danger{% endif %}">
+                        <div>
+                            <a href="{% url 'projects:task_update' pk=task.pk %}" class="text-decoration-none fw-bold text-dark">
+                                {{ task.description }} 
+                            </a>
+                            {% if task.is_paid_relevant %}
+                                <span class="badge bg-success ms-2">Paie</span>
+                            {% endif %}
+                            
+                            <small class="text-muted ms-3">
+                                Assigné à: 
+                                {% if task.assigned_to == user %}
+                                    <strong>Moi-même</strong>
+                                {% else %}
+                                    {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                                {% endif %}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                Statut: <span class="badge 
+                                    {% if task.status == 'TO_DO' %}bg-secondary
+                                    {% elif task.status == 'IN_PROGRESS' %}bg-primary
+                                    {% elif task.status == 'QC_PENDING' %}bg-warning text-dark
+                                    {% elif task.status == 'APPROVED' %}bg-success
+                                    {% elif task.status == 'REJECTED' %}bg-danger
+                                    {% endif %}">
+                                    {{ task.get_status_display }}
+                                </span>
+                                | Progression: <span class="badge bg-info">{{ task.progress_percentage }}%</span>
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            {% if task.due_date < today %}
+                                <span class="badge bg-danger me-2">EN RETARD</span>
+                            {% endif %}
+                            <small class="text-muted d-block">Limite: {{ task.due_date|date:"d M Y" }}</small>
+                            <a href="{% url 'projects:task_update' pk=task.pk %}" class="btn btn-sm btn-warning mt-1">
+                                <i class="fas fa-pencil-alt me-1"></i> MAJ
+                            </a>
+                        </div>
+                    </li>
+    {% endfor %}
+                </ul>
+            </div>
+{% else %}
+    <div class="alert alert-info text-center py-5">
+        <i class="fas fa-info-circle fs-4 text-info"></i>
+        <p class="mb-0 mt-2">Aucune tâche active trouvée.</p>
+        <p class="text-muted mt-2">
+            Vous n'avez actuellement aucune tâche assignée et vous n'êtes pas Team Lead d'aucun site actif.
+        </p>
+    </div>
+{% endif %}
+
+<!-- Debug information -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        Informations de Débogage
+    </div>
+    <div class="card-body">
+        <p><strong>Utilisateur:</strong> {{ user.username }}</p>
+        <p><strong>Groupes:</strong> {{ user_groups|join:", " }}</p>
+        <p><strong>Est Team Lead:</strong> {{ is_team_lead|yesno:"Oui,Non" }}</p>
+        <p><strong>Sites managés (dans pays actifs):</strong> {{ sites_managed_count }}</p>
+        <p><strong>Tâches assignées (dans pays actifs):</strong> {{ assigned_tasks_count }}</p>
+        <p><strong>Tâches actives affichées:</strong> {{ tasks.count }}</p>
+    </div>
+</div>
+
+{% endblock %}

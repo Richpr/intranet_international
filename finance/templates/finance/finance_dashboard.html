@@ -1,0 +1,26 @@
+{% extends "core/base.html" %}
+
+{% block title %}Tableau de Bord Financier{% endblock %}
+
+{% block content %}
+    <h1>Tableau de Bord Financier</h1>
+    <p class="lead">Bienvenue dans l'espace financier. Vos données sont filtrées selon vos affectations pays.</p>
+    
+    <div class="row">
+        
+        <div class="col-md-4">
+            <a href="{% url 'finance:salary_structure_list' %}" class="btn btn-lg btn-secondary w-100">Structures Salariales</a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{% url 'finance:expense_list' %}" class="btn btn-lg btn-secondary w-100">Dépenses Quotidiennes</a>
+        </div>
+        
+        <div class="col-md-4">
+            <a href="{% url 'finance:work_record_list' %}" class="btn btn-lg btn-success w-100">Paie Terrain (Achèvements)</a>
+        </div>
+        
+    </div>
+    
+    <h2 class="mt-5">Résumé des Pays Actifs</h2>
+{% endblock %}

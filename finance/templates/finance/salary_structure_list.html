@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+
+{% block title %}Structures Salariales{% endblock %}
+
+{% block content %}
+    <h1>Structures Salariales</h1>
+    <p class="lead">Liste des coûts de personnel filtrés par vos pays actifs.</p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Pays</th>
+                <th>Rôle</th>
+                <th>Montant de Base</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for structure in structures %}
+            <tr>
+                <td>{{ structure.country.code }}</td>
+                <td>{{ structure.role.name }}</td>
+                <td>{{ structure.base_amount }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">Aucune structure salariale trouvée pour vos pays.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
