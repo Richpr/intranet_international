@@ -8,7 +8,7 @@ __pycache__/
 # Base de données locale
 db.sqlite3
 
-.env
+
 g.txt
 # Fichiers statiques collectés par Django
 staticfiles/
