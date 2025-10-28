@@ -20,7 +20,10 @@ class DepenseForm(forms.ModelForm):
             'description', 
             'montant', 
             'recu_scan'
-        ] 
+        ]
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        } 
         
 
 

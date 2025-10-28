@@ -77,7 +77,7 @@ class CustomUser(AbstractUser):
         """Vérifie si l'utilisateur est un Project Coordinator actif."""
         user_roles = {r.lower() for r in self.get_active_role_names()}
         return (
-            "project coordinator" in user_roles or "project_coordinator" in user_roles
+            "coordinateur de projet" in user_roles or "coordinateur_de_projet" in user_roles
         )
 
     def is_field_team_user(self):

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Détails de la Dépense</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .receipt-image {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Détails de la Dépense</h1>
+        <table>
+            <tr>
+                <th>Date</th>
+                <td>{{ depense.date }}</td>
+            </tr>
+            <tr>
+                <th>Montant</th>
+                <td>{{ depense.montant }} FCFA</td>
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{ depense.description }}</td>
+            </tr>
+            <tr>
+                <th>Catégorie</th>
+                <td>{{ depense.get_categorie_display }}</td>
+            </tr>
+            <tr>
+                <th>Projet Associé</th>
+                <td>{{ depense.projet_associe }}</td>
+            </tr>
+            <tr>
+                <th>Employé Déclarant</th>
+                <td>{{ depense.employe_declarant }}</td>
+            </tr>
+        </table>
+
+        <h2>Reçu Scanné</h2>
+        {% if depense.recu_scan %}
+            <img src="{{ depense.recu_scan.path }}" class="receipt-image">
+        {% else %}
+            <p>Aucun reçu scanné n'a été fourni.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

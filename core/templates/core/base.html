@@ -316,6 +316,13 @@
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
+                        {% if is_team_lead or is_coordinator or is_field_team %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'expense_create' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'finance:expense_create' %}">
+                                <i class="fas fa-plus-circle me-2"></i> Ajouter une dépense
+                            </a>
+                        </li>
+                        {% endif %}
                         {% if is_cm %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'project_create' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'projects:project_create' %}">
@@ -334,6 +341,7 @@
                 </div>
             </li>
 
+            {% if is_cm %}
             <li class="sidebar-item">
                 <a class="sidebar-link {% if 'reporting' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#reporting-collapse" role="button" aria-expanded="false" aria-controls="reporting-collapse">
                     <i class="fas fa-chart-bar me-2"></i> Rapports <i class="fas fa-chevron-down float-end"></i>
@@ -373,8 +381,9 @@
                     </ul>
                 </div>
             </li>
+            {% endif %}
 
-            {% if has_finance_menu_access %}
+            {% if is_cm or is_coordinator or user.is_staff %}
             <li class="sidebar-item">
                 <a class="sidebar-link {% if 'finance' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#finance-collapse" role="button" aria-expanded="false" aria-controls="finance-collapse">
                     <i class="fas fa-wallet me-2"></i> Finance & Paie <i class="fas fa-chevron-down float-end"></i>
@@ -386,26 +395,32 @@
                                 <i class="fas fa-file-invoice-dollar me-2"></i> Dépenses
                             </a>
                         </li>
+                        {% if is_cm or user.is_staff %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'revenus' in request.path %}active{% endif %}" href="{% url 'finance:revenu_list' %}">
                                 <i class="fas fa-hand-holding-usd me-2"></i> Revenus
                             </a>
                         </li>
+                        {% endif %}
+                        {% if is_cm or user.is_staff %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'salary-structures' in request.path %}active{% endif %}" href="{% url 'finance:salary_structure_list' %}">
                                 <i class="fas fa-file-contract me-2"></i> Structures Salariales
                             </a>
                         </li>
+                        {% endif %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'paie-terrain' in request.path %}active{% endif %}" href="{% url 'finance:work_record_list' %}">
                                 <i class="fas fa-hard-hat me-2"></i> Paie Terrain
                             </a>
                         </li>
+                        {% if is_cm or user.is_staff %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'obligations-fiscales' in request.path %}active{% endif %}" href="{% url 'finance:obligationfiscale_list' %}">
                                 <i class="fas fa-landmark me-2"></i> Obligations Fiscales
                             </a>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </li>
@@ -458,11 +473,13 @@
                                 <i class="fas fa-certificate me-2"></i> Certifications
                             </a>
                         </li>
+                        {% if is_cm or user.is_staff %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'paiements-salaires' in request.path %}active{% endif %}" href="{% url 'rh:paiementsalaire_list' %}">
                                 <i class="fas fa-money-bill-wave me-2"></i> Paiements Salaires
                             </a>
                         </li>
+                        {% endif %}
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'employees' in request.path %}active{% endif %}" href="{% url 'rh:employee_list' %}">
                                 <i class="fas fa-users-cog me-2"></i> Employés

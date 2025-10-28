@@ -9,28 +9,26 @@ def roles_and_permissions(request):
     user = request.user
 
     # Valeurs par défaut
+    is_cm = False
+    is_coordinator = False
+    is_team_lead = False
+    is_field_team = False
     is_finance = False
 
     if user.is_authenticated:
-        # Utilise la méthode centralisée pour obtenir tous les rôles
-        user_roles = user.get_active_role_names()
-
-        # Définit les booléens de rôle
-        is_cm = "Country Manager" in user_roles or "Country_Manager" in user_roles
-        is_coordinator = (
-            "Project Coordinator" in user_roles or "Project_Coordinator" in user_roles
-        )
+        # Utilise les propriétés du modèle CustomUser pour la cohérence
+        is_cm = user.is_cm
+        is_coordinator = user.is_coordinator
+        is_team_lead = user.is_team_lead
+        is_field_team = user.is_field_team
 
         # Logique Finance (vérifie si l'utilisateur a un rôle financier)
+        user_roles = user.get_active_role_names()
         is_finance = (
             "Finance User" in user_roles
             or "Finance_Admin" in user_roles
             or "Finance User" in user_roles
         )
-
-    else:
-        # Pour les utilisateurs non authentifiés
-        is_cm, is_coordinator = False, False
 
     has_finance_menu_access = is_cm or is_coordinator or is_finance
 
@@ -38,6 +36,8 @@ def roles_and_permissions(request):
         # Ces booléens sont utilisés par les templates pour masquer/afficher des liens
         "is_cm": is_cm,
         "is_coordinator": is_coordinator,
+        "is_team_lead": is_team_lead,
+        "is_field_team": is_field_team,
         "is_finance_user": is_finance,
         "has_finance_menu_access": has_finance_menu_access,
     }

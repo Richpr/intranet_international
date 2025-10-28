@@ -11,6 +11,7 @@ urlpatterns = [
     # 2. Dépenses (Expenses)
     path("depenses/", views.DepenseListView.as_view(), name="expense_list"), # <-- Corrigé (un seul 't')
     path("depenses/creer/", views.DepenseCreateView.as_view(), name="expense_create"), # <-- AJOUTÉ
+    path("depenses/<int:depense_id>/pdf/", views.depense_pdf_view, name="depense_pdf"),
 
     # 3. Revenus
     path("revenus/", views.RevenuListView.as_view(), name="revenu_list"),

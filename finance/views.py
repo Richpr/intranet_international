@@ -2,8 +2,12 @@
 
 # --- Imports Django ---
 from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
 
 # --- Imports Locaux (de cette app) ---
 from .models import Depense, Revenu, SalaryStructure, ObligationFiscale
@@ -11,6 +15,7 @@ from .forms import DepenseForm, WorkCompletionForm, RevenuForm
 
 # --- Imports Externes (d'autres apps) ---
 from projects.models import WorkCompletionRecord
+from core.mixins import TeamLeadOrCoordinatorRequiredMixin, ExpenseManagementMixin
 
 
 # ==========================================================
@@ -79,6 +84,14 @@ class FinanceDashboardView(LoginRequiredMixin, TemplateView):
         ).count()
         return context
 
+def depense_pdf_view(request, depense_id):
+    depense = get_object_or_404(Depense, id=depense_id)
+    html_string = render_to_string('finance/depense_pdf.html', {'depense': depense})
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    pdf = html.write_pdf()
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="depense_{depense.id}.pdf"'
+    return response
 
 class DepenseListView(FinanceCountryIsolationMixin, ListView):
     """Liste les dépenses (filtrées par le Mixin)."""
@@ -119,7 +132,9 @@ class WorkRecordListView(FinanceCountryIsolationMixin, ListView):
 # VUES DE CRÉATION (Formulaires)
 # ==========================================================
 
-class DepenseCreateView(LoginRequiredMixin, CreateView):
+from django.shortcuts import render, get_object_or_404
+
+class DepenseCreateView(ExpenseManagementMixin, CreateView):
     """Vue pour créer une nouvelle dépense."""
     model = Depense
     form_class = DepenseForm
