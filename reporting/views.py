@@ -3,11 +3,71 @@ from django.contrib.auth.decorators import login_required
 from projects.models import Site, TransmissionLink, Project  # 👈 AJOUT DE PROJECT
 from core.models import Departement
 from users.models import Country
+from finance.models import Depense
+from logistique.models import Vehicule
+from inventaire.models import Equipement
+from django.db.models import Sum, F, Q, Count
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
 import openpyxl
 from datetime import date  # 👈 AJOUT DE DATE
+
+# =================================================================
+# VUES RENTABILITÉ
+# =================================================================
+
+@login_required
+def site_profitability_report_view(request):
+    countries = Country.objects.filter(is_active=True)
+    selected_country_id = request.GET.get('country')
+    selected_project_id = request.GET.get('project')
+
+    sites_qs = Site.objects.all().select_related('project__country')
+    projects_qs = Project.objects.filter(is_active=True)
+
+    if selected_country_id:
+        sites_qs = sites_qs.filter(project__country_id=selected_country_id)
+        projects_qs = projects_qs.filter(country_id=selected_country_id)
+
+    if selected_project_id:
+        sites_qs = sites_qs.filter(project_id=selected_project_id)
+
+    sites_with_profit = sites_qs.annotate(
+        total_expenses=Sum('depenses__montant'),
+        profit=F('prix_facturation') - F('total_expenses')
+    )
+
+    context = {
+        'sites': sites_with_profit,
+        'countries': countries,
+        'projects': projects_qs,
+        'selected_country_id': selected_country_id,
+        'selected_project_id': selected_project_id,
+    }
+    return render(request, 'reporting/site_profitability_report.html', context)
+
+@login_required
+def cost_per_vehicle_report_view(request):
+    vehicules_qs = Vehicule.objects.all()
+
+    vehicules_with_cost = vehicules_qs.annotate(
+        total_cost=Sum('depenses__montant', filter=Q(depenses__categorie__in=['CARBURANT', 'REPARATION_VEHICULE']))
+    )
+
+    context = {
+        'vehicules': vehicules_with_cost,
+    }
+    return render(request, 'reporting/cost_per_vehicle_report.html', context)
+
+@login_required
+def inventory_status_report_view(request):
+    equipments_qs = Equipement.objects.values('statut').annotate(count=Count('statut'))
+
+    context = {
+        'equipments': equipments_qs,
+    }
+    return render(request, 'reporting/inventory_status_report.html', context)
 
 # =================================================================
 # VUES RAN

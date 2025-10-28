@@ -1,157 +1,125 @@
 from django.db import models
+from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
 from users.models import Country, Role, CustomUser
-from projects.models import Site
+from projects.models import Project, Site
+from logistique.models import Vehicule
+from inventaire.models import Equipement
 from django.conf import settings
 
 
 # =================================================================
-# 1. Modèle SalaryStructure (La Structure de Coûts)
-# (Pas de changement)
+# CHOIX POUR LES MODÈLES
 # =================================================================
+
+DEPENSE_CATEGORIE_CHOICES = (
+    ("LOYER", _("Loyer")),
+    ("ELECTRICITE", _("Electricité")),
+    ("EAU", _("Eau")),
+    ("CARBURANT", _("Carburant")),
+    ("SALAIRE", _("Salaire")),
+    ("IMPOTS", _("Impôts")),
+    ("ACHAT_MATERIEL", _("Achat Matériel")),
+    ("REPARATION_VEHICULE", _("Réparation Véhicule")),
+    ("REPARATION_EQUIPEMENT", _("Réparation Équipement")),
+    ("CERTIFICATION", _("Certification")),
+    ("TRANSPORT", _("Transport")),
+    ("SOUS_TRAITANT", _("Sous-traitant")),
+    ("AUTRE", _("Autre")),
+)
+
+# =================================================================
+# 1. Modèle Depense
+# =================================================================
+
+
+
 class SalaryStructure(models.Model):
     country = models.ForeignKey(
-        Country, on_delete=models.PROTECT, verbose_name=_("Pays")
+        Country, 
+        on_delete=models.PROTECT, 
+        verbose_name=_("Pays/Filiale")
     )
-    # ... (le reste du modèle)
     role = models.ForeignKey(
-        Role, on_delete=models.PROTECT, verbose_name=_("Rôle concerné")
+        Role, 
+        on_delete=models.PROTECT, 
+        verbose_name=_("Rôle")
     )
     base_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name=_("Montant de base (par jour/mois)"),
+        max_digits=10, 
+        decimal_places=2, 
+        default=Decimal("0.00"), 
+        verbose_name=_("Montant de base (mensuel)")
     )
+    # Ajoutez d'autres champs si nécessaire (devise, etc.)
 
     class Meta:
         verbose_name = _("Structure Salariale")
         verbose_name_plural = _("Structures Salariales")
-        unique_together = ("country", "role")
+        # Assure qu'il n'y a qu'une seule structure par combinaison Pays/Rôle
+        unique_together = ("country", "role") 
 
     def __str__(self):
-        return f"Structure {self.role.name} - {self.country.code}"
+        return f"Salaire pour {self.role.name} en {self.country.code}: {self.base_amount}"
 
-
-# =================================================================
-# 2. Modèle DailyExpense (Dépenses/Notes de Frais Quotidiennes)
-# (Pas de changement)
-# =================================================================
-class DailyExpense(models.Model):
-    country = models.ForeignKey(
-        Country,
-        on_delete=models.PROTECT,
-        verbose_name=_("Pays"),
-        help_text=_("Clé d'isolation."),
-    )
-    # ... (le reste du modèle)
-    site = models.ForeignKey(
-        Site,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name=_("Site/Localisation"),
-    )
-
-    date = models.DateField(verbose_name=_("Date de la Dépense"))
-    description = models.CharField(max_length=255, verbose_name=_("Description"))
-    amount = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Montant (€ / XOF etc.)")
-    )
-
-    is_approved = models.BooleanField(default=False, verbose_name=_("Approuvée ?"))
-
-    created_by = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="daily_expenses",
-        verbose_name=_("Saisie par"),
-    )
+class Depense(models.Model):
+    date = models.DateField(verbose_name=_("Date de la dépense"))
+    montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Montant"))
+    description = models.TextField(verbose_name=_("Description"))
+    categorie = models.CharField(max_length=50, choices=DEPENSE_CATEGORIE_CHOICES, verbose_name=_("Catégorie"))
+    projet_associe = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="depenses", verbose_name=_("Projet associé"))
+    site_concerne = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="depenses", verbose_name=_("Site concerné"))
+    vehicule_concerne = models.ForeignKey(Vehicule, on_delete=models.SET_NULL, null=True, blank=True, related_name="depenses", verbose_name=_("Véhicule concerné"))
+    equipement_concerne = models.ForeignKey(Equipement, on_delete=models.SET_NULL, null=True, blank=True, related_name="depenses", verbose_name=_("Équipement concerné"))
+    employe_declarant = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="depenses_declarees", verbose_name=_("Employé déclarant"))
+    recu_scan = models.FileField(upload_to="recus_depenses/", verbose_name=_("Reçu scanné"))
 
     class Meta:
-        verbose_name = _("Dépense Quotidienne")
-        verbose_name_plural = _("Dépenses Quotidiennes")
+        verbose_name = _("Dépense")
+        verbose_name_plural = _("Dépenses")
         ordering = ["-date"]
 
     def __str__(self):
-        return f"Dépense {self.country.code} - {self.date} - {self.amount}"
-
+        return f"Dépense du {self.date} - {self.montant}"
 
 # =================================================================
-# 3. Modèle WorkCompletionRecord (Fiche de Paie du Terrain)
-# Version FUSIONNÉE et CORRIGÉE
+# 2. Modèle Revenu
 # =================================================================
-class WorkCompletionRecord(models.Model):
-    """
-    Enregistre les heures/jours travaillés ou l'avancement d'une tâche pour la paie.
-    Permet un enregistrement par jour/employé/tâche.
-    """
-
-    # Liens
-    task = models.ForeignKey(
-        "projects.Task",  # Utilisation de la chaîne pour éviter les problèmes d'import circulaire
-        on_delete=models.PROTECT,  # CHANGEMENT : Protéger la tâche car elle est liée à une paie.
-        verbose_name="Tâche Complétée",
-    )
-    # Renommé en 'employee' pour la clarté, tout en pointant vers l'utilisateur (CustomUser)
-    employee = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,  # CHANGEMENT : Protéger l'employé
-        verbose_name="Employé (Ouvrier)",
-    )
-
-    # Données de travail
-    date = models.DateField(verbose_name="Date de travail")
-    duration_hours = models.DecimalField(
-        max_digits=4,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        verbose_name="Durée (Heures)",
-    )
-    completion_percentage = models.IntegerField(
-        null=True, blank=True, verbose_name="Achèvement de la Tâche (%)"
-    )
-
-    # CHAMPS POUR LE CALCUL DE LA PAIE (Nouveaux Ajouts)
-
-    hourly_rate_used = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        verbose_name="Taux Horaire Utilisé (pour historique)",
-    )
-
-    # Coût total de cet enregistrement de travail (Paie Brute)
-    cost = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        verbose_name="Coût de l'Enregistrement",
-    )
-
-    # CHAMP FUSIONNÉ du Modèle 1 pour le suivi du paiement
-    is_paid_out = models.BooleanField(
-        default=False, verbose_name=_("Paiement effectué ?")
-    )
-
-    # Méta
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="work_records_created",
-    )
+class Revenu(models.Model):
+    date = models.DateField(verbose_name=_("Date de réception du paiement"))
+    montant = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Montant reçu"))
+    projet_facture = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="revenus", verbose_name=_("Projet facturé"))
 
     class Meta:
-        verbose_name = "Enregistrement d'Achèvement de Travail"
-        verbose_name_plural = "Enregistrements d'Achèvement de Travail"
-        # Rétablir la contrainte d'unicité sur la nouvelle structure :
-        unique_together = ("task", "date", "employee")
-        ordering = ["-date", "task__id"]  # Tri par date la plus récente
+        verbose_name = _("Revenu")
+        verbose_name_plural = _("Revenus")
+        ordering = ["-date"]
 
     def __str__(self):
-        # Utilisation de 'employee' à la place de 'user'
-        return f"{self.employee.username} - Tâche #{self.task.id} ({self.date})"
+        return f"Revenu du {self.date} - {self.montant}"
+
+
+# =================================================================
+# 3. Modèle ObligationFiscale
+# =================================================================
+class ObligationFiscale(models.Model):
+    STATUT_CHOICES = (
+        ("A_PAYER", _("À Payer")),
+        ("PAYE", _("Payé")),
+        ("EN_RETARD", _("En Retard")),
+    )
+
+    type_impot = models.CharField(max_length=100, verbose_name=_("Type d'impôt"))
+    date_echeance = models.DateField(verbose_name=_("Date d'échéance"))
+    montant_a_payer = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Montant à payer"))
+    montant_paye = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name=_("Montant payé"))
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default="A_PAYER", verbose_name=_("Statut"))
+    depense_associee = models.OneToOneField(Depense, on_delete=models.SET_NULL, null=True, blank=True, related_name="obligation_fiscale", verbose_name=_("Dépense associée"))
+
+    class Meta:
+        verbose_name = _("Obligation Fiscale")
+        verbose_name_plural = _("Obligations Fiscales")
+        ordering = ["date_echeance"]
+
+    def __str__(self):
+        return f"{self.type_impot} - {self.date_echeance}"

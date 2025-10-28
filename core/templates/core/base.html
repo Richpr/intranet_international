@@ -239,6 +239,16 @@
                     <small class="opacity-75" style="font-size: 0.7em; font-weight: 400;">Multi-Pays</small>
                 </div>
             </a>
+
+            <!-- Barre de recherche -->
+            <form class="d-flex ms-3" role="search">
+                <div class="input-group">
+                    <input class="form-control" type="search" placeholder="Rechercher..." aria-label="Search">
+                    <button class="btn btn-outline-light" type="submit" style="border-color: rgba(255,255,255,0.2);">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
             
             <div class="d-flex ms-auto">
                 <ul class="navbar-nav">
@@ -325,16 +335,141 @@
             </li>
 
             <li class="sidebar-item">
-                <a class="sidebar-link {% if 'reporting' in request.path %}active{% endif %}" href="{% url 'reporting:ran_site_list' %}">
-                    <i class="fas fa-chart-bar me-2"></i> Rapports
+                <a class="sidebar-link {% if 'reporting' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#reporting-collapse" role="button" aria-expanded="false" aria-controls="reporting-collapse">
+                    <i class="fas fa-chart-bar me-2"></i> Rapports <i class="fas fa-chevron-down float-end"></i>
                 </a>
+                <div class="collapse" id="reporting-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'ran-sites' in request.path %}active{% endif %}" href="{% url 'reporting:ran_site_list' %}">
+                                <i class="fas fa-broadcast-tower me-2"></i> Sites RAN
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'transmission-sites' in request.path %}active{% endif %}" href="{% url 'reporting:transmission_site_list' %}">
+                                <i class="fas fa-network-wired me-2"></i> Sites Transmission
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'survey-sites' in request.path %}active{% endif %}" href="{% url 'reporting:survey_site_list' %}">
+                                <i class="fas fa-poll-h me-2"></i> Sites Survey
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'site-profitability' in request.path %}active{% endif %}" href="{% url 'reporting:site_profitability_report' %}">
+                                <i class="fas fa-dollar-sign me-2"></i> Rentabilité par Site
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'cost-per-vehicle' in request.path %}active{% endif %}" href="{% url 'reporting:cost_per_vehicle_report' %}">
+                                <i class="fas fa-car-side me-2"></i> Coûts par Véhicule
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'inventory-status' in request.path %}active{% endif %}" href="{% url 'reporting:inventory_status_report' %}">
+                                <i class="fas fa-warehouse me-2"></i> État de l'Inventaire
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
 
             {% if has_finance_menu_access %}
             <li class="sidebar-item">
-                <a class="sidebar-link {% if 'finance' in request.path %}active{% endif %}" href="{% url 'finance:finance_dashboard' %}">
-                    <i class="fas fa-wallet me-2"></i> Finance & Paie
+                <a class="sidebar-link {% if 'finance' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#finance-collapse" role="button" aria-expanded="false" aria-controls="finance-collapse">
+                    <i class="fas fa-wallet me-2"></i> Finance & Paie <i class="fas fa-chevron-down float-end"></i>
                 </a>
+                <div class="collapse" id="finance-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'depenses' in request.path %}active{% endif %}" href="{% url 'finance:expense_list' %}">
+                                <i class="fas fa-file-invoice-dollar me-2"></i> Dépenses
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'revenus' in request.path %}active{% endif %}" href="{% url 'finance:revenu_list' %}">
+                                <i class="fas fa-hand-holding-usd me-2"></i> Revenus
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'salary-structures' in request.path %}active{% endif %}" href="{% url 'finance:salary_structure_list' %}">
+                                <i class="fas fa-file-contract me-2"></i> Structures Salariales
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'paie-terrain' in request.path %}active{% endif %}" href="{% url 'finance:work_record_list' %}">
+                                <i class="fas fa-hard-hat me-2"></i> Paie Terrain
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'obligations-fiscales' in request.path %}active{% endif %}" href="{% url 'finance:obligationfiscale_list' %}">
+                                <i class="fas fa-landmark me-2"></i> Obligations Fiscales
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'inventaire' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#inventaire-collapse" role="button" aria-expanded="false" aria-controls="inventaire-collapse">
+                    <i class="fas fa-truck me-2"></i> Inventaire <i class="fas fa-chevron-down float-end"></i>
+                </a>
+                <div class="collapse" id="inventaire-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'equipements' in request.path %}active{% endif %}" href="{% url 'inventaire:equipement_list' %}">
+                                <i class="fas fa-boxes me-2"></i> Équipements
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'allocations' in request.path %}active{% endif %}" href="{% url 'inventaire:allocationequipement_list' %}">
+                                <i class="fas fa-people-carry me-2"></i> Allocations
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'logistique' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#logistique-collapse" role="button" aria-expanded="false" aria-controls="logistique-collapse">
+                    <i class="fas fa-road me-2"></i> Logistique <i class="fas fa-chevron-down float-end"></i>
+                </a>
+                <div class="collapse" id="logistique-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'vehicules' in request.path %}active{% endif %}" href="{% url 'logistique:vehicule_list' %}">
+                                <i class="fas fa-car me-2"></i> Véhicules
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'missions' in request.path %}active{% endif %}" href="{% url 'logistique:missionlogistique_list' %}">
+                                <i class="fas fa-route me-2"></i> Missions
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'rh' in request.path %}active{% endif %}" data-bs-toggle="collapse" href="#rh-collapse" role="button" aria-expanded="false" aria-controls="rh-collapse">
+                    <i class="fas fa-users me-2"></i> RH <i class="fas fa-chevron-down float-end"></i>
+                </a>
+                <div class="collapse" id="rh-collapse">
+                    <ul class="list-group list-group-flush">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'certifications' in request.path %}active{% endif %}" href="{% url 'rh:certification_list' %}">
+                                <i class="fas fa-certificate me-2"></i> Certifications
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'paiements-salaires' in request.path %}active{% endif %}" href="{% url 'rh:paiementsalaire_list' %}">
+                                <i class="fas fa-money-bill-wave me-2"></i> Paiements Salaires
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'employees' in request.path %}active{% endif %}" href="{% url 'rh:employee_list' %}">
+                                <i class="fas fa-users-cog me-2"></i> Employés
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             {% endif %}
 

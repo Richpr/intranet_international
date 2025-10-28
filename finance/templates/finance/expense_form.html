@@ -7,6 +7,12 @@
 {% endblock title %}
 
 {% block content %}
+<style>
+    #div_id_site_concerne, #div_id_vehicule_concerne, #div_id_equipement_concerne {
+        display: none;
+    }
+</style>
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -39,4 +45,38 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorieField = document.getElementById('id_categorie');
+        const siteField = document.getElementById('div_id_site_concerne');
+        const vehiculeField = document.getElementById('div_id_vehicule_concerne');
+        const equipementField = document.getElementById('div_id_equipement_concerne');
+
+        function toggleFields() {
+            const selectedCategory = categorieField.value;
+
+            // Hide all by default
+            siteField.style.display = 'none';
+            vehiculeField.style.display = 'none';
+            equipementField.style.display = 'none';
+
+            if (selectedCategory === 'REPARATION_VEHICULE' || selectedCategory === 'CARBURANT') {
+                vehiculeField.style.display = 'block';
+            } else if (selectedCategory === 'REPARATION_EQUIPEMENT' || selectedCategory === 'ACHAT_MATERIEL') {
+                equipementField.style.display = 'block';
+            } else if (selectedCategory !== 'LOYER' && selectedCategory !== 'ELECTRICITE' && selectedCategory !== 'EAU' && selectedCategory !== 'SALAIRE' && selectedCategory !== 'IMPOTS') {
+                siteField.style.display = 'block';
+            }
+        }
+
+        // Initial check
+        toggleFields();
+
+        // Add event listener
+        categorieField.addEventListener('change', toggleFields);
+    });
+</script>
+{% endblock extra_js %}
 {% endblock content %}

@@ -1,10 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from users.models import Country
 
 class Departement(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("Nom du Département"))
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="departements", verbose_name=_("Pays"))
+    country = models.ForeignKey('users.Country', on_delete=models.CASCADE, related_name="departements", verbose_name=_("Pays"))
     is_active = models.BooleanField(default=True, verbose_name=_("Actif"))
 
     class Meta:

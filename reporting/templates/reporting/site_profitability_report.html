@@ -1,0 +1,83 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Rapport de Rentabilité par Site{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Rapport de Rentabilité par Site</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" action="">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="country">Pays</label>
+                            <select name="country" id="country" class="form-control">
+                                <option value="">Tous les pays</option>
+                                {% for country in countries %}
+                                    <option value="{{ country.id }}" {% if country.id|stringformat:"s" == selected_country_id %}selected{% endif %}>{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="project">Projet</label>
+                            <select name="project" id="project" class="form-control">
+                                <option value="">Tous les projets</option>
+                                {% for project in projects %}
+                                    <option value="{{ project.id }}" {% if project.id|stringformat:"s" == selected_project_id %}selected{% endif %}>{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Filtrer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Site</th>
+                            <th>Projet</th>
+                            <th>Pays</th>
+                            <th>Prix de Facturation</th>
+                            <th>Dépenses Totales</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for site in sites %}
+                        <tr>
+                            <td>{{ site.name }}</td>
+                            <td>{{ site.project.name }}</td>
+                            <td>{{ site.project.country.name }}</td>
+                            <td>{{ site.prix_facturation|floatformat:2 }} FCFA</td>
+                            <td>{{ site.total_expenses|floatformat:2 }} FCFA</td>
+                            <td>
+                                {% if site.profit < 0 %}
+                                    <strong class="text-danger">{{ site.profit|floatformat:2 }} FCFA</strong>
+                                {% else %}
+                                    <strong class="text-success">{{ site.profit|floatformat:2 }} FCFA</strong>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

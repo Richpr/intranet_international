@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Liste des Revenus{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Liste des Revenus</h1>
+        <a href="{% url 'finance:revenu_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Ajouter un revenu
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Montant</th>
+                            <th>Projet Facturé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for revenu in revenus %}
+                        <tr>
+                            <td>{{ revenu.date }}</td>
+                            <td>{{ revenu.montant|floatformat:2 }} FCFA</td>
+                            <td>{{ revenu.projet_facture }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,190 +1,187 @@
 # finance/views.py
 
-from django.views.generic import TemplateView, ListView, CreateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from projects.views import CountryIsolationMixin
-from .models import SalaryStructure, DailyExpense, WorkCompletionRecord
-from .forms import DailyExpenseForm, WorkCompletionForm
+# --- Imports Django ---
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView
+
+# --- Imports Locaux (de cette app) ---
+from .models import Depense, Revenu, SalaryStructure, ObligationFiscale
+from .forms import DepenseForm, WorkCompletionForm, RevenuForm
+
+# --- Imports Externes (d'autres apps) ---
+from projects.models import WorkCompletionRecord
 
 
-# =================================================================
-# 1. Mixin de Vérification de Groupe (Accès à l'app Finance)
-# =================================================================
-class FinanceGroupRequiredMixin(UserPassesTestMixin):
+# ==========================================================
+# MIXIN POUR L'ISOLATION DES DONNÉES PAR PAYS
+# ==========================================================
+
+class FinanceCountryIsolationMixin(LoginRequiredMixin):
     """
-    Vérifie si l'utilisateur est Superuser OU appartient à un groupe autorisé à accéder au module Finance.
+    Mixin pour isoler les requêtes financières aux pays actifs de l'utilisateur.
+    S'applique à toutes les ListView.
     """
-
-    # ⚠️ Ces noms doivent correspondre EXACTEMENT aux Groupes que vous avez créés dans /admin/
-    allowed_groups = [
-        "Country_Manager",
-        "Project_Coordinator",
-        "Finance_User",
-        "Finance_Admin",
-    ]
-
-    def test_func(self):
-        user = self.request.user
-
-        # 1. Superuser voit tout
-        if user.is_superuser:
-            return True
-
-        # 2. Vérifie l'appartenance à un des groupes définis
-        return user.groups.filter(name__in=self.allowed_groups).exists()
-
-    # Optionnel: Gérer la permission refusée (rediriger vers l'accueil ou 403)
-    # def handle_no_permission(self):
-    #     return redirect('home') # Nécessite l'import de redirect
-
-
-# =================================================================
-# Mixins de Permission Spécifiques à la Finance
-# =================================================================
-
-
-class FinanceAccessMixin(CountryIsolationMixin):
-    """
-    Mixin qui combine la connexion obligatoire et le filtrage par pays.
-    Il surcharge get_queryset pour gérer les chemins de relation complexes
-    pour les différents modèles du module finance en sautant le filtre par défaut du parent.
-    """
-
     def get_queryset(self):
-        # CORRECTION CRUCIALE : On remonte la MRO au-dessus de CountryIsolationMixin
-        # pour obtenir le queryset de base (WorkCompletionRecord.objects.all())
-        qs = super(CountryIsolationMixin, self).get_queryset()
-
+        # Récupère le queryset de base (ex: Depense.objects.all())
+        qs = super().get_queryset() 
         user = self.request.user
 
+        # Le Superuser voit tout
         if user.is_superuser:
             return qs
 
-        active_country_ids = user.active_countries
+        # Récupère les pays actifs de l'utilisateur (depuis users/models.py)
+        active_country_ids = user.active_country_ids
 
-        # 2. Appliquer la logique de filtrage spécifique au modèle
-        if self.model == SalaryStructure or self.model == DailyExpense:
+        # Applique le filtre basé sur le modèle utilisé par la vue
+        if self.model == SalaryStructure:
             return qs.filter(country__id__in=active_country_ids)
-
-        elif self.model == WorkCompletionRecord:
-            # Chemin indirect : task -> site -> project -> country
+        
+        if self.model == Depense:
+            return qs.filter(projet_associe__country__id__in=active_country_ids)
+        
+        if self.model == Revenu:
+            return qs.filter(projet_facture__country__id__in=active_country_ids)
+        
+        if self.model == WorkCompletionRecord:
+            # CORRECTION : Le chemin correct est Tâche -> Site -> Projet -> Pays
             return qs.filter(task__site__project__country__id__in=active_country_ids)
-
+        
+        # Par défaut, ne rien retourner si le modèle n'est pas géré
         return qs.none()
 
-
-# =================================================================
-# Vues d'Affichage
-# =================================================================
-
+# ==========================================================
+# VUES PRINCIPALES (Dashboard et Listes)
+# ==========================================================
 
 class FinanceDashboardView(LoginRequiredMixin, TemplateView):
     """
-    Tableau de bord de base de la finance.
+    CORRIGÉ : Utilise TemplateView car c'est une page d'accueil, 
+    pas une liste d'un modèle spécifique.
     """
-
-    # 🌟 CORRECTION DE L'ERREUR ImproperlyConfigured 🌟
-
     template_name = "finance/finance_dashboard.html"
 
     def get_context_data(self, **kwargs):
+        """Ajoute des statistiques au tableau de bord."""
         context = super().get_context_data(**kwargs)
-        # Vous pouvez ajouter ici des données de synthèse futures
+        active_countries = self.request.user.active_country_ids
+        
+        # Ajoute des statistiques (filtrées par pays)
+        context['total_depenses'] = Depense.objects.filter(
+            projet_associe__country__id__in=active_countries
+        ).count()
+        context['total_revenus'] = Revenu.objects.filter(
+            projet_facture__country__id__in=active_countries
+        ).count()
+        context['total_structures'] = SalaryStructure.objects.filter(
+            country__id__in=active_countries
+        ).count()
         return context
 
 
-class SalaryStructureListView(FinanceAccessMixin, ListView):
-    """
-    Liste des structures salariales, filtrée par les pays de l'utilisateur.
-    """
+class DepenseListView(FinanceCountryIsolationMixin, ListView):
+    """Liste les dépenses (filtrées par le Mixin)."""
+    model = Depense
+    template_name = "finance/expense_list.html" # Correspond à vos templates
+    context_object_name = "expenses" # Correspond à vos templates
 
+
+class RevenuListView(FinanceCountryIsolationMixin, ListView):
+    """Liste les revenus (filtrés par le Mixin)."""
+    model = Revenu
+    template_name = "finance/revenu_list.html"
+    context_object_name = "revenus"
+
+
+class SalaryStructureListView(FinanceCountryIsolationMixin, ListView):
+    """Liste les structures salariales (filtrées par le Mixin)."""
     model = SalaryStructure
     template_name = "finance/salary_structure_list.html"
     context_object_name = "structures"
 
 
-class DailyExpenseListView(FinanceAccessMixin, ListView):
+class WorkRecordListView(FinanceCountryIsolationMixin, ListView):
     """
-    Liste des dépenses, filtrée par les pays de l'utilisateur.
+    Vue pour lister tous les enregistrements de travail (Paie Terrain).
+    Filtrée par le Mixin.
     """
+    model = WorkCompletionRecord
+    template_name = "finance/work_completion_list.html"
+    context_object_name = "work_records"
+    
+    def get_queryset(self):
+        # Le Mixin gère le filtre, on ajoute juste le tri
+        qs = super().get_queryset()
+        return qs.order_by('-date')
 
-    model = DailyExpense
-    template_name = "finance/expense_list.html"
-    context_object_name = "expenses"
+# ==========================================================
+# VUES DE CRÉATION (Formulaires)
+# ==========================================================
 
-
-# =================================================================
-# Vue de Création (Pour les Dépenses)
-# =================================================================
-
-
-class DailyExpenseCreateView(FinanceAccessMixin, CreateView):
-    """
-    Formulaire de saisie d'une nouvelle dépense.
-    """
-
-    model = DailyExpense
-    form_class = DailyExpenseForm
-    success_url = reverse_lazy("finance:expense_list")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
+class DepenseCreateView(LoginRequiredMixin, CreateView):
+    """Vue pour créer une nouvelle dépense."""
+    model = Depense
+    form_class = DepenseForm
+    template_name = "finance/expense_form.html"
+    success_url = reverse_lazy("finance:expense_list") # Retourne à la liste
 
     def form_valid(self, form):
-        # Assigner l'utilisateur courant comme celui qui a créé l'enregistrement
-        form.instance.created_by = self.request.user
+        # Associe automatiquement la dépense à l'utilisateur qui la déclare
+        form.instance.employe_declarant = self.request.user 
         return super().form_valid(form)
 
-
-# =================================================================
-# Vues d'Achèvement de Travail (Paie/Terrain)
-# =================================================================
-
-
-class WorkCompletionListView(FinanceAccessMixin, ListView):
-    """
-    Liste des achèvements de travail, filtrée via FinanceAccessMixin.
-    """
-
-    model = WorkCompletionRecord
-    context_object_name = "work_records"
-    template_name = "finance/work_completion_list.html"
-
-    def get_queryset(self):
-        # Le mixin d'isolation filtre déjà par pays actif
-        # Utilisation de select_related pour charger l'utilisateur, la tâche et le créateur en une seule requête.
-        return (
-            super()
-            .get_queryset()
-            .select_related("user", "task", "created_by")
-            .order_by("-date", "-created_at")
-        )
+class RevenuCreateView(LoginRequiredMixin, CreateView):
+    """Vue pour créer un nouveau revenu."""
+    model = Revenu
+    form_class = RevenuForm
+    template_name = "finance/revenu_form.html"
+    success_url = reverse_lazy("finance:revenu_list")
 
 
-class WorkCompletionCreateView(FinanceAccessMixin, CreateView):
+class WorkRecordCreateView(LoginRequiredMixin, CreateView):
+    """Vue pour créer un nouvel enregistrement de travail (heures/achèvement)."""
     model = WorkCompletionRecord
     form_class = WorkCompletionForm
-    success_url = reverse_lazy("finance:work_record_list")
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        user = self.request.user
-
-        country_id = None
-
-        # NOTE : Récupération du premier pays actif de l'utilisateur
-        active_assignment = user.assignments.filter(is_active=True).first()
-        if active_assignment:
-            country_id = active_assignment.country_id
-
-        # Passe l'ID du pays au formulaire (pour filtrer Tâches et Employés)
-        kwargs["country_id"] = country_id
-        return kwargs
+    template_name = "finance/work_completion_form.html"
+    success_url = reverse_lazy("finance:work_record_list") # Retourne à la liste
 
     def form_valid(self, form):
-        # Assigner l'utilisateur courant comme celui qui a créé l'enregistrement
+        # Associe automatiquement l'enregistrement à l'utilisateur qui le crée
         form.instance.created_by = self.request.user
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        # Ajoute le pays actif au contexte (basé sur votre template)
+        context = super().get_context_data(**kwargs)
+        active_country = self.request.user.active_countries_objects.first()
+        if active_country:
+            context['country_code'] = active_country.code
+        else:
+            context['country_code'] = "N/A"
+        return context
+
+class ObligationFiscaleListView(LoginRequiredMixin, ListView):
+    model = ObligationFiscale
+    template_name = "finance/obligationfiscale_list.html"
+    context_object_name = "obligations"
+
+class ObligationFiscaleCreateView(PermissionRequiredMixin, CreateView):
+    model = ObligationFiscale
+    template_name = "finance/obligationfiscale_form.html"
+    fields = '__all__'
+    success_url = reverse_lazy("finance:obligationfiscale_list")
+    permission_required = 'finance.add_obligationfiscale'
+
+class ObligationFiscaleUpdateView(PermissionRequiredMixin, UpdateView):
+    model = ObligationFiscale
+    template_name = "finance/obligationfiscale_form.html"
+    fields = '__all__'
+    success_url = reverse_lazy("finance:obligationfiscale_list")
+    permission_required = 'finance.change_obligationfiscale'
+
+class ObligationFiscaleDeleteView(PermissionRequiredMixin, DeleteView):
+    model = ObligationFiscale
+    template_name = "finance/obligationfiscale_confirm_delete.html"
+    success_url = reverse_lazy("finance:obligationfiscale_list")
+    permission_required = 'finance.delete_obligationfiscale'        

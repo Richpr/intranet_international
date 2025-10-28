@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Liste des Paiements de Salaires{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Liste des Paiements de Salaires</h1>
+        <a href="{% url 'rh:paiementsalaire_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Ajouter un paiement
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employé</th>
+                            <th>Mois/Année</th>
+                            <th>Montant payé</th>
+                            <th>Dépense associée</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paiement in paiements_salaires %}
+                        <tr>
+                            <td>{{ paiement.employe }}</td>
+                            <td>{{ paiement.mois }}/{{ paiement.annee }}</td>
+                            <td>{{ paiement.montant_paye }}</td>
+                            <td>{{ paiement.depense_associee }}</td>
+                            <td>
+                                <a href="{% url 'rh:paiementsalaire_update' paiement.pk %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'rh:paiementsalaire_delete' paiement.pk %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

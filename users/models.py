@@ -1,10 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
-from django.utils.translation import (
-    gettext_lazy as _,
-)  # Pour une meilleure pratique de code
-
+from django.utils.translation import gettext_lazy as _
+from projects.models import Project
+from decimal import Decimal
 
 # =================================================================
 # 1. Modèle Country (Le Locataire / Tenant)
@@ -41,14 +40,28 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
-
 # =================================================================
 # 3. Modèle CustomUser (L'Employé)
 # =================================================================
+
+EMPLOYEE_STATUS_CHOICES = (
+    ("ACTIF", _("Actif")),
+    ("EN_CONGE", _("En congé")),
+    ("INACTIF", _("Inactif")),
+)
+
 class CustomUser(AbstractUser):
-    # Champ de profil supplémentaire
     phone_number = models.CharField(
         max_length=20, blank=True, null=True, verbose_name="Numéro de téléphone"
+    )
+    salaire_mensuel_base = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name=_("Salaire Mensuel de Base")
+    )
+    statut_actuel = models.CharField(
+        max_length=20,
+        choices=EMPLOYEE_STATUS_CHOICES,
+        default="ACTIF",
+        verbose_name=_("Statut actuel"),
     )
 
     class Meta:
@@ -167,9 +180,26 @@ class CustomUser(AbstractUser):
             is_active=True,
         ).exists()
 
+# =================================================================
+# 4. Modèle Assignation (Lien Employé-Projet)
+# =================================================================
+class Assignation(models.Model):
+    employe = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="assignations_projet", verbose_name=_("Employé"))
+    projet = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="assignations_employe", verbose_name=_("Projet"))
+    date_debut_assignation = models.DateField(verbose_name=_("Date de début d'assignation"))
+    date_fin_assignation = models.DateField(blank=True, null=True, verbose_name=_("Date de fin d'assignation"))
+
+    class Meta:
+        verbose_name = _("Assignation Projet")
+        verbose_name_plural = _("Assignations Projet")
+        unique_together = ("employe", "projet", "date_debut_assignation")
+
+    def __str__(self):
+        return f"{self.employe.username} assigné à {self.projet.name}"
+
 
 # =================================================================
-# 4. Modèle EmployeeCountryAssignment (L'Affectation Dynamique)
+# 5. Modèle EmployeeCountryAssignment (L'Affectation Dynamique)
 # =================================================================
 class EmployeeCountryAssignment(models.Model):
     user = models.ForeignKey(
@@ -185,7 +215,6 @@ class EmployeeCountryAssignment(models.Model):
         Role, on_delete=models.PROTECT, verbose_name=_("Rôle dans ce Pays")
     )
 
-    # MODIFICATION DE STYLE POUR SÉCURITÉ : tout en ligne
     start_date = models.DateField(
         default=date.today, verbose_name=_("Date de début de l'affectation")
     )

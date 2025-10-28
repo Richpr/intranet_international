@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "django.contrib.humanize",
     "reporting.apps.ReportingConfig",
+    "inventaire.apps.InventaireConfig",
+    "logistique.apps.LogistiqueConfig",
+    "rh.apps.RhConfig",
     
 ]
 

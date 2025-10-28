@@ -1,0 +1,20 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Confirmer la suppression</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <p>Êtes-vous sûr de vouloir supprimer le paiement de salaire de "{{ object.employe }}" pour le mois de {{ object.mois }}/{{ object.annee }} ?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Supprimer</button>
+                <a href="{% url 'rh:paiementsalaire_list' %}" class="btn btn-secondary">Annuler</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

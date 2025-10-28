@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Rapport des Coûts par Véhicule{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Rapport des Coûts par Véhicule</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Véhicule</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Coût Total (Carburant + Réparations)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicule in vehicules %}
+                        <tr>
+                            <td>{{ vehicule.nom_vehicule }}</td>
+                            <td>{{ vehicule.get_type_display }}</td>
+                            <td>{{ vehicule.get_statut_display }}</td>
+                            <td>{{ vehicule.total_cost|floatformat:2 }} FCFA</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,5 @@
 {% extends "core/base.html" %}
-
-{% block title %}Tableau de Bord NG{% endblock %}
+{% load i18n %} {% block title %}Tableau de Bord NG{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -100,8 +99,220 @@
             </div>
             
         </div>
+
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">🚚</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Équipements</small>
+                                <h3 class="mb-0">{{ equipement_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">🚗</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Véhicules</small>
+                                <h3 class="mb-0">{{ vehicule_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">📜</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Certifications Expirant</small>
+                                <h3 class="mb-0">{{ expiring_certifications_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-danger rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">🧾</i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">Obligations Fiscales</small>
+                                <h3 class="mb-0">{{ upcoming_obligations_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        {% endif %} 
+        <h2 class="h4 text-danger mb-3">Synthèse Financière & RH (Manager)</h2>
+        
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-success"> <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">📈</i> </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">{% trans "Revenus (30j)" %}</small>
+                                <h3 class="mb-0">FCFA</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-danger"> <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-danger rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">📉</i> </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">{% trans "Dépenses (30j)" %}</small>
+                                <h3 class="mb-0">{{ total_depenses_30j|floatformat:2 }} FCFA</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-warning"> <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-warning rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">👥</i> </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">{% trans "Coût Inactivité / Mois" %}</small>
+                                <h3 class="mb-0">{{ cout_inactivite_mensuel|floatformat:2 }} FCFA</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-secondary"> <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="bg-secondary rounded-circle p-3 text-center">
+                                    <i class="fs-4 text-white">⚠️</i> </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <small class="text-muted">{% trans "Tâches (Problèmes)" %}</small>
+                                <h3 class="mb-0">
+                                    <span class="text-danger" title="Tâches en retard">{{ taches_en_retard }}</span> / 
+                                    <span class="text-warning" title="Tâches bloquées">{{ taches_bloquees }}</span>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            
+            <div class="col-lg-7 mb-4">
+                <h3 class="h5">{% trans "Rentabilité des Projets Actifs" %} [Source 7]</h3>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Projet" %}</th>
+                                    <th>{% trans "Budget Alloué" %}</th>
+                                    <th>{% trans "Dépenses" %}</th>
+                                    <th>{% trans "Restant" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for projet in rentabilite_projets %}
+                                <tr>
+                                    <td>{{ projet.nom }}</td>
+                                    <td>{{ projet.budget_alloue|floatformat:2 }} FCFA</td>
+                                    <td>{{ projet.total_depenses|floatformat:2 }} FCFA</td>
+                                    <td>
+                                        {% if projet.budget_restant < 0 %}
+                                            <strong class="text-danger">{{ projet.budget_restant|floatformat:2 }} FCFA</strong>
+                                        {% else %}
+                                            {{ projet.budget_restant|floatformat:2 }} FCFA
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">{% trans "Aucun projet actif trouvé." %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mb-4">
+                <h3 class="h5">{% trans "Employés Non Assignés" %} [Source 12]</h3>
+                <ul class="list-group mb-3">
+                    {% for employe in employes_non_assignes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ employe.get_full_name|default:employe.username }}
+                            <span class="badge bg-secondary rounded-pill">{{ employe.salaire_mensuel_base|floatformat:0 }} FCFA</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">{% trans "Tous les employés actifs sont assignés." %}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3 class="h5 mt-4">{% trans "Dépenses (30j) par Catégorie" %} [Source 8]</h3>
+                <ul class="list-group">
+                    {% for dep in depenses_par_categorie %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ dep.categorie }}
+                            <span class="badge bg-primary rounded-pill">{{ dep.total|floatformat:2 }} FCFA</span>
+                        </li>
+                    {% empty %}
+                         <li class="list-group-item text-muted">{% trans "Aucune dépense." %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <hr class="my-4"> {% endif %} 
 
 
         {% if is_coordinator and not is_cm %}

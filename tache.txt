@@ -1,0 +1,154 @@
+L'objectif est de centraliser toute l'information en liant chaque dépense à une action, un projet, ou un actif.
+
+1. App gestion_sites (Le Cœur)
+Gère le travail et les revenus.
+
+Client
+
+nom (Ex: "Ericsson")
+
+ProjetGlobal
+
+nom (Ex: "Contrat 2025 - Bénin")
+
+client (Lien vers Client)
+
+Site
+
+nom_officiel (Ex: "Site 45-B-Lomé")
+
+projet_global (Lien vers ProjetGlobal)
+
+pays
+
+scope_travail (Description des tâches)
+
+prix_facturation (Combien Ericsson vous paie pour ce site)
+
+po_recu (Oui/Non)
+
+statut (En attente, En cours, Terminé, Facturé, Payé)
+
+Note : On créera un Site spécial nommé "Frais Généraux - [Pays]" pour y lier tous les coûts non-spécifiques (loyer, électricité...).
+
+2. App finances (Le Contrôle)
+Suit chaque franc entrant et sortant. C'est le module le plus complexe.
+
+Depense
+
+date
+
+montant
+
+description
+
+recu_scan (Champ obligatoire pour forcer la discipline)
+
+categorie (Liste de choix : Loyer, Electricité, Eau, Carburant, Salaire, Impôts, Achat Matériel, Réparation Véhicule, Réparation Équipement, Certification...)
+
+Les Liens de Coût (La Clé de l'Analyse) :
+
+site_concerne (Lien vers Site - C'est ici qu'on lie au site Ericsson ou aux "Frais Généraux")
+
+vehicule_concerne (Lien optionnel vers Vehicule - pour les réparations/carburant)
+
+equipement_concerne (Lien optionnel vers Equipement - pour les réparations)
+
+Revenu
+
+date_recu
+
+montant
+
+projet_facture (Lien vers le Site qui a été payé)
+
+ObligationFiscale
+
+type_impot, date_echeance, montant_paye, statut
+
+3. App inventaire (Les Actifs Matériels)
+Gère vos outils de travail.
+
+Equipement
+
+nom_equipement (Ex: "Perceuse Hilti")
+
+numero_serie
+
+cout_achat
+
+date_prochaine_inspection
+
+statut (Choix : En stock, Alloué, En maintenance, Hors service)
+
+AllocationEquipement
+
+equipement (Lien vers Equipement)
+
+employe_assigne (Lien vers Employe)
+
+date_assignation
+
+4. App logistique (Les Véhicules)
+Gère les déplacements et le transport.
+
+Vehicule
+
+nom_vehicule (Ex: "Pickup Hilux")
+
+type (Propriétaire, Loué)
+
+statut (Choix : Opérationnel, En réparation, Hors service)
+
+MissionLogistique
+
+vehicule (Lien vers Vehicule)
+
+conducteur (Lien vers Employe)
+
+motif (Ex: "Livraison matériel Site 45-B")
+
+site_concerne (Lien vers Site)
+
+5. App rh (Les Équipes)
+Gère le personnel, leurs salaires et leurs compétences.
+
+Employe
+
+nom, prenom
+
+poste
+
+salaire_mensuel_base
+
+pays_base
+
+Certification
+
+employe (Lien vers Employe)
+
+nom_certification (Ex: "Travail en Hauteur")
+
+date_expiration
+
+depense_associee (Lien vers la Depense du coût de la formation)
+
+PaiementSalaire
+
+employe (Lien vers Employe)
+
+mois, annee
+
+montant_paye
+
+depense_associee (Lien vers la Depense de catégorie Salaire)
+
+Cette architecture te permettra d'obtenir automatiquement ton tableau de bord avec :
+
+La rentabilité nette par site (Prix Facturation - Coûts directs).
+
+Le coût total de tes frais fixes (Loyer, Eau, Salaires "à vide"...).
+
+Le coût d'exploitation de chaque véhicule/équipement (Total des réparations).
+
+Le statut de tout ton inventaire et les alertes pour les certifications et inspections.

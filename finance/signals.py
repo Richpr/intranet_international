@@ -3,8 +3,10 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.db import models  # Nécessaire pour models.Sum
-from .models import WorkCompletionRecord, SalaryStructure
-from projects.models import Task
+
+# 👇 Imports corrigés et nettoyés
+from projects.models import Task, WorkCompletionRecord
+from .models import SalaryStructure
 
 # =================================================================
 # 1. Signal PRE_SAVE : Calculer le Coût (Paie)

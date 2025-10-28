@@ -1,0 +1,68 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Détails de l'Employé{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Détails de l'Employé</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ employee.get_full_name|default:employee.username }}</h6>
+        </div>
+        <div class="card-body">
+            <p><strong>Nom d'utilisateur:</strong> {{ employee.username }}</p>
+            <p><strong>Email:</strong> {{ employee.email }}</p>
+            <p><strong>Rôle principal:</strong> {{ employee.main_role }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Certifications</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Certification</th>
+                            <th>Date d'expiration</th>
+                            <th>Statut</th>
+                            <th>Fichier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for certification in employee.certifications.all %}
+                        <tr>
+                            <td>{{ certification.nom_certification }}</td>
+                            <td>{{ certification.date_expiration }}</td>
+                            <td>
+                                {% if certification.statut_expiration == "Expiré" %}
+                                    <span class="badge bg-danger">Expiré</span>
+                                {% elif certification.statut_expiration == "Expire bientôt" %}
+                                    <span class="badge bg-warning">Expire bientôt</span>
+                                {% else %}
+                                    <span class="badge bg-success">Valide</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if certification.fichier_certificat %}
+                                    <a href="{{ certification.fichier_certificat.url }}" class="btn btn-info btn-sm" target="_blank">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Cet employé n'a aucune certification.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
