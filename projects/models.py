@@ -522,13 +522,16 @@ class Site(models.Model):
     )
     
 
+    # 👇 MODIFICATION ICI 👇
     installation_type = models.ForeignKey(
         InstallationType,
-        on_delete=models.PROTECT,  # 💡 2. MODIFIÉ : SET_NULL -> PROTECT
-        # 💡 2. RETIRÉ : null=True, blank=True (le champ est maintenant OBLIGATOIRE)
+        on_delete=models.PROTECT,
+        null=True,  # 1. REMETTEZ CECI
+        blank=True, # 2. REMETTEZ CECI
         related_name="sites",
         verbose_name=_("Type d'Installation"),
     )
+    # 👆 FIN DE LA MODIFICATION 👆
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
