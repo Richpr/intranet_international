@@ -955,7 +955,15 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
             request.POST, prefix="site_b", user=request.user, project=project
         )
 
+        link_id = "inconnu" # Valeur par défaut
         if form_a.is_valid() and form_b.is_valid():
+            
+            # Définir le link_id à partir des données nettoyées
+            site_a_id = form_a.cleaned_data.get('site_id_client', 'SITE_A').upper().strip()
+            site_b_id = form_b.cleaned_data.get('site_id_client', 'SITE_B').upper().strip()
+            link_id = f"{site_a_id}-{site_b_id}" # link_id est maintenant défini
+            
+            # 💡 FIN DE LA CORRECTION (logique déplacée)
             try:
                 with transaction.atomic():
                     # Sauvegarde Site A
