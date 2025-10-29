@@ -552,7 +552,7 @@ class Site(models.Model):
         ordering = ["project", "site_id_client"]
 
         # 💡 3. AJOUTÉ : Nouvelle contrainte d'unicité
-        unique_together = ('project', 'site_id_client', 'installation_type')
+        #unique_together = ('project', 'site_id_client', 'installation_type')
 
     def __str__(self):
         return f"{self.site_id_client} - {self.name}"
