@@ -947,7 +947,6 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         project = self.get_project()
 
-        # CORRECTION : Utiliser request.POST au lieu de self.request.POST
         form_a = SiteForm(
             request.POST, prefix="site_a", user=request.user, project=project
         )
@@ -956,14 +955,16 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
         )
 
         link_id = "inconnu" # Valeur par défaut
+        
+        # 🚨 VÉRIFICATION PRÉALABLE 🚨: S'assurer que les deux formulaires sont valides
         if form_a.is_valid() and form_b.is_valid():
             
             # Définir le link_id à partir des données nettoyées
-            site_a_id = form_a.cleaned_data.get('site_id_client', 'SITE_A').upper().strip()
-            site_b_id = form_b.cleaned_data.get('site_id_client', 'SITE_B').upper().strip()
-            link_id = f"{site_a_id}-{site_b_id}" # link_id est maintenant défini
+            # (Cette logique est utilisée en cas d'erreur avant la sauvegarde)
+            site_a_id_clean = form_a.cleaned_data.get('site_id_client', 'SITE_A').upper().strip()
+            site_b_id_clean = form_b.cleaned_data.get('site_id_client', 'SITE_B').upper().strip()
+            link_id = f"{site_a_id_clean}-{site_b_id_clean}" 
             
-            # 💡 FIN DE LA CORRECTION (logique déplacée)
             try:
                 with transaction.atomic():
                     # Sauvegarde Site A
@@ -981,11 +982,10 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
                     site_b.save()
 
                     # Génération du link_id
-                    site_a_id = site_a.site_id_client.upper().strip()
-                    site_b_id = site_b.site_id_client.upper().strip()
-                    link_id = f"{site_a_id}-{site_b_id}"
+                    # Utiliser les valeurs nettoyées des instances sauvegardées
+                    link_id = f"{site_a.site_id_client.upper().strip()}-{site_b.site_id_client.upper().strip()}"
 
-                    # Création de la liaison
+                    # Création de la liaison (Le modèle n'a plus de contraintes bloquantes)
                     TransmissionLink.objects.create(
                         link_id=link_id, site_a=site_a, site_b=site_b
                     )
@@ -995,13 +995,20 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
                     )
                     return redirect(self.get_success_url())
 
-            except IntegrityError:
-                messages.error(
-                    request,
-                    f"Erreur : Le lien '{link_id}' existe déjà. Vérifiez les IDs clients.",
-                )
+            # 💥 GESTION DES EXCEPTIONS CORRIGÉE 💥
+            # Capture les erreurs de base de données (ForeignKey manquant, données manquantes)
             except Exception as e:
-                messages.error(request, f"Erreur inattendue : {e}")
+                error_message = str(e)
+                
+                # Interception pour les données manquantes (Site ou autre ForeignKey)
+                if "ForeignKey" in error_message or "IntegrityError" in error_message:
+                    messages.error(
+                        request,
+                        _("Erreur de données : Un site ou un objet obligatoire est manquant (ex: Type de Site ou Projet ID). Veuillez vérifier que toutes les dépendances existent dans la base de données."),
+                    )
+                else:
+                    # Pour toutes les autres erreurs inattendues
+                    messages.error(request, f"Erreur inattendue lors de la création : {e}")
 
         # En cas d'erreur, retourner le contexte avec les erreurs
         context = self.get_context_data()
@@ -1009,6 +1016,7 @@ class TransmissionLinkCreateView(CountryIsolationMixin, TemplateView):
         context["form_b"] = form_b
         return self.render_to_response(context)
 
+    
     def get_success_url(self):
         # Rediriger vers la page de détail du projet (ou tout autre endroit logique)
         return reverse("projects:project_detail", kwargs={"pk": self.get_project().pk})

@@ -8,6 +8,7 @@ from django.db.models import Avg
 from datetime import date
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal  # Pour garantir la précision des calculs
+from django.core.exceptions import ValidationError
 
 
 # =================================================================
@@ -917,13 +918,14 @@ class TransmissionLink(models.Model):
         max_length=50, verbose_name=_("ID de la Liaison")
     )
 
-    site_a = models.OneToOneField(
+    # ForeignKey est correct et permet les liaisons multiples
+    site_a = models.ForeignKey(
         Site,
         on_delete=models.CASCADE,
         related_name="transmission_link_a",
         verbose_name=_("Site A"),
     )
-    site_b = models.OneToOneField(
+    site_b = models.ForeignKey(
         Site,
         on_delete=models.CASCADE,
         related_name="transmission_link_b",
@@ -931,13 +933,24 @@ class TransmissionLink(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # 🚨 AJOUTEZ LA MÉTHODE save() POUR FORCER LA VÉRIFICATION 🚨
+    def save(self, *args, **kwargs):
+        # Ne mettons aucune validation ici pour accepter tous les doublons et ordres
+        # Cependant, pour éviter l'auto-liaison (A vers A), on peut la garder
+        if self.site_a == self.site_b:
+            raise ValidationError(
+                _("Un site ne peut pas être lié à lui-même.")
+            )
+        super().save(*args, **kwargs)
+
+
     class Meta:
         verbose_name = _("Liaison Transmission")
         verbose_name_plural = _("Liaisons Transmission")
+        # 🚨 IMPORTANT : NE PAS ajouter unique_together ici pour accepter les doublons.
 
     def __str__(self):
         return f"Liaison {self.link_id}: {self.site_a.site_id_client} <-> {self.site_b.site_id_client}"
-
 # =================================================================
 # 10. Modèles pour la Tâche de Désinstallation (NOUVEAU)
 # =================================================================
