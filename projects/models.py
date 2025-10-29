@@ -363,6 +363,15 @@ class Project(models.Model):
         """
         progress_data = self.sites.aggregate(avg_progress=Avg("progress_percentage"))
         self.progress_percentage = progress_data["avg_progress"] or Decimal("0.00")
+
+        if self.statut not in ['INVOICED', 'PAID']:
+            if self.progress_percentage >= 100:
+                self.statut = 'COMPLETED'
+            elif self.progress_percentage > 0:
+                self.statut = 'IN_PROGRESS'
+            else:
+                self.statut = 'PREPARATION'
+        
         self.save()
         
     def calculate_total_expenses(self):
@@ -600,6 +609,14 @@ class Site(models.Model):
 
         new_progress = progress_data["avg_progress"] or Decimal("0.00")
         self.progress_percentage = new_progress
+
+        if new_progress >= 100:
+            self.status = 'COMPLETED'
+        elif new_progress > 0:
+            self.status = 'IN_PROGRESS'
+        else:
+            self.status = 'TO_DO'
+
         self.save()
 
         # Cascade vers le projet parent

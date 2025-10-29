@@ -7,4 +7,4 @@ class ProjectsConfig(AppConfig):
 
     # 💡 AJOUT CRITIQUE : Connecter les signaux
     def ready(self):
-        pass
+        import projects.signals

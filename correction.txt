@@ -1,2 +1,4 @@
-au niveau de la mise a jour des taches normalement la progression doit etre faite automatiquement en fonction du statu des taches .
+au niveau de la barre de progression des sites elle doit se faire automatiquement en fonction  du statut et de la barre de progression de chaque tache 
 
+
+ensuite  la progression du project aussi doit se faire automatiquement en fonction du statu et de la progression de la somme des site sdu project 
