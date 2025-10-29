@@ -914,7 +914,7 @@ class TransmissionLink(models.Model):
     Modèle pour lier deux sites ensemble dans le cadre d'une installation Transmission.
     """
     link_id = models.CharField(
-        max_length=50, unique=True, verbose_name=_("ID de la Liaison")
+        max_length=50, verbose_name=_("ID de la Liaison")
     )
 
     site_a = models.OneToOneField(
