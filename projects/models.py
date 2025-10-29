@@ -724,6 +724,17 @@ class Task(models.Model):
     def __str__(self):
         return f"[{self.site.site_id_client}] {self.description[:30]}..."
 
+    def save(self, *args, **kwargs):
+        if self.status == 'TO_DO':
+            self.progress_percentage = 0
+        elif self.status == 'IN_PROGRESS':
+            self.progress_percentage = 50
+        elif self.status == 'QC_PENDING':
+            self.progress_percentage = 75
+        elif self.status == 'COMPLETED':
+            self.progress_percentage = 100
+        super(Task, self).save(*args, **kwargs)
+
 
 # =================================================================
 # 6. Modèle WorkCompletionRecord (AJOUTÉ CAR MANQUANT)

@@ -1,1 +1,2 @@
-DEBUG ROLES: {'Coordinateur de Projet'}
+au niveau de la mise a jour des taches normalement la progression doit etre faite automatiquement en fonction du statu des taches .
+
