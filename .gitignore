@@ -22,4 +22,5 @@ erreur.txt
 
 # Fichiers d'IDE (Visual Studio Code, PyCharm...)
 .vscode/
-.idea/
+.idea/db.sqlite3
+db.sqlite3
