@@ -399,7 +399,7 @@ class Site(models.Model):
         verbose_name=_("Projet Parent"),
     )
     site_id_client = models.CharField(
-        max_length=50, unique=True, verbose_name=_("ID du Site Client")
+        max_length=50, verbose_name=_("ID du Site Client")
     )  # ID du Site*
     name = models.CharField(
         max_length=200, verbose_name=_("Nom du Site")
@@ -520,11 +520,12 @@ class Site(models.Model):
         related_name="sites",
         verbose_name=_("Type de Site"),
     )
+    
+
     installation_type = models.ForeignKey(
-        InstallationType,  # ✅ OK
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        InstallationType,
+        on_delete=models.PROTECT,  # 💡 2. MODIFIÉ : SET_NULL -> PROTECT
+        # 💡 2. RETIRÉ : null=True, blank=True (le champ est maintenant OBLIGATOIRE)
         related_name="sites",
         verbose_name=_("Type d'Installation"),
     )
@@ -549,6 +550,9 @@ class Site(models.Model):
         verbose_name = _("Site")
         verbose_name_plural = _("Sites")
         ordering = ["project", "site_id_client"]
+
+        # 💡 3. AJOUTÉ : Nouvelle contrainte d'unicité
+        unique_together = ('project', 'site_id_client', 'installation_type')
 
     def __str__(self):
         return f"{self.site_id_client} - {self.name}"
