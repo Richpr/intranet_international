@@ -6,6 +6,7 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     TemplateView,
+    View, # 💡 AJOUT
 )
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
@@ -13,7 +14,8 @@ from django.contrib.auth.mixins import (
     UserPassesTestMixin,
 )
 from users.models import Country, CustomUser
-from django.shortcuts import get_object_or_404, redirect
+
+from django.shortcuts import get_object_or_404, redirect, render # 💡 AJOUT de render
 from django.db import transaction, IntegrityError
 from django.db.models import (
     Count,
@@ -33,8 +35,12 @@ from .forms import (
     InspectionForm,
     SiteRadioConfigurationFormset,
 )
+
+# 💡 AJOUTEZ CETTE LIGNE
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView
-from .forms import TaskPhotoForm, SimpleTaskUpdateForm
+
+from .forms import TaskPhotoForm, SimpleTaskUpdateForm, UninstallationReportForm,  UninstalledEquipmentFormset  # 💡 AJOUT
 from .models import (
     Project,
     Site,
@@ -42,9 +48,14 @@ from .models import (
     Inspection,
     TransmissionLink,
     TaskPhoto,
+    UninstallationReport,     # 💡 AJOUT
+    UninstalledEquipment,   # 💡 AJOUT
 )  # ⬅️ AJOUTER TaskPhoto
+
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+
+
 
 # =================================================================
 # 1. MIXINS DE CONTRÔLE D'ACCÈS ET D'ISOLATION DE PAYS
@@ -1036,6 +1047,16 @@ class TaskReportView(CountryIsolationMixin, DetailView):
         context["site"] = task.site
         context["project"] = task.site.project
         context["photos"] = task.task_images.all()
+        
+        # 💡 AJOUT : Charger le rapport de désinstallation s'il existe
+        try:
+            context["uninstallation_report"] = task.uninstallation_report
+            context["uninstalled_equipment"] = context["uninstallation_report"].uninstalled_equipments.all()
+        except UninstallationReport.DoesNotExist:
+            context["uninstallation_report"] = None
+            context["uninstalled_equipment"] = None
+
+
         return context
 
 
@@ -1152,3 +1173,97 @@ def task_photo_delete(request, pk):
         messages.error(request, f"Erreur lors de la suppression de la photo : {e}")
 
     return redirect('projects:task_update', pk=task.pk)
+
+
+# 8. VUE DE GESTION DU RAPPORT DE DESINSTALLATION (NOUVEAU)
+# =================================================================
+
+class UninstallationReportView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Vue pour créer/modifier un rapport de désinstallation (OneToOne avec Task)
+    et gérer ses équipements (inline formset).
+    """
+    template_name = "projects/uninstallation_report_form.html"
+
+    def setup(self, request, *args, **kwargs):
+        """Récupère la tâche parente avant tout."""
+        super().setup(request, *args, **kwargs)
+        self.task = get_object_or_404(Task, pk=self.kwargs["task_pk"])
+
+    def test_func(self):
+        """Vérifie les permissions (copié de TaskUpdateView)."""
+        user = self.request.user
+        task = self.task
+        if user.is_superuser:
+            return True
+        if user == task.site.project.coordinator:
+            return True
+        if task.site.project.country.id in user.active_country_ids and user.is_cm:
+            return True
+        if task.site.team_lead == user:
+            return True
+        if task.assigned_to == user:
+            return True
+        return False
+
+    def get_report_object(self):
+        """Tente de récupérer le rapport, ou en crée un en mémoire."""
+        try:
+            report = self.task.uninstallation_report
+        except UninstallationReport.DoesNotExist:
+            report = UninstallationReport(task=self.task)
+        return report
+
+    def get(self, request, *args, **kwargs):
+        """Gère l'affichage du formulaire."""
+        report = self.get_report_object()
+
+        report_form = UninstallationReportForm(instance=report)
+        equipment_formset = UninstalledEquipmentFormset(instance=report)
+
+        context = {
+            "task": self.task,
+            "site": self.task.site,
+            "project": self.task.site.project,
+            "report": report,
+            "report_form": report_form,
+            "equipment_formset": equipment_formset,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        """Gère la soumission du formulaire."""
+        report = self.get_report_object()
+
+        report_form = UninstallationReportForm(request.POST, instance=report)
+        equipment_formset = UninstalledEquipmentFormset(request.POST, instance=report)
+
+        if report_form.is_valid() and equipment_formset.is_valid():
+            with transaction.atomic():
+                # Sauvegarder le rapport
+                report_instance = report_form.save(commit=False)
+                if not report_instance.pk:  # Si c'est une création
+                    report_instance.task = self.task
+                    report_instance.created_by = request.user
+                report_instance.save()
+
+                # Sauvegarder les équipements liés
+                equipment_formset.instance = report_instance
+                equipment_formset.save()
+
+            messages.success(request, _("Rapport de désinstallation mis à jour."))
+            
+            # Rediriger vers la page de mise à jour de la tâche
+            return redirect("projects:task_update", pk=self.task.pk)
+
+        # En cas d'erreur
+        context = {
+            "task": self.task,
+            "site": self.task.site,
+            "project": self.task.site.project,
+            "report": report,
+            "report_form": report_form,
+            "equipment_formset": equipment_formset,
+        }
+        messages.error(request, _("Erreur lors de la sauvegarde. Vérifiez les champs."))
+        return render(request, self.template_name, context)

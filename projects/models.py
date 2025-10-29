@@ -972,6 +972,10 @@ class UninstallationReport(models.Model):
         return f"Rapport de désinstallation pour la tâche {self.task.id}"
 
 
+# projects/models.py
+
+# ... (autres modèles) ...
+
 class UninstalledEquipment(models.Model):
     """
     Équipement désinstallé listé dans un rapport de désinstallation.
@@ -983,6 +987,14 @@ class UninstalledEquipment(models.Model):
         verbose_name=_("Rapport de désinstallation"),
     )
     equipment_name = models.CharField(max_length=200, verbose_name=_("Nom de l'équipement"))
+    
+    # 💡 AJOUT DU CHAMP QUANTITÉ
+    quantity = models.PositiveIntegerField(
+        default=1, 
+        verbose_name=_("Quantité"),
+        validators=[MinValueValidator(1)]
+    )
+    
     serial_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro de série"))
     product_code = models.CharField(max_length=100, blank=True, verbose_name=_("Code produit"))
     comment = models.TextField(blank=True, verbose_name=_("Commentaire"))
@@ -992,4 +1004,4 @@ class UninstalledEquipment(models.Model):
         verbose_name_plural = _("Équipements Désinstallés")
 
     def __str__(self):
-        return self.equipment_name
+        return f"{self.equipment_name} (x{self.quantity})"

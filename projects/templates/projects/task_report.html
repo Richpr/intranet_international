@@ -44,7 +44,7 @@
     </style>
 </head>
 <body>
-    <div class="report-container">
+    {% load i18n %} <div class="report-container">
         <div class="header text-center mb-4">
             <h1 class="h3">Rapport d'Exécution de Tâche</h1>
         </div>
@@ -66,6 +66,18 @@
                     <tr>
                         <th scope="row">Site</th>
                         <td>{{ site.site_id_client }} - {{ site.name }}</td>
+                    </tr>
+                     <tr>
+                        <th scope="row">Client</th>
+                        <td>{{ project.client.name|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Localisation</th>
+                        <td>{{ site.location|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Team Lead du Site</th>
+                        <td>{{ site.team_lead.get_full_name|default:"N/A" }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Tâche</th>
@@ -97,6 +109,53 @@
             </div>
         </div>
 
+        {% if uninstallation_report %}
+        <div class="card mb-4">
+            <div class="card-header bg-info-subtle">
+                {% trans "Rapport de Désinstallation" %}
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered info-table">
+                    <tr>
+                        <th scope="row">{% trans "Lieu de dépôt" %}</th>
+                        <td>{{ uninstallation_report.storage_location }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Rapport créé par" %}</th>
+                        <td>{{ uninstallation_report.created_by.get_full_name|default:uninstallation_report.created_by.username }} le {{ uninstallation_report.report_date|date:"d M Y" }}</td>
+                    </tr>
+                </table>
+
+                <h4 class="h5 mt-4">{% trans "Équipements Désinstallés" %}</h4>
+                <table class="table table-bordered table-striped table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{% trans "Équipement" %}</th>
+                            <th>{% trans "Quantité" %}</th>
+                            <th>{% trans "Serial Number" %}</th>
+                            <th>{% trans "Product Code" %}</th>
+                            <th>{% trans "Commentaire" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in uninstalled_equipment %}
+                        <tr>
+                            <td>{{ item.equipment_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.serial_number|default:"-" }}</td>
+                            <td>{{ item.product_code|default:"-" }}</td>
+                            <td>{{ item.comment|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">{% trans "Aucun équipement listé dans ce rapport." %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
         <hr>
 
         <h2 class="h4 mt-4">Photos de la Tâche</h2>

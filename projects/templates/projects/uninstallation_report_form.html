@@ -1,0 +1,211 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Rapport de Désinstallation" %} - {{ task.task_type.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">{% trans "Rapport de Désinstallation" %}</h4>
+        </div>
+        
+        <div class="card-body">
+            <div class="row mb-4 p-3 bg-light rounded border">
+                <div class="col-md-3">
+                    <strong>{% trans "Projet" %}:</strong><br>{{ project.name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>{% trans "Site" %}:</strong><br>{{ site.site_id_client }} - {{ site.name }}
+                </div>
+                <div class="col-md-3">
+                    <strong>{% trans "Client" %}:</strong><br>{{ project.client.name|default:"N/A" }}
+                </div>
+                <div class="col-md-3">
+                    <strong>{% trans "Localisation" %}:</strong><br>{{ site.location|default:"N/A" }}
+                </div>
+                <div class="col-md-3 mt-2">
+                    <strong>{% trans "Tâche" %}:</strong><br>{{ task.task_type.name }}
+                </div>
+                <div class="col-md-3 mt-2">
+                    <strong>{% trans "Team Lead du Site" %}:</strong><br>{{ site.team_lead.get_full_name|default:"N/A" }}
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ report_form|crispy }}
+                    </div>
+                </div>
+
+                <hr>
+                
+                <h5 class="mb-3">{% trans "Équipements Désinstallés" %}</h5>
+                
+                <div id="equipment-formset-container">
+                    
+                    {{ equipment_formset.management_form }}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" id="equipment-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Équipement" %}</th>
+                                    <th style="width: 100px;">{% trans "Qte" %}</th>
+                                    <th>{% trans "Serial Number" %}</th>
+                                    <th>{% trans "Product Code" %}</th>
+                                    <th>{% trans "Commentaire" %}</th>
+                                    <th style="width: 50px;">{% trans "Supp." %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment-formset-body">
+                                {% for form in equipment_formset %}
+                                <tr class="equipment-form-row dynamic-form">
+                                    <td class="p-1">
+                                        {{ form.id }}
+                                        {{ form.equipment_name }}
+                                    </td>
+                                    <td class="p-1">{{ form.quantity }}</td>
+                                    <td class="p-1">{{ form.serial_number }}</td>
+                                    <td class="p-1">{{ form.product_code }}</td>
+                                    <td class="p-1">{{ form.comment }}</td>
+                                    <td class="text-center align-middle">
+                                        {% if form.instance.pk %}
+                                            <div class="form-check d-flex justify-content-center">
+                                                {{ form.DELETE }}
+                                            </div>
+                                        {% else %}
+                                            <button type="button" class="btn btn-danger btn-sm remove-form-row" title="Retirer cette ligne">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <template id="equipment-form-template">
+                        <tr class="equipment-form-row dynamic-form">
+                            <td class="p-1">
+                                {{ equipment_formset.empty_form.id }}
+                                {{ equipment_formset.empty_form.equipment_name }}
+                            </td>
+                             <td class="p-1">{{ equipment_formset.empty_form.quantity }}</td>
+                            <td class="p-1">{{ equipment_formset.empty_form.serial_number }}</td>
+                            <td class="p-1">{{ equipment_formset.empty_form.product_code }}</td>
+                            <td class="p-1">{{ equipment_formset.empty_form.comment }}</td>
+                            <td class="text-center align-middle">
+                                <button type="button" class="btn btn-danger btn-sm remove-form-row" title="Retirer cette ligne">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        </template>
+                </div>
+
+                <button type="button" id="add-equipment-form" class="btn btn-outline-success btn-sm mt-2">
+                    <i class="fas fa-plus"></i> {% trans "Ajouter un équipement" %}
+                </button>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% trans "Enregistrer le Rapport" %}
+                        </button>
+                        <a href="{% url 'projects:task_update' pk=task.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> {% trans "Annuler" %}
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{% url 'projects:task_photo_upload' pk=task.pk %}" class="btn btn-info">
+                            <i class="fas fa-camera"></i> {% trans "Gérer les Photos" %}
+                        </a>
+                        <a href="{% url 'projects:task_report' pk=task.pk %}" class="btn btn-dark" target="_blank">
+                            <i class="fas fa-print"></i> {% trans "Voir le Rapport" %}
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Détection du bon préfixe du formset (dynamique)
+    const managementForm = document.querySelector('[name$="TOTAL_FORMS"]');
+    if (!managementForm) {
+        console.error("Formset management form non trouvé !");
+        return;
+    }
+    // ex: "uninstalledequipments-TOTAL_FORMS" -> "uninstalledequipments"
+    const formsetPrefix = managementForm.name.split('-')[0];
+    const totalFormsInput = document.getElementById(`id_${formsetPrefix}-TOTAL_FORMS`);
+    
+    const addFormBtn = document.getElementById("add-equipment-form");
+    const formsetBody = document.getElementById("equipment-formset-body");
+    const formTemplate = document.getElementById("equipment-form-template");
+
+
+    // 1. Fonction pour "Ajouter un formulaire"
+    addFormBtn.addEventListener("click", function() {
+        const newFormHtml = formTemplate.innerHTML.replace(/__prefix__/g, totalFormsInput.value);
+        const newFormRow = document.createElement("tr");
+        newFormRow.className = "equipment-form-row dynamic-form";
+        newFormRow.innerHTML = newFormHtml;
+
+        formsetBody.appendChild(newFormRow);
+        
+        // Mettre à jour le compteur
+        totalFormsInput.value = parseInt(totalFormsInput.value) + 1;
+    });
+
+    // 2. Fonction pour "Supprimer un formulaire" (délégation d'événement)
+    formsetBody.addEventListener("click", function(e) {
+        const removeBtn = e.target.closest(".remove-form-row");
+        if (removeBtn) {
+            const rowToRemove = removeBtn.closest(".equipment-form-row");
+            if (rowToRemove) {
+                rowToRemove.remove();
+                
+                // Mettre à jour les index est crucial si on supprime au milieu
+                updateFormIndices();
+            }
+        }
+    });
+
+    // 3. Fonction pour mettre à jour les index
+    function updateFormIndices() {
+        const rows = formsetBody.getElementsByClassName("dynamic-form");
+        for (let i = 0; i < rows.length; i++) {
+            const inputs = rows[i].querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                // Remplace 'formsetPrefix-N-' par 'formsetPrefix-i-'
+                const nameRegex = new RegExp(formsetPrefix + '-\\d+-');
+                const idRegex = new RegExp('id_s*' + formsetPrefix + '-\\d+-'); // Accepte id_ ou id_s_
+                
+                if (input.name) {
+                    input.name = input.name.replace(nameRegex, formsetPrefix + '-' + i + '-');
+                }
+                if (input.id) {
+                    input.id = input.id.replace(idRegex, 'id_' + formsetPrefix + '-' + i + '-');
+                }
+            });
+        }
+        // Mettre à jour le total
+        totalFormsInput.value = rows.length;
+    }
+    
+});
+</script>
+{% endblock %}

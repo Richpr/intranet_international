@@ -4,6 +4,7 @@ from django import forms
 from django.forms import (
     ModelForm,
     inlineformset_factory,
+    BaseInlineFormSet, # 💡 AJOUT
 )  # 💡 AJOUT : Import de inlineformset_factory
 from django.forms.widgets import DateInput
 from django.utils.translation import gettext_lazy as _
@@ -23,6 +24,8 @@ from .models import (
     TaskResultType,  # ⬅️ AJOUTEZ CET IMPORT
     TaskType,  # ⬅️ AJOUTEZ AUSSI TaskType SI NÉCESSAIRE
     TaskPhoto,
+    UninstallationReport,    # 💡 AJOUT
+    UninstalledEquipment,  # 💡 AJOUT
 )
 from users.models import CustomUser, Role  # Import des modèles externes
 
@@ -425,3 +428,49 @@ class SimpleTaskUpdateForm(ModelForm):
             task.save()
 
         return task
+
+
+# -----------------------------------------------------------------------------
+# 7. Formulaires de Rapport de Désinstallation (NOUVEAU)
+# -----------------------------------------------------------------------------
+
+class UninstallationReportForm(ModelForm):
+    """
+    Formulaire principal pour le rapport de désinstallation.
+    Ne gère que les champs du rapport lui-même.
+    """
+    class Meta:
+        model = UninstallationReport
+        fields = ['storage_location']
+        widgets = {
+            'storage_location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _("Entrepôt, magasin, etc.")}),
+        }
+        labels = {
+            'storage_location': _("Lieu de dépôt du matériel"),
+        }
+
+
+class UninstalledEquipmentForm(ModelForm):
+    """
+    Formulaire pour *une seule ligne* d'équipement désinstallé.
+    """
+    class Meta:
+        model = UninstalledEquipment
+        fields = ['equipment_name', 'quantity', 'serial_number', 'product_code', 'comment']
+        widgets = {
+            'equipment_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'product_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 1}),
+        }
+
+# Crée le Formset.
+UninstalledEquipmentFormset = inlineformset_factory(
+    UninstallationReport,  # Modèle parent
+    UninstalledEquipment,  # Modèle enfant
+    form=UninstalledEquipmentForm,
+    extra=1,  # Commence avec 1 formulaire vide
+    can_delete=True,
+    min_num=0, # Autorise de n'avoir aucun équipement
+)

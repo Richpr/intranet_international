@@ -12,6 +12,7 @@ from .views import (
     ProjectTableView,
     TaskPhotoUploadView,
     SiteDetailView,
+    UninstallationReportView, # 💡 AJOUT
 )
 from projects.models import Site, Task
 
@@ -68,6 +69,13 @@ urlpatterns = [
         name="task_photo_upload",
     ), 
     path("task/<int:pk>/report/", views.TaskReportView.as_view(), name="task_report"),
+    
+    path(
+        "task/<int:task_pk>/uninstallation-report/",
+        views.UninstallationReportView.as_view(),
+        name="uninstallation_report",
+    ),
+
     path('task/photo/<int:pk>/delete/', views.task_photo_delete, name='task_photo_delete'),
 
     # 5. INTERFACE INSPECTION
