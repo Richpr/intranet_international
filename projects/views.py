@@ -43,6 +43,8 @@ from .models import (
     TransmissionLink,
     TaskPhoto,
 )  # ⬅️ AJOUTER TaskPhoto
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 # =================================================================
 # 1. MIXINS DE CONTRÔLE D'ACCÈS ET D'ISOLATION DE PAYS
@@ -1124,3 +1126,29 @@ class ProjectTableView(CountryIsolationMixin, ListView):
 
         context["is_cm"] = user.is_cm
         return context
+
+@login_required
+@require_POST
+def task_photo_delete(request, pk):
+    photo = get_object_or_404(TaskPhoto, pk=pk)
+    task = photo.task
+    
+    # Check permissions
+    user = request.user
+    if not (
+        user.is_superuser or
+        user == task.assigned_to or
+        user == task.site.team_lead or
+        user == task.site.project.coordinator or
+        task.site.project.country.id in user.active_country_ids
+    ):
+        messages.error(request, "Vous n'avez pas la permission de supprimer cette photo.")
+        return redirect('projects:task_update', pk=task.pk)
+
+    try:
+        photo.delete()
+        messages.success(request, "Photo supprimée avec succès.")
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la suppression de la photo : {e}")
+
+    return redirect('projects:task_update', pk=task.pk)

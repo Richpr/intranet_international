@@ -930,3 +930,66 @@ class TransmissionLink(models.Model):
 
     def __str__(self):
         return f"Liaison {self.link_id}: {self.site_a.site_id_client} <-> {self.site_b.site_id_client}"
+
+# =================================================================
+# 10. Modèles pour la Tâche de Désinstallation (NOUVEAU)
+# =================================================================
+
+class UninstallationReport(models.Model):
+    """
+    Rapport pour une tâche de désinstallation.
+    """
+    task = models.OneToOneField(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="uninstallation_report",
+        verbose_name=_("Tâche de désinstallation"),
+    )
+    storage_location = models.CharField(
+        max_length=255,
+        verbose_name=_("Lieu de stockage du matériel"),
+        help_text=_("Entrepôt, magasin, etc."),
+    )
+    report_date = models.DateField(
+        default=date.today,
+        verbose_name=_("Date du rapport"),
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="uninstallation_reports_created",
+        verbose_name=_("Créé par"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Rapport de Désinstallation")
+        verbose_name_plural = _("Rapports de Désinstallation")
+        ordering = ["-report_date"]
+
+    def __str__(self):
+        return f"Rapport de désinstallation pour la tâche {self.task.id}"
+
+
+class UninstalledEquipment(models.Model):
+    """
+    Équipement désinstallé listé dans un rapport de désinstallation.
+    """
+    uninstallation_report = models.ForeignKey(
+        UninstallationReport,
+        on_delete=models.CASCADE,
+        related_name="uninstalled_equipments",
+        verbose_name=_("Rapport de désinstallation"),
+    )
+    equipment_name = models.CharField(max_length=200, verbose_name=_("Nom de l'équipement"))
+    serial_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro de série"))
+    product_code = models.CharField(max_length=100, blank=True, verbose_name=_("Code produit"))
+    comment = models.TextField(blank=True, verbose_name=_("Commentaire"))
+
+    class Meta:
+        verbose_name = _("Équipement Désinstallé")
+        verbose_name_plural = _("Équipements Désinstallés")
+
+    def __str__(self):
+        return self.equipment_name

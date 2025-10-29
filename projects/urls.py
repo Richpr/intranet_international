@@ -68,6 +68,7 @@ urlpatterns = [
         name="task_photo_upload",
     ), 
     path("task/<int:pk>/report/", views.TaskReportView.as_view(), name="task_report"),
+    path('task/photo/<int:pk>/delete/', views.task_photo_delete, name='task_photo_delete'),
 
     # 5. INTERFACE INSPECTION
     path(

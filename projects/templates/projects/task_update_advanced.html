@@ -72,6 +72,12 @@
                                             <a href="{{ photo.photo.url }}" download class="btn btn-sm btn-outline-success">
                                                 <i class="fas fa-download me-1"></i>Télécharger
                                             </a>
+                                            <form method="post" action="{% url 'projects:task_photo_delete' photo.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette photo ?');">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
