@@ -1,27 +1,3 @@
-dans les taches des sites il doit avoir la tache nommee desinstallation dans la quelle le team lead devra mentionner 
-tous les equipement desisntaller, les serial number, les product code, des commentaires etc etc .
+ AFFICHER LE MOIS ET L ANNEE  DANS PROJECT DESINSTALLATION
 
-scenario lorsque on attribut la tache desinstaller lors de la mise a jour de la tache  on doit pouvoir entrer les information suivante 
-
-RAPPORT DE DESINSTALLATION 
-
-Project Name
-SITE Name
-TL Name
-Client 
-location 
-
-lieu de depot : 
-
-
-apres ca il y aura un button ajouter equipement desinstaller 
-
-puis des cahmps viendront comme 
-Equipements	,Qte	,SN	,Product Code,	commentaire ,
-
-et il va saisir  si il veut ajouter autre il va encore apuyer sur ajouter autre 
-
-ensuite il y aura le champs photo ou on pourra ajouter des photos des materiels desinstaller 
-
-
-et a la fin on doit avoir un tableau qui va resumer tout ce qu il y a comme information e on doit pouvoir telecharger le rapport 
+ARRANGER L EXPERIENCE UTILISATEUR POUR LE SIDE BAR LATERAL

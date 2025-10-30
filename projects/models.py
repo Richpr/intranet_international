@@ -10,6 +10,13 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal  # Pour garantir la précision des calculs
 from django.core.exceptions import ValidationError
 
+# 💡 AJOUTEZ CETTE LIGNE D'IMPORTATION
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
+# 💡 FIN DE L'AJOUT
+
 
 # =================================================================
 # CHOIX EXISTANTS
@@ -894,7 +901,63 @@ class TaskPhoto(models.Model):
 
     def __str__(self):
         return f"Photo pour {self.task} - {self.uploaded_at}"
+    
 
+    def save(self, *args, **kwargs):
+    
+        # 1. Vérifier si l'instance a un fichier photo ET si nous sommes en train de l'initialiser/modifier.
+        if self.photo:
+            
+            # Ce bloc doit s'exécuter si l'objet est nouveau (pk is None) OU
+            # si le champ 'photo' a été modifié (self.photo.name pourrait être un moyen de le vérifier
+            # mais la vérification du contenu en mémoire est plus robuste si on n'a pas accès à la DB ici).
+            
+            # Solution la plus simple et la plus robuste : si c'est la première sauvegarde (pk is None), 
+            # on optimise. Si c'est une mise à jour, on suppose que l'optimisation a déjà eu lieu 
+            # (ce qui est vrai, car on ne permet que l'ajout via TaskPhotoUploadView).
+            # Cependant, pour être certain, la vérification par le type de fichier est la meilleure.
+            
+            # Seule l'optimisation est nécessaire ici. Si self.pk est None, c'est une création.
+            # Si self.pk n'est PAS None, on doit vérifier si l'image a VRAIMENT changé (plus complexe).
+            # Comme TaskPhotoUploadView appelle create(), self.pk est None lors de l'upload initial.
+            
+            # Testons si le fichier est un nouveau fichier uploadé (pas encore sauvegardé)
+            # On utilise une vérification que le fichier n'est pas déjà un chemin vers la DB.
+            is_new_upload = not self.pk or hasattr(self.photo.file, 'chunks') # Une vérification simple
+
+            if self.pk is None or is_new_upload:
+                img = Image.open(self.photo)
+                
+                MAX_SIZE = (1280, 1280)
+                QUALITY = 65  # 💡 Diminution supplémentaire de la qualité (de 80 à 65)
+                            # pour garantir un poids très faible sans dégrader trop l'image.
+
+                # 2. Redimensionnement
+                if img.size[0] > MAX_SIZE[0] or img.size[1] > MAX_SIZE[1]:
+                    # Utilise Image.LANCZOS pour un meilleur redimensionnement (meilleure qualité)
+                    img.thumbnail(MAX_SIZE, Image.Resampling.LANCZOS)
+
+                # 3. Sauvegarde de l'image optimisée
+                output = BytesIO()
+                
+                if img.mode == 'RGBA':
+                    img = img.convert('RGB')
+                    
+                img.save(output, format='JPEG', quality=QUALITY, optimize=True) # Ajout de optimize=True
+                output.seek(0)
+
+                # 4. Remplace le contenu du champ 'photo'
+                self.photo = InMemoryUploadedFile(
+                    output, 
+                    'ImageField', 
+                    f"{self.photo.name.split('.')[0]}.jpg", 
+                    'image/jpeg', 
+                    sys.getsizeof(output), 
+                    None
+                )
+
+        # 5. Appel de la méthode save originale
+        super().save(*args, **kwargs)
 
 # =================================================================
 # 8. Modèle Inspection (DÉPEND DE SITE)
