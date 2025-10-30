@@ -550,6 +550,44 @@ class Site(models.Model):
         verbose_name=_("Résultat Dernière Inspection"),
     )
 
+    @property
+    def transmission_display_name(self):
+        """
+        Calcule le nom d'affichage de la liaison en utilisant le format canonique
+        (Nom Site 1 - Nom Site 2, trié alphabétiquement), et l'affiche à côté
+        du nom du site actuel.
+        """
+        link = None
+        site_name_a = None
+        site_name_b = None
+        
+        # 1. Tente de trouver le lien où self est site_a
+        link_as_a = self.transmission_link_a.first()
+        if link_as_a:
+            link = link_as_a
+            site_name_a = self.name
+            site_name_b = link.site_b.name
+        else:
+            # 2. Tente de trouver le lien où self est site_b
+            link_as_b = self.transmission_link_b.first()
+            if link_as_b:
+                link = link_as_b
+                site_name_a = link.site_a.name
+                site_name_b = self.name
+        
+        if link:
+            # 3. Ordonner les noms pour un affichage canonique du lien (ex: AZOVE 2 - AZOVE 5)
+            # Utilise sorted() pour que l'ordre du lien soit toujours le même (non directionnel)
+            ordered_names = sorted([site_name_a, site_name_b])
+            canonical_link_name = f"{ordered_names[0]} - {ordered_names[1]}"
+
+            # 4. Renvoyer le nom du site suivi du lien canonique entre parenthèses
+            # Ex: "AZOVE 5 (AZOVE 2 - AZOVE 5)"
+            return f"{canonical_link_name}"
+
+        # Si le site n'est pas impliqué dans une liaison
+        return self.name
+
     class Meta:
         verbose_name = _("Site")
         verbose_name_plural = _("Sites")

@@ -362,6 +362,9 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
                 project__country__id__in=active_country_ids
             ).prefetch_related("tasks", "inspections", "team_lead")
 
+        # 🚨 MODIFICATION CRITIQUE : Tri par Date de Démarrage et ID Client
+        sites = sites.order_by('start_date', 'site_id_client')
+        
         context["sites"] = sites
 
         # Calcul du progrès global agrégé des sites

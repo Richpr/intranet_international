@@ -169,7 +169,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID Site</th>
-                        <th>Nom</th>
+                        <th>Lien</th>
                         <th>Type</th>
                         <th>Team Lead</th>
                         <th>Progression</th>
@@ -189,7 +189,9 @@
                                 {{ site.site_id_client }}
                             </a>
                         </td>
-                        <td>{{ site.name }}</td>
+                        {# 💥 MODIFICATION CRITIQUE ICI (Ligne 208) 💥 #}
+                        <td>{{ site.transmission_display_name }}</td>
+                        {# ANCIEN CODE ÉTAIT : <td>{{ site.name }}</td> #}
                         <td>
                             <span class="badge bg-info">{{ site.site_type.name|default:"N/A" }}</span>
                         </td>
