@@ -130,14 +130,69 @@
         </div>
     </div>
 
-    <div class="card-body border-bottom d-none" id="filters-section">
+    {# 💡 NOUVELLE SECTION DE FILTRES SERVEUR/JS COMBINÉS #}
+    <div class="card-body border-bottom {% if not filters.installation_type and not filters.year and not filters.month and not request.GET.q %}d-none{% endif %}" id="filters-section">
+        
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type d'Installation</label>
+                <select class="form-select form-select-sm" name="installation_type" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    {# Utilise installation_types_options du contexte de la vue #}
+                    {% for type_name in installation_types_options %}
+                    <option value="{{ type_name }}" {% if filters.installation_type == type_name %}selected{% endif %}>
+                        {{ type_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Année</label>
+                <select class="form-select form-select-sm" name="year" onchange="this.form.submit()">
+                    <option value="">Toutes</option>
+                    {# Utilise available_years du contexte de la vue #}
+                    {% for year in available_years %}
+                    <option value="{{ year }}" {% if filters.year|slugify == year|slugify %}selected{% endif %}>
+                        {{ year }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Mois</label>
+                <select class="form-select form-select-sm" name="month" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    {# Utilise available_months du contexte de la vue #}
+                    {% for month in available_months %}
+                    <option value="{{ month.value }}" {% if filters.month|slugify == month.value|slugify %}selected{% endif %}>
+                        {{ month.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-5 d-flex align-items-end">
+                {# Bouton de réinitialisation qui redirige vers l'URL du projet sans paramètres GET #}
+                <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="me-1">🔄</i> Réinitialiser les Filtres Serveur
+                </a>
+            </div>
+        </form>
+
+        {# Séparateur visuel pour les filtres gérés par JavaScript #}
+        <hr class="mt-4 mb-3">
+        <p class="fw-bold mb-2">Filtrage Local (sur les sites affichés) :</p>
+
+        {# Filtres gérés par JavaScript #}
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">ID Site</label>
+                <label class="form-label">ID Site (Local)</label>
                 <input type="text" class="form-control form-control-sm" id="filter-site-id" placeholder="Rechercher...">
             </div>
             <div class="col-md-3">
-                <label class="form-label">Team Lead</label>
+                <label class="form-label">Team Lead (Local)</label>
                 <select class="form-select form-select-sm" id="filter-team-lead">
                     <option value="">Tous</option>
                     {% for lead in team_leads %}
@@ -146,7 +201,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Progression</label>
+                <label class="form-label">Progression (Local)</label>
                 <select class="form-select form-select-sm" id="filter-progress">
                     <option value="">Tous</option>
                     <option value="100">100% Terminé</option>
@@ -154,10 +209,9 @@
                     <option value="0">En cours</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <button class="btn btn-outline-secondary btn-sm w-100" id="reset-site-filters">
-                    <i class="me-1">🔄</i> Réinitialiser
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-outline-danger btn-sm w-100" id="reset-js-filters">
+                    <i class="me-1">✖️</i> Réinit. Locaux
                 </button>
             </div>
         </div>
@@ -169,7 +223,10 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID Site</th>
-                        <th>Lien</th>
+                        <th>Sites / Liens</th>
+                        <th>Type d'Install.</th>
+                        <th>Mois</th> {# 💡 AJOUT #}
+                        <th>Année</th> {# 💡 AJOUT #}
                         <th>Type</th>
                         <th>Team Lead</th>
                         <th>Progression</th>
@@ -191,7 +248,20 @@
                         </td>
                         {# 💥 MODIFICATION CRITIQUE ICI (Ligne 208) 💥 #}
                         <td>{{ site.transmission_display_name }}</td>
-                        {# ANCIEN CODE ÉTAIT : <td>{{ site.name }}</td> #}
+                        
+                        {# 💡 NOUVEL AFFICHAGE : Type d'Installation #}
+                        <td>
+                            {% if site.installation_type %}
+                                <span class="badge bg-secondary">{{ site.installation_type.name }}</span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        
+                        {# 💡 AFFICHAGE MOIS ET ANNÉE #}
+                        <td>{{ site.start_date|date:"M"|default:"-" }}</td>
+                        <td>{{ site.start_date|date:"Y"|default:"-" }}</td>
+
                         <td>
                             <span class="badge bg-info">{{ site.site_type.name|default:"N/A" }}</span>
                         </td>
@@ -262,7 +332,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">
+                        <td colspan="12" class="text-center py-4 text-muted">
                             <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
                             <p>Aucun site trouvé pour ce projet</p>
                             {% if user.is_superuser or user == project.coordinator %}
@@ -287,15 +357,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleFilters = document.getElementById('toggle-filters');
     const filtersSection = document.getElementById('filters-section');
     
+    // 💡 Afficher les filtres si un filtre serveur est déjà actif (pour garder le contexte)
+    const serverFiltersActive = filtersSection.querySelector('select[name="installation_type"]').value || 
+                                filtersSection.querySelector('select[name="year"]').value ||
+                                filtersSection.querySelector('select[name="month"]').value;
+    
+    if (serverFiltersActive) {
+        filtersSection.classList.remove('d-none');
+    }
+
     toggleFilters.addEventListener('click', function() {
         filtersSection.classList.toggle('d-none');
     });
 
-    // Site filtering
+    // Site filtering (Local JS filters)
     const siteIdFilter = document.getElementById('filter-site-id');
     const teamLeadFilter = document.getElementById('filter-team-lead');
     const progressFilter = document.getElementById('filter-progress');
-    const resetSiteFilters = document.getElementById('reset-site-filters');
+    const resetJsFilters = document.getElementById('reset-js-filters');
     const siteRows = document.querySelectorAll('#sites-table tbody tr');
 
     function filterSites() {
@@ -332,7 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
     teamLeadFilter.addEventListener('change', filterSites);
     progressFilter.addEventListener('change', filterSites);
 
-    resetSiteFilters.addEventListener('click', function() {
+    // 💡 Nouveau gestionnaire pour le bouton Réinitialiser les filtres locaux
+    resetJsFilters.addEventListener('click', function() {
         siteIdFilter.value = '';
         teamLeadFilter.value = '';
         progressFilter.value = '';

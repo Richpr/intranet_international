@@ -7,6 +7,7 @@ from django.views.generic import (
     UpdateView,
     TemplateView,
     View, # 💡 AJOUT
+    
 )
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
@@ -50,6 +51,7 @@ from .models import (
     TaskPhoto,
     UninstallationReport,     # 💡 AJOUT
     UninstalledEquipment,   # 💡 AJOUT
+    InstallationType,
 )  # ⬅️ AJOUTER TaskPhoto
 
 from django.views.decorators.http import require_POST
@@ -334,6 +336,71 @@ class ProjectListView(CountryIsolationMixin, ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
+# projects/views.py
+
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    TemplateView,
+    View,
+)
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+    AccessMixin,
+    UserPassesTestMixin,
+)
+from users.models import Country, CustomUser
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.db import transaction, IntegrityError
+from django.db.models import (
+    Count,
+    Q,
+    Avg,
+)
+from django.db.models.functions import ExtractYear
+from django.urls import reverse_lazy, reverse
+from datetime import date
+from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+from .forms import (
+    ProjectForm,
+    SiteForm,
+    TaskForm,
+    TaskUpdateForm,
+    InspectionForm,
+    SiteRadioConfigurationFormset,
+)
+
+from django.utils.translation import gettext_lazy as _
+from django.views.generic import FormView
+
+from .forms import TaskPhotoForm, SimpleTaskUpdateForm, UninstallationReportForm,  UninstalledEquipmentFormset
+from .models import (
+    Project,
+    Site,
+    Task,
+    Inspection,
+    TransmissionLink,
+    TaskPhoto,
+    UninstallationReport,
+    UninstalledEquipment,
+    InstallationType,  # 💡 AJOUTEZ CET IMPORT
+)
+
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+# ... (Mixins inchangés) ...
+
+# =================================================================
+# 2. VUES DE LISTE ET DÉTAIL
+# =================================================================
+
+# ... (ProjectListView inchangée) ...
+
 class ProjectDetailView(CountryIsolationMixin, DetailView):
     model = Project
     template_name = "projects/project_detail.html"
@@ -353,14 +420,42 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
         active_country_ids = user.active_country_ids
 
         # Récupérer les sites du projet (filtrés par pays actif si pas Superuser)
-        if user.is_superuser:
-            sites = project.sites.all().prefetch_related(
-                "tasks", "inspections", "team_lead"
-            )
-        else:
-            sites = project.sites.filter(
-                project__country__id__in=active_country_ids
-            ).prefetch_related("tasks", "inspections", "team_lead")
+        # 💡 S'assurer que installation_type est sélectionné pour le filtre
+        sites_qs = project.sites.all().select_related('installation_type')
+        
+        if not user.is_superuser:
+            sites_qs = sites_qs.filter(project__country__id__in=active_country_ids)
+        
+        # Préfetche les données qui seront utilisées dans le template
+        sites = sites_qs.prefetch_related(
+            "tasks", "inspections", "team_lead"
+        )
+        
+        # =========================================================
+        # 💡 AJOUT : LOGIQUE DE FILTRAGE DES SITES 💡
+        # =========================================================
+        from django.db.models.functions import ExtractYear
+        from datetime import date
+        
+        # 1. Récupérer les paramètres de filtre de l'URL
+        year_filter = self.request.GET.get('year', '')
+        month_filter = self.request.GET.get('month', '')
+        # Utiliser l'ID ou le nom exact pour le filtre
+        installation_type_filter = self.request.GET.get('installation_type', '')
+        
+        # 2. Appliquer les filtres au queryset des sites
+        if year_filter:
+            sites = sites.filter(start_date__year=year_filter)
+        
+        if month_filter:
+            # Note: month_filter doit être un nombre de 1 à 12
+            try:
+                sites = sites.filter(start_date__month=int(month_filter))
+            except ValueError:
+                pass # Ignorer si le mois n'est pas un nombre
+            
+        if installation_type_filter:
+            sites = sites.filter(installation_type__name=installation_type_filter)
 
         # 🚨 MODIFICATION CRITIQUE : Tri par Date de Démarrage et ID Client
         sites = sites.order_by('start_date', 'site_id_client')
@@ -368,7 +463,6 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
         context["sites"] = sites
 
         # Calcul du progrès global agrégé des sites
-        # Le reste du code de calcul... (omis pour la concision)
         progress_data = sites.aggregate(
             global_progress=Avg(
                 "progress_percentage",
@@ -388,10 +482,35 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
         context["team_leads"] = CustomUser.objects.filter(
             led_sites__in=sites
         ).distinct()
+        
+        # =========================================================
+        # 💡 AJOUT : CONTEXTE POUR LES NOUVEAUX FILTRES DISPONIBLES 💡
+        # =========================================================
+        
+        # Options d'années (basées sur TOUS les sites du projet)
+        context["available_years"] = (
+            sites_qs.annotate(year=ExtractYear("start_date"))
+            .values_list("year", flat=True)
+            .distinct()
+            .order_by("-year")
+        )
+        
+        # Options de mois
+        context["available_months"] = [
+            {"value": i, "name": date(2000, i, 1).strftime("%B")} for i in range(1, 13)
+        ]
+        
+        # Options de Type d'Installation (Récupéré de la table de référence)
+        context["installation_types_options"] = InstallationType.objects.filter(
+            is_active=True
+        ).values_list('name', flat=True).distinct().order_by('name')
 
-        # ===============================================
-        # 🚀 LOGIQUE DE PERMISSION CORRIGÉE ET AJOUTÉE 🚀
-        # ===============================================
+        # Passer les filtres actuels au contexte pour maintenir la sélection dans le formulaire
+        context["filters"] = {
+            "installation_type": installation_type_filter,
+            "year": year_filter,
+            "month": month_filter,
+        }
 
         # 1. Le CM est-il le CM du pays du projet ?
         is_cm_for_project_country = user.is_cm and (
@@ -407,12 +526,11 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
         )
 
         # Booléens pour les permissions des boutons
-        context["can_edit_project"] = can_manage_project  # ⬅️ NOUVELLE PERMISSION CRÉÉE
-        context["can_add_site"] = can_manage_project  # ⬅️ LOGIQUE MISE À JOUR
-        context["can_add_task"] = can_manage_project  # ⬅️ LOGIQUE MISE À JOUR
+        context["can_edit_project"] = can_manage_project
+        context["can_add_site"] = can_manage_project
+        context["can_add_task"] = can_manage_project
 
         return context
-
 
 # =================================================================
 # 3. VUES DE CRÉATION ET MISE À JOUR
