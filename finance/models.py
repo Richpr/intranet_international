@@ -6,6 +6,10 @@ from projects.models import Project, Site
 from logistique.models import Vehicule
 from inventaire.models import Equipement
 from django.conf import settings
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 
 
 # =================================================================
@@ -81,6 +85,34 @@ class Depense(models.Model):
 
     def __str__(self):
         return f"Dépense du {self.date} - {self.montant}"
+
+    def save(self, *args, **kwargs):
+        if self.recu_scan:
+            img = Image.open(self.recu_scan)
+
+            MAX_SIZE = (1280, 1280)
+            QUALITY = 85
+
+            if img.size[0] > MAX_SIZE[0] or img.size[1] > MAX_SIZE[1]:
+                img.thumbnail(MAX_SIZE, Image.Resampling.LANCZOS)
+
+            output = BytesIO()
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
+
+            img.save(output, format='JPEG', quality=QUALITY, optimize=True)
+            output.seek(0)
+
+            self.recu_scan = InMemoryUploadedFile(
+                output, 
+                'ImageField', 
+                f"{self.recu_scan.name.split('.')[0]}.jpg", 
+                'image/jpeg', 
+                sys.getsizeof(output), 
+                None
+            )
+
+        super().save(*args, **kwargs)
 
 # =================================================================
 # 2. Modèle Revenu

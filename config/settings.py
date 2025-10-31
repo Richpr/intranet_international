@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "inventaire.apps.InventaireConfig",
     "logistique.apps.LogistiqueConfig",
     "rh.apps.RhConfig",
+    "data_analytics.apps.DataAnalyticsConfig",
     
 ]
 

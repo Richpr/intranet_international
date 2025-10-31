@@ -1,0 +1,161 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Analyse de Performance Annuelle{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Analyse de Performance Annuelle</h1>
+
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <select name="country" class="form-control" onchange="this.form.submit()">
+                    <option value="">Tous les pays</option>
+                    {% for country in countries %}
+                        <option value="{{ country.id }}" {% if country.id|stringformat:"s" == selected_country_id %}selected{% endif %}>{{ country.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance Globale des Projets (Budget vs. Progrès)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="projectPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Taux de Complétion des Sites par Année</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="siteCompletionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Rentabilité des Sites par Année</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="siteProfitabilityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Data from Django
+        const projectPerformanceData = {{ project_performance|safe }};
+        const siteCompletionData = {{ site_completion|safe }};
+        const siteProfitabilityData = {{ site_profitability|safe }};
+
+        // Project Performance Chart
+        if (projectPerformanceData.length > 0) {
+            const projectPerformanceCtx = document.getElementById('projectPerformanceChart').getContext('2d');
+            new Chart(projectPerformanceCtx, {
+                type: 'line',
+                data: {
+                    labels: projectPerformanceData.map(d => d.year),
+                    datasets: [{
+                        label: 'Budget Total Alloué',
+                        data: projectPerformanceData.map(d => d.total_budget),
+                        borderColor: '#1D64B5',
+                        backgroundColor: 'rgba(29, 100, 181, 0.1)',
+                        yAxisID: 'y-budget',
+                    }, {
+                        label: 'Progrès Total (%)',
+                        data: projectPerformanceData.map(d => d.total_progress),
+                        borderColor: '#F4A900',
+                        backgroundColor: 'rgba(244, 169, 0, 0.1)',
+                        yAxisID: 'y-progress',
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-budget',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-progress',
+                            grid: {
+                                drawOnChartArea: false, // only draw grid for the first Y axis
+                            },
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('projectPerformanceChart').parentElement.innerHTML = '<p class="text-center">Pas de données de performance de projet disponibles.</p>';
+        }
+
+        // Site Completion Chart
+        if (siteCompletionData.length > 0) {
+            const siteCompletionCtx = document.getElementById('siteCompletionChart').getContext('2d');
+            new Chart(siteCompletionCtx, {
+                type: 'bar',
+                data: {
+                    labels: siteCompletionData.map(d => d.year),
+                    datasets: [{
+                        label: 'Sites Complétés',
+                        data: siteCompletionData.map(d => d.completed_sites),
+                        backgroundColor: '#2B90D9',
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('siteCompletionChart').parentElement.innerHTML = '<p class="text-center">Pas de données de complétion de site disponibles.</p>';
+        }
+
+        // Site Profitability Chart
+        if (siteProfitabilityData.length > 0) {
+            const siteProfitabilityCtx = document.getElementById('siteProfitabilityChart').getContext('2d');
+            new Chart(siteProfitabilityCtx, {
+                type: 'line',
+                data: {
+                    labels: siteProfitabilityData.map(d => d.year),
+                    datasets: [{
+                        label: 'Revenu Total',
+                        data: siteProfitabilityData.map(d => d.total_revenue),
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        borderColor: '#27ae60',
+                        fill: true,
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('siteProfitabilityChart').parentElement.innerHTML = '<p class="text-center">Pas de données de rentabilité de site disponibles.</p>';
+        }
+    });
+</script>
+{% endblock %}

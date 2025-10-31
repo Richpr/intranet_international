@@ -16,7 +16,8 @@ urlpatterns = [
     path("reporting/", include("reporting.urls")),
     path("inventaire/", include("inventaire.urls", namespace="inventaire")),
     path("logistique/", include("logistique.urls", namespace="logistique")),
-    path("rh/", include("rh.urls", namespace="rh")),
+    path('rh/', include('rh.urls')),
+    path('data-analytics/', include('data_analytics.urls')),
     path("", HomeView.as_view(), name="home"),
     # 👇 AJOUTE ÇA :
     # Fait de l'app 'core' la page d'accueil du site

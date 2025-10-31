@@ -186,6 +186,12 @@
             border: none;
         }
 
+        .card-header h6 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white !important;
+        }
+
         /* Progress bars NG */
         .progress {
             height: 10px;
@@ -221,6 +227,14 @@
         #sidebarToggle {
             border: 1px solid rgba(255,255,255,0.3);
             color: white;
+        }
+
+        /* Table header style */
+        thead th {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-blue);
         }
     </style>
 </head>
@@ -378,6 +392,11 @@
                                 <i class="fas fa-warehouse me-2"></i> État de l'Inventaire
                             </a>
                         </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'performance-annuelle' in request.path %}active{% endif %}" href="{% url 'reporting:performance_annuelle' %}">
+                                <i class="fas fa-chart-pie me-2"></i> Analyse Annuelle
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>
@@ -485,9 +504,23 @@
                                 <i class="fas fa-users-cog me-2"></i> Employés
                             </a>
                         </li>
+                        {% if is_cm or user.is_staff %}
+                        <li class="sidebar-item">
+                            <a class="sidebar-link {% if 'performance' in request.path %}active{% endif %}" href="{% url 'rh:employee_performance' %}">
+                                <i class="fas fa-chart-line me-2"></i> Performance Employés
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </li>
+            {% if is_cm or user.is_staff %}
+            <li class="sidebar-item">
+                <a class="sidebar-link {% if 'data-analytics' in request.path %}active{% endif %}" href="{% url 'data_analytics:dashboard' %}">
+                    <i class="fas fa-chart-pie me-2"></i> Analyse de Données
+                </a>
+            </li>
+            {% endif %}
             {% endif %}
 
             <li class="sidebar-item">

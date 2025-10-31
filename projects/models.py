@@ -247,6 +247,7 @@ class TaskType(models.Model):
     )
     is_active = models.BooleanField(default=True)
     order = models.IntegerField(default=0, verbose_name=_("Ordre d'affichage"))
+    points_value = models.IntegerField(default=1, verbose_name=_("Valeur en points"))
 
     class Meta:
         verbose_name = _("Type de Tâche")

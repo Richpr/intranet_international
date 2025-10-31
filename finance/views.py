@@ -99,6 +99,15 @@ class DepenseListView(FinanceCountryIsolationMixin, ListView):
     template_name = "finance/expense_list.html" # Correspond à vos templates
     context_object_name = "expenses" # Correspond à vos templates
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+
+        if user.is_superuser or user.is_cm or user.is_coordinator or user.groups.filter(name='Finance').exists():
+            return qs
+        
+        return qs.filter(employe_declarant=user)
+
 
 class RevenuListView(FinanceCountryIsolationMixin, ListView):
     """Liste les revenus (filtrés par le Mixin)."""

@@ -16,4 +16,5 @@ urlpatterns = [
 
     path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
     path('employees/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee_detail'),
+    path('employees/performance/', views.EmployeePerformanceView.as_view(), name='employee_performance'),
 ]

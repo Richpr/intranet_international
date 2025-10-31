@@ -65,7 +65,7 @@
 
         <h2>Reçu Scanné</h2>
         {% if depense.recu_scan %}
-            <img src="{{ depense.recu_scan.path }}" class="receipt-image">
+            <img src="{{ depense.recu_scan.url }}" class="receipt-image">
         {% else %}
             <p>Aucun reçu scanné n'a été fourni.</p>
         {% endif %}

@@ -23,7 +23,7 @@
                 <div class="card-body">
                     
                     {# Le formulaire pointe vers la même URL pour la soumission #}
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %} 
                         
                         {# Affiche tous les champs du formulaire en utilisant le style Crispy Forms #}

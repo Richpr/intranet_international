@@ -8,8 +8,8 @@ class TeamLeadOrCoordinatorRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 class ExpenseManagementMixin(AccessMixin):
-    """Verify that the current user is a team lead, a coordinator or a field team user."""
+    """Verify that the current user is authenticated."""
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or (not request.user.is_team_lead and not request.user.is_coordinator and not request.user.is_field_team):
+        if not request.user.is_authenticated:
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)

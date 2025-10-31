@@ -1,4 +1,26 @@
-au niveau de la barre de progression des sites elle doit se faire automatiquement en fonction  du statut et de la barre de progression de chaque tache 
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+[31/Oct/2025 10:37:41] "GET /data-analytics/dashboard/ HTTP/1.1" 200 50758
+Not Found: /favicon.ico
+[31/Oct/2025 10:37:42] "GET /favicon.ico HTTP/1.1" 404 4004
+[31/Oct/2025 10:56:39] "POST /finance/depenses/creer/ HTTP/1.1" 200 25663
+[31/Oct/2025 10:56:56] "GET /finance/depenses/ HTTP/1.1" 200 30043
+Forbidden (Permission denied): /finance/depenses/creer/
+Traceback (most recent call last):
+  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rich/intranet_international/core/mixins.py", line 14, in dispatch
+    return self.handle_no_permission()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/contrib/auth/mixins.py", line 48, in handle_no_permission
+    raise PermissionDenied(self.get_permission_denied_message())
+django.core.exceptions.PermissionDenied
+[31/Oct/2025 10:57:01] "GET /finance/depenses/creer/ HTTP/1.1" 403 135
 
-
-ensuite  la progression du project aussi doit se faire automatiquement en fonction du statu et de la progression de la somme des site sdu project 

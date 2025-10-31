@@ -2,8 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
 from django.utils.translation import gettext_lazy as _
-from projects.models import Project
+from projects.models import Project, Task
 from decimal import Decimal
+from django.db.models import F
 
 # =================================================================
 # 1. Modèle Country (Le Locataire / Tenant)
@@ -179,6 +180,48 @@ class CustomUser(AbstractUser):
             country_id__in=self.active_country_ids,  # Correction : utiliser active_country_ids
             is_active=True,
         ).exists()
+
+    def technician_completion_rate(self):
+        """Taux d'achèvement pour un technicien."""
+        assigned_tasks = self.assigned_tasks.all()
+        if not assigned_tasks.exists():
+            return Decimal('0.00')
+        
+        completed_tasks = assigned_tasks.filter(status='COMPLETED', result_type__is_success=True).count()
+        total_tasks = assigned_tasks.count()
+        
+        return (Decimal(completed_tasks) / Decimal(total_tasks)) * 100 if total_tasks > 0 else Decimal('0.00')
+
+    def team_lead_success_rate(self):
+        """Taux de succès pour un Team Lead."""
+        led_sites = self.led_sites.all()
+        if not led_sites.exists():
+            return Decimal('0.00')
+            
+        tasks = Task.objects.filter(site__in=led_sites)
+        if not tasks.exists():
+            return Decimal('0.00')
+            
+        successful_tasks = tasks.filter(status='COMPLETED', result_type__is_success=True).count()
+        total_tasks = tasks.count()
+        
+        return (Decimal(successful_tasks) / Decimal(total_tasks)) * 100 if total_tasks > 0 else Decimal('0.00')
+
+    def coordinator_on_time_completion_rate(self):
+        """Taux de complétion à temps pour un coordinateur."""
+        coordinated_projects = self.coordinated_projects.all()
+        if not coordinated_projects.exists():
+            return Decimal('0.00')
+            
+        tasks = Task.objects.filter(site__project__in=coordinated_projects)
+        if not tasks.exists():
+            return Decimal('0.00')
+            
+        on_time_tasks = tasks.filter(completion_date__isnull=False, completion_date__date__lte=models.F('due_date')).count()
+        total_tasks = tasks.count()
+        
+        return (Decimal(on_time_tasks) / Decimal(total_tasks)) * 100 if total_tasks > 0 else Decimal('0.00')
+
 
 # =================================================================
 # 4. Modèle Assignation (Lien Employé-Projet)

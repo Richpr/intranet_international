@@ -19,4 +19,5 @@ urlpatterns = [
     path('cost-per-vehicle/', views.cost_per_vehicle_report_view, name='cost_per_vehicle_report'),
 
     path('inventory-status/', views.inventory_status_report_view, name='inventory_status_report'),
+    path('performance-annuelle/', views.performance_annuelle_view, name='performance_annuelle'),
 ]

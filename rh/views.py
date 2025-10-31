@@ -88,3 +88,26 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
     template_name = 'rh/employee_detail.html'
 
     context_object_name = 'employee'
+
+
+class EmployeePerformanceView(LoginRequiredMixin, ListView):
+    model = CustomUser
+    template_name = 'rh/employee_performance.html'
+    context_object_name = 'employees'
+
+    def get_queryset(self):
+        users = CustomUser.objects.all()
+        
+        # Trier les utilisateurs en Python
+        def sort_key(user):
+            if user.main_role == 'Field Team':
+                return user.technician_completion_rate()
+            elif user.main_role == 'Team Lead':
+                return user.team_lead_success_rate()
+            elif user.main_role == 'Coordinateur de Projet':
+                return user.coordinator_on_time_completion_rate()
+            else:
+                return 0
+
+        sorted_users = sorted(users, key=sort_key, reverse=True)
+        return sorted_users

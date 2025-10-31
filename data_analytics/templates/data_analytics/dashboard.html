@@ -1,0 +1,307 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Tableau de Bord d'Analyse de Données{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Tableau de Bord d'Analyse de Données</h1>
+
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <select name="country" class="form-control" onchange="this.form.submit()">
+                    <option value="">Tous les pays</option>
+                    {% for country in countries %}
+                        <option value="{{ country.id }}" {% if country.id|stringformat:"s" == selected_country_id %}selected{% endif %}>{{ country.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="year" class="form-control" onchange="this.form.submit()">
+                    {% for year in years %}
+                        <option value="{{ year }}" {% if year|stringformat:"s" == selected_year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Création de Sites par Mois ({{ selected_year }})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="monthlySiteCreationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Dépenses par Mois ({{ selected_year }})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="monthlyExpenseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenus par Année</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="yearlyRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Création de Sites par Année</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="yearlySiteCreationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance des Chefs d'Équipe</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="teamLeadPerformanceTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Chef d'Équipe</th>
+                                    <th>Sites Terminés</th>
+                                    <th>Taux de Succès</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in team_lead_performance %}
+                                <tr>
+                                    <td>{{ lead.username }}</td>
+                                    <td>{{ lead.completed_sites }}</td>
+                                    <td>{{ lead.success_rate|floatformat:2 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Pas de données de performance des chefs d'équipe disponibles.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance des Employés</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nom d'utilisateur</th>
+                                    <th>Rôle Principal</th>
+                                    <th>Taux d'achèvement (Technicien)</th>
+                                    <th>Taux de succès (Team Lead)</th>
+                                    <th>Taux de complétion à temps (Coordinateur)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employee_performance %}
+                                <tr>
+                                    <td>{{ employee.username }}</td>
+                                    <td>{{ employee.main_role }}</td>
+                                    <td>
+                                        {% if employee.main_role == 'Field Team' %}
+                                            {{ employee.technician_completion_rate|floatformat:2 }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.main_role == 'Team Lead' %}
+                                            {{ employee.team_lead_success_rate|floatformat:2 }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.main_role == 'Coordinateur de Projet' %}
+                                            {{ employee.coordinator_on_time_completion_rate|floatformat:2 }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Analyse de la Création de Sites par Année et Mois</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="siteCreationPivotTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Année</th>
+                                    {% for month in month_names %}
+                                        <th>{{ month }}</th>
+                                    {% endfor %}
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for year, months in site_creation_pivot_data.items %}
+                                <tr>
+                                    <td>{{ year }}</td>
+                                    {% for month_num, site_count in months.items %}
+                                        {% if month_num != 'total' %}
+                                            <td>{{ site_count }}</td>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <td>{{ months.total }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="14" class="text-center">Pas de données de création de site disponibles.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Data from Django
+        const monthlySiteCreationData = {{ monthly_site_creation|safe }};
+        const monthlyExpenseData = {{ monthly_expense|safe }};
+        const yearlyRevenueData = {{ yearly_revenue|safe }};
+        const yearlySiteCreationData = {{ yearly_site_creation|safe }};
+
+        // Monthly Site Creation Chart
+        if (monthlySiteCreationData.length > 0) {
+            const monthlySiteCreationCtx = document.getElementById('monthlySiteCreationChart').getContext('2d');
+            new Chart(monthlySiteCreationCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlySiteCreationData.map(d => d.month),
+                    datasets: [{
+                        label: 'Sites Créés',
+                        data: monthlySiteCreationData.map(d => d.site_count),
+                        backgroundColor: '#2B90D9',
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('monthlySiteCreationChart').parentElement.innerHTML = '<p class="text-center">Pas de données de création de site disponibles pour cette sélection.</p>';
+        }
+
+        // Monthly Expense Chart
+        if (monthlyExpenseData.length > 0) {
+            const monthlyExpenseCtx = document.getElementById('monthlyExpenseChart').getContext('2d');
+            new Chart(monthlyExpenseCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyExpenseData.map(d => d.month),
+                    datasets: [{
+                        label: 'Dépenses Totales',
+                        data: monthlyExpenseData.map(d => d.total_expense),
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderColor: '#e74c3c',
+                        fill: true,
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('monthlyExpenseChart').parentElement.innerHTML = '<p class="text-center">Pas de données de dépenses disponibles pour cette sélection.</p>';
+        }
+
+        // Yearly Revenue Chart
+        if (yearlyRevenueData.length > 0) {
+            const yearlyRevenueCtx = document.getElementById('yearlyRevenueChart').getContext('2d');
+            new Chart(yearlyRevenueCtx, {
+                type: 'line',
+                data: {
+                    labels: yearlyRevenueData.map(d => d.year),
+                    datasets: [{
+                        label: 'Revenu Total',
+                        data: yearlyRevenueData.map(d => d.total_revenue),
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        borderColor: '#27ae60',
+                        fill: true,
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('yearlyRevenueChart').parentElement.innerHTML = '<p class="text-center">Pas de données de revenus disponibles pour cette sélection.</p>';
+        }
+
+        // Yearly Site Creation Chart
+        if (yearlySiteCreationData.length > 0) {
+            const yearlySiteCreationCtx = document.getElementById('yearlySiteCreationChart').getContext('2d');
+            new Chart(yearlySiteCreationCtx, {
+                type: 'line',
+                data: {
+                    labels: yearlySiteCreationData.map(d => d.year),
+                    datasets: [{
+                        label: 'Sites Créés',
+                        data: yearlySiteCreationData.map(d => d.site_count),
+                        backgroundColor: 'rgba(43, 144, 217, 0.1)',
+                        borderColor: '#2B90D9',
+                        fill: true,
+                    }]
+                }
+            });
+        } else {
+            document.getElementById('yearlySiteCreationChart').parentElement.innerHTML = '<p class="text-center">Pas de données de création de site disponibles pour cette sélection.</p>';
+        }
+    });
+</script>
+{% endblock %}

@@ -11,7 +11,37 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from weasyprint import HTML
 import openpyxl
-from datetime import date  # 👈 AJOUT DE DATE
+from datetime import date
+from .utils import get_project_performance_by_year, get_site_completion_rate_by_year, get_site_profitability_by_year
+
+@login_required
+def performance_annuelle_view(request):
+    countries = Country.objects.filter(is_active=True)
+    selected_country_id = request.GET.get('country')
+
+    project_performance_qs = get_project_performance_by_year(selected_country_id)
+    site_completion_qs = get_site_completion_rate_by_year(selected_country_id)
+    site_profitability_qs = get_site_profitability_by_year(selected_country_id)
+
+    project_performance = [
+        {
+            'year': item['year'],
+            'total_budget': float(item['total_budget']),
+            'total_progress': float(item['total_progress']),
+        }
+        for item in project_performance_qs
+    ]
+
+    context = {
+        'project_performance': project_performance,
+        'site_completion': list(site_completion_qs),
+        'site_profitability': list(site_profitability_qs),
+        'countries': countries,
+        'selected_country_id': selected_country_id,
+    }
+
+    return render(request, 'reporting/performance_annuelle.html', context)
+
 
 # =================================================================
 # VUES RENTABILITÉ
