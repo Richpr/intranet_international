@@ -3,7 +3,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from openpyxl import load_workbook
-from datetime import date
+from datetime import date, timedelta
+from django.utils import timezone
 from projects.models import (
     Site, 
     Project, 
@@ -22,28 +23,26 @@ from projects.models import (
 from users.models import CustomUser 
 
 
-# Fonction utilitaire pour trouver les objets par nom/ID (V19 - Recherche Tolérante)
+# Fonction utilitaire pour trouver les objets par nom/ID (Recherche Tolérante)
 def get_related_object(Model, identifier, lookup_field='name', required=False):
     if not identifier:
         return None
         
     identifier_cleaned = str(identifier).strip() 
     
-    # 🚨 V19 : Nettoyage pour la tolérance (élimine l'encodage problématique et met en MAJUSCULES pour correspondre aux noms d'objets courants)
+    # Nettoyage pour la tolérance (élimine l'encodage problématique et met en MAJUSCULES)
     try:
         identifier_cleaned = identifier_cleaned.encode('ascii', 'ignore').decode('ascii').upper()
     except Exception:
         pass 
     
     try:
-        # Recherche unique, insensible à la casse (__iexact)
         filters = {f'{lookup_field}__iexact': identifier_cleaned}
         
         return Model.objects.get(**filters)
         
     except Model.DoesNotExist:
         if required:
-            # Lève l'erreur pour que l'utilisateur crée l'objet
             raise CommandError(f"Clé étrangère manquante: Objet {Model.__name__} avec '{identifier_cleaned}' non trouvé.")
         return None
     except Exception as e:
@@ -51,10 +50,10 @@ def get_related_object(Model, identifier, lookup_field='name', required=False):
 
 
 class Command(BaseCommand):
-    help = 'Importe des Sites pour un Project spécifique à partir d’un fichier Excel (XLSX), crée la configuration radio et 7 tâches terminées.'
+    help = "Importe des Sites pour un Project spécifique à partir d'un fichier Excel (XLSX), crée la configuration radio et 7 tâches terminées."
 
     def add_arguments(self, parser):
-        parser.add_argument('project_pk', type=int, help='L\'ID (PK) du Projet parent.')
+        parser.add_argument('project_pk', type=int, help="L'ID (PK) du Projet parent.")
         parser.add_argument('file_path', type=str, help='Le chemin complet vers le fichier Excel.')
 
     @transaction.atomic
@@ -85,7 +84,6 @@ class Command(BaseCommand):
             sheet = workbook.active
 
             # --- DÉFINITION DE LA CORRESPONDANCE DES COLONNES (INDICES) ---
-            # Basé sur notre dernier modèle complet (A à K)
             COL_ID_CLIENT = 0     
             COL_NAME = 1          
             COL_SITE_TYPE = 2     
@@ -113,19 +111,43 @@ class Command(BaseCommand):
                 
                 # --- 2. Gérer les dépendances (Clés Étrangères) ---
                 try:
-                    # InstallationType et SiteType doivent être recherchés.
-                    # Ils sont requis=False dans la plupart des cas si null=True est sur le modèle.
-                    # Nous utilisons REQUIRED=TRUE pour les forcer à être définis ou l'erreur sera levée
-                    # si l'objet n'est pas trouvé (ce qui est le comportement souhaité pour l'importation complète).
+                    # Remplissage SiteType (Required=False car null=True)
+                    site_type_instance = get_related_object(SiteType, row[COL_SITE_TYPE], required=False)
                     
-                    site_type_instance = get_related_object(SiteType, row[COL_SITE_TYPE], required=True)
-                    install_type_instance = get_related_object(InstallationType, row[COL_INSTALL_TYPE], required=True) 
+                    # 🚨 CORRECTION CRITIQUE : Gestion robuste du Type d'Installation
+                    install_type_excel_value = row[COL_INSTALL_TYPE]
+                    install_type_instance = None
+                    
+                    if install_type_excel_value:
+                        # Si la cellule n'est PAS vide, on force la recherche
+                        install_type_instance = get_related_object(InstallationType, install_type_excel_value, required=True) 
+                    else:
+                        # 🚨 CRÉATION D'UN TYPE PAR DÉFAUT SI AUCUN N'EST FOURNI
+                        install_type_instance, created = InstallationType.objects.get_or_create(
+                            name="Non spécifié",
+                            defaults={'is_active': True}  # ✅ CORRECTION : pas de champ 'code'
+                        )
+                        if created:
+                            self.stdout.write(self.style.SUCCESS(f"✅ Type d'installation par défaut créé: 'Non spécifié'"))
 
                     team_lead_username = str(row[COL_TEAM_LEAD]).strip() if row[COL_TEAM_LEAD] else None
                     team_lead_instance = get_related_object(CustomUser, team_lead_username, lookup_field='username', required=False) 
 
+                    # 🚨 CORRECTION : Gestion robuste des dates
                     start_date_value = row[COL_START_DATE]
-                    final_start_date = date.fromisoformat(str(start_date_value)) if isinstance(start_date_value, str) else start_date_value or date.today()
+                    final_start_date = date.today()
+
+                    try:
+                        if isinstance(start_date_value, str) and start_date_value.strip():
+                            final_start_date = date.fromisoformat(str(start_date_value).strip())
+                        elif isinstance(start_date_value, date):
+                            final_start_date = start_date_value
+                        elif start_date_value:
+                            # Gestion des dates Excel (nombre de jours depuis 1900)
+                            final_start_date = date(1900, 1, 1) + timedelta(days=int(start_date_value) - 2)
+                    except (ValueError, TypeError, AttributeError) as e:
+                        self.stdout.write(self.style.WARNING(f"⚠️ Date invalide à la ligne {lignes_traitees}, utilisation de la date du jour. Erreur: {e}"))
+                        final_start_date = date.today()
 
                     # Champs techniques optionnels (Required=False)
                     antenna_type_name = row[COL_ANTENNA_TYPE] if row_len > COL_ANTENNA_TYPE else None
@@ -148,7 +170,7 @@ class Command(BaseCommand):
                         })
 
                 except CommandError as e:
-                    # Arrête ici pour forcer l'utilisateur à créer l'objet de référence manquant
+                    # Arrête ici pour forcer l'utilisateur à corriger l'objet manquant
                     raise e
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"❌ Erreur de données non gérée à la ligne {lignes_traitees}: {e}"))
@@ -163,7 +185,7 @@ class Command(BaseCommand):
                     start_date=final_start_date,
                     
                     site_type=site_type_instance,
-                    installation_type=install_type_instance, 
+                    installation_type=install_type_instance, # 🚨 MAINTENANT TOUJOURS NON-NULL
                     team_lead=team_lead_instance,
                     
                     antenna_type=antenna_type_instance,
@@ -184,7 +206,6 @@ class Command(BaseCommand):
 
             # ==========================================================
             # 5. CRÉATION DES 7 TÂCHES INITIALES TERMINÉES
-            # ==========================================================
 
             TASK_CODES_TO_COMPLETE = ['CLEANUP', 'ANTENNA_INSTALL', 'QA_PHOTOS', 'EHS_PRE', 'ATP', 'SRS', 'IMK'] 
             SUCCESS_RESULT_CODE = 'DONE' 
@@ -220,7 +241,7 @@ class Command(BaseCommand):
                             status='COMPLETED',
                             progress_percentage=100,
                             result_type=result_type_instance,
-                            completion_date=current_date,
+                            completion_date=timezone.now(),  # ✅ CORRECTION : utilisation de timezone
                             
                             created_by=creator_user
                         )
@@ -231,7 +252,6 @@ class Command(BaseCommand):
             
             # ==========================================================
             # 6. CRÉATION DES CONFIGURATIONS RADIO
-            # ==========================================================
             
             radio_configs_a_creer = []
             
@@ -240,7 +260,6 @@ class Command(BaseCommand):
                 site_instance = sites_a_creer[data['site_index']] 
                 
                 try:
-                    # Utilise get_related_object (V19) pour une recherche fiable
                     radio_type_instance = get_related_object(RadioType, data['radio_model_name'], required=True)
                 
                     radio_configs_a_creer.append(
@@ -252,7 +271,6 @@ class Command(BaseCommand):
                     )
                 
                 except CommandError as e:
-                    # Écrit l'erreur mais passe au site radio suivant
                     self.stdout.write(self.style.ERROR(f"❌ Radio manquée pour le site {site_instance.site_id_client}: {e}"))
                     continue
 
