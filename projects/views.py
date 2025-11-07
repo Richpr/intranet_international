@@ -890,9 +890,13 @@ class TeamLeadTasksView(CountryIsolationMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        task_filter = self.request.GET.get('filter', 'active')
 
         # Base filters for active tasks
-        active_status_filter = Q(status__in=["TO_DO", "IN_PROGRESS", "QC_PENDING"])
+        if task_filter == 'active':
+            active_status_filter = Q(status__in=["TO_DO", "IN_PROGRESS", "QC_PENDING"])
+        else:
+            active_status_filter = Q()
 
         # CountryIsolationMixin is already applied via super().get_queryset()
         qs = super().get_queryset()

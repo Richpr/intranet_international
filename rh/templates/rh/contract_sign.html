@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Signer le Contrat{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Signer le Contrat</h1>
+    <p>Veuillez confirmer que vous avez lu et que vous acceptez les termes du contrat.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Je confirme et je signe</button>
+    </form>
+</div>
+{% endblock %}

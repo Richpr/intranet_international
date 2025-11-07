@@ -1,10 +1,55 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-from .models import Certification, PaiementSalaire
+from .models import Certification, PaiementSalaire, Contract
 from users.models import CustomUser
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .forms import CertificationForm
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+
+class ContractListView(LoginRequiredMixin, ListView):
+    model = Contract
+    template_name = 'rh/contract_list.html'
+    context_object_name = 'contracts'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.is_cm:
+            return Contract.objects.all()
+        return Contract.objects.filter(employee=user)
+
+class ContractDetailView(LoginRequiredMixin, DetailView):
+    model = Contract
+    template_name = 'rh/contract_detail.html'
+    context_object_name = 'contract'
+
+class ContractPdfView(LoginRequiredMixin, DetailView):
+    model = Contract
+    template_name = 'rh/contract_pdf.html'
+
+    def render_to_response(self, context, **response_kwargs):
+        html_string = render_to_string(self.template_name, context)
+        html = HTML(string=html_string)
+        pdf = html.write_pdf()
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="contract_{self.object.pk}.pdf"'
+        return response
+
+class ContractSignView(LoginRequiredMixin, UpdateView):
+    model = Contract
+    fields = ['is_signed']
+    template_name = 'rh/contract_sign.html'
+
+    def get_success_url(self):
+        return reverse_lazy('rh:contract_detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        if not self.object.is_signed:
+            form.instance.is_signed = True
+        return super().form_valid(form)
+
 
 class CertificationListView(LoginRequiredMixin, ListView):
     model = Certification

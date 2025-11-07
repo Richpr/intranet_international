@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Demandes à Approuver{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Demandes à Approuver</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Demandeur</th>
+                <th>Type</th>
+                <th>Date de début</th>
+                <th>Date de fin</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+            <tr>
+                <td>{{ request.user.username }}</td>
+                <td>{{ request.get_request_type_display }}</td>
+                <td>{{ request.start_date }}</td>
+                <td>{{ request.end_date }}</td>
+                <td>
+                    <a href="{% url 'workflow:approval_update' request.pk %}" class="btn btn-sm btn-primary">Traiter</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

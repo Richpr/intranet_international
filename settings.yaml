@@ -1,0 +1,11 @@
+# intranet_international/settings.yaml
+client_config:
+  client_id: 79734660185-1usm15vr9elmhifr2t39ghkv3dsrp5mb.apps.googleusercontent.com
+  client_secret: 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
+  redirect_uris:
+  - urn:ietf:wg:oauth:2.0:oob
+  - http://localhost
+
+save_credentials: True
+save_credentials_backend: file
+save_credentials_file: token.json  # <--- CORRECTION AJOUTÉE ICI

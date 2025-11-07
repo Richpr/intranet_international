@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Détails de la Mission{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Détails de la Mission</h1>
+    <p><strong>Motif:</strong> {{ mission.motif }}</p>
+    <p><strong>Conducteur:</strong> {{ mission.conducteur.username }}</p>
+    <p><strong>Véhicule:</strong> {{ mission.vehicule.nom_vehicule }}</p>
+    <p><strong>Site:</strong> {{ mission.site_concerne.site_id_client }}</p>
+    <p><strong>Date de début:</strong> {{ mission.start_date }}</p>
+    <p><strong>Date de fin:</strong> {{ mission.end_date }}</p>
+    <p><strong>Membres de l'équipe:</strong>
+        <ul>
+            {% for member in mission.team_members.all %}
+                <li>{{ member.username }}</li>
+            {% endfor %}
+        </ul>
+    </p>
+
+    <a href="{% url 'logistique:mission_letter_pdf' mission.pk %}" class="btn btn-primary">Télécharger la lettre de mission</a>
+</div>
+{% endblock %}

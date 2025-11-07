@@ -1,8 +1,28 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from .models import Vehicule, MissionLogistique
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+
+class MissionLogistiqueDetailView(LoginRequiredMixin, DetailView):
+    model = MissionLogistique
+    template_name = 'logistique/missionlogistique_detail.html'
+    context_object_name = 'mission'
+
+class MissionLetterPdfView(LoginRequiredMixin, DetailView):
+    model = MissionLogistique
+    template_name = 'logistique/mission_letter_pdf.html'
+
+    def render_to_response(self, context, **response_kwargs):
+        html_string = render_to_string(self.template_name, context)
+        html = HTML(string=html_string)
+        pdf = html.write_pdf()
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="mission_letter_{self.object.pk}.pdf"'
+        return response
 
 class VehiculeListView(LoginRequiredMixin, ListView):
     model = Vehicule

@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Détails de la Demande{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Détails de la Demande</h1>
+    <p><strong>Demandeur:</strong> {{ request.user.username }}</p>
+    <p><strong>Type:</strong> {{ request.get_request_type_display }}</p>
+    <p><strong>Dates:</strong> du {{ request.start_date }} au {{ request.end_date }}</p>
+    <p><strong>Raison:</strong> {{ request.reason }}</p>
+    <p><strong>Statut:</strong> {{ request.get_status_display }}</p>
+
+    {% if request.status == 'approved' %}
+        <a href="{% url 'workflow:request_pdf' request.pk %}" class="btn btn-primary">Télécharger le PDF</a>
+    {% endif %}
+</div>
+{% endblock %}

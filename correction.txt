@@ -1,26 +1,85 @@
-WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
-For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
-[31/Oct/2025 10:37:41] "GET /data-analytics/dashboard/ HTTP/1.1" 200 50758
-Not Found: /favicon.ico
-[31/Oct/2025 10:37:42] "GET /favicon.ico HTTP/1.1" 404 4004
-[31/Oct/2025 10:56:39] "POST /finance/depenses/creer/ HTTP/1.1" 200 25663
-[31/Oct/2025 10:56:56] "GET /finance/depenses/ HTTP/1.1" 200 30043
-Forbidden (Permission denied): /finance/depenses/creer/
-Traceback (most recent call last):
-  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
-    response = get_response(request)
-               ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
-    response = wrapped_callback(request, *callback_args, **callback_kwargs)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/views/generic/base.py", line 105, in view
-    return self.dispatch(request, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/rich/intranet_international/core/mixins.py", line 14, in dispatch
-    return self.handle_no_permission()
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/rich/intranet_international/venv/lib/python3.12/site-packages/django/contrib/auth/mixins.py", line 48, in handle_no_permission
-    raise PermissionDenied(self.get_permission_denied_message())
-django.core.exceptions.PermissionDenied
-[31/Oct/2025 10:57:01] "GET /finance/depenses/creer/ HTTP/1.1" 403 135
+DANS LE TABLAU DE BORD , CELUI QUI MONTRE LA SYNTHESE OPERATIONEEL  MULTI PAYS  LA SYNTHESE FINANCIERE ETC O DOIT POUVOIR METTRE UN FILTRE QUI POURRA FILTRER PAR PAYS 
 
+ON DOIT POUVOIR ARRANGER  ET MODERNISER LA PAGE DE LOGIN 
+
+AUSSI AU NVEAU DE L AFFICHAGE DES SITES OU DES PROJECT OU DES TACHES  IL FAUT QU ON FASSE DE TEL SORTES QUE LORSQU ON VIENT SUR LA PAGE QU ON PUISSE VOIR UIQUEMENT LES TACHES QUI SONT ENCORE EN COURS ET ENSUITE SI L UTILISATEUR VEUT VOIR TOUT IL PEUT ALLER LE FAIRE AU NICEAU DES FILTRES  POUR AZFFICHER TOUT CE QU IL VEUT 
+
+
+
+
+ensuite  suivre et faire tout ce qui est mentionner ci dessous
+
+
+C'est un excellent ensemble de fonctionnalités à ajouter à votre intranet, surtout dans une optique de **grand programmeur** visant la modernité et l'efficacité! Votre projet Django actuel, avec ses modules `rh`, `core`, `projects`, et `logistique`, est la base parfaite pour intégrer ces améliorations.
+
+Le concept de **gestion des workflows** et de **documentation structurée** est très pertinent pour une entreprise multisite.
+
+Voici une proposition d'approche et un **Plan d'Action** structuré pour implémenter ces fonctionnalités.
+
+---
+
+## 💡 Approche Modulaire et Architecture
+
+Pour implémenter ces fonctionnalités de manière moderne et évolutive, nous allons nous concentrer sur deux nouveaux modules principaux, tout en étendant légèrement les modules existants (`rh`, `logistique`, `core`).
+
+1.  **Nouveau Module: `workflow` (Demandes et Approbations)**: Gérera toutes les demandes d'autorisation (permissions, congés, missions) et le cycle d'approbation.
+2.  **Nouveau Module: `documentation` (Base de Connaissances et Contrats)**: Gérera la documentation, les manuels, les documents EHS, et les contrats des employés.
+
+---
+
+## 🗺️ Plan d'Action Détaillé (Roadmap)
+
+Nous allons scinder l'implémentation en trois phases logiques.
+
+### Phase 1 : 🛠️ Le Moteur de Workflow (Module `workflow`)
+
+L'objectif est de créer le système central qui gère l'envoi, l'approbation et le suivi des demandes.
+
+| Étape | Description de l'Action | Application(s) Clé(s) |
+| :--- | :--- | :--- |
+| **1.1** | **Créer l'Application `workflow`** : Mettre en place la nouvelle application Django. | `workflow` |
+| **1.2** | **Modèle de Demande Générique** : Créer le modèle `PermissionRequest` pour gérer les types de demandes (Permission/Congé). Inclure les champs `user` (demandeur), `request_type`, `start_date`, `end_date`, `reason`, `status` (Pending, Approved, Rejected). | `workflow` |
+| **1.3** | **Modèle d'Approbation** : Créer le modèle `ApprovalStep` pour lier le responsable (`manager`) à la demande, avec un champ `approval_date`. Cela permet de savoir **qui** doit approuver. | `workflow`, `users` |
+| **1.4** | **Logique de Responsable** : Mettre à jour le modèle `CustomUser` dans l'application `users` pour inclure un champ `manager` (lien Foreign Key vers `CustomUser` lui-même). | `users` |
+| **1.5** | **Vues et Interface Utilisateur** : Créer les vues (`FormView`, `ListView`) pour que l'utilisateur puisse **soumettre** une demande et **consulter** ses demandes. | `workflow` |
+| **1.6** | **Vues et Interface Responsable** : Créer les vues pour que le responsable puisse **voir la liste des demandes en attente** et des vues d'action pour **Approuver/Refuser**. | `workflow` |
+| **1.7** | **Notification (Optionnel mais Recommandé)** : Mise en place de signaux ou de tâches asynchrones pour envoyer un e-mail à l'utilisateur lors de l'approbation/refus. | `workflow` |
+
+### Phase 2 : 📄 Génération de Documents et Internationalisation (Multi-Pays)
+
+L'objectif est d'implémenter la génération dynamique de PDF et la gestion par pays.
+
+| Étape | Description de l'Action | Application(s) Clé(s) |
+| :--- | :--- | :--- |
+| **2.1** | **Modèle de Pays/Locale** : Créer un modèle `Country` ou étendre un modèle existant pour gérer les spécificités par pays si ce n'est pas déjà fait. **Lier les utilisateurs, missions et projets à ce pays.** | `core`, `users`, `projects` |
+| **2.2** | **Installation et Configuration de PDF** : Utiliser une librairie comme **`WeasyPrint`** (que vous avez déjà dans le `venv`) pour la génération de PDF à partir de templates HTML. | `config` |
+| **2.3** | **Génération de Lettres Utilisateur** : Créer un modèle `DocumentRequest` (ou utiliser le modèle `PermissionRequest` si le type est "Certification") et une vue pour générer un PDF de certification ou d'attestation. | `rh`, `workflow` |
+| **2.4** | **Gestion du Téléchargement Unique** : Ajouter un champ `download_count` (ou `is_downloaded`) au modèle de la demande. Utiliser un **token temporaire** dans l'URL de téléchargement pour n'autoriser qu'un seul accès ou incrémenter le compteur. | `rh`, `workflow` |
+| **2.5** | **Missions du Country Manager** : Étendre les modèles `logistique` et `projects` (ou créer un nouveau modèle dans `logistique`) pour une `Mission` liée au `Vehicule` et aux `CustomUser` (membres de l'équipe). Créer une vue dédiée pour le **Country Manager** pour attribuer et générer la lettre de mission en PDF. | `logistique`, `users` |
+
+### Phase 3 : 📚 Documentation et Contrats (Module `documentation`)
+
+L'objectif est de créer la base de connaissances et le système de gestion des contrats de travail.
+
+| Étape | Description de l'Action | Application(s) Clé(s) |
+| :--- | :--- | :--- |
+| **3.1** | **Créer l'Application `documentation`** : Mettre en place la nouvelle application Django. | `documentation` |
+| **3.2** | **Modèles de Documentation** : Créer le modèle `Document` avec des champs pour le `title`, `file` (FileField), et surtout `document_type` (choix: Installation, EHS, Intégration, etc.). | `documentation` |
+| **3.3** | **Interface de Documentation** : Créer une page de liste des documents avec filtres par `document_type` et une vue permettant aux utilisateurs de lire ou télécharger le document. | `documentation` |
+| **3.4** | **Modèle de Contrat** : Créer un modèle `Contract` dans l'application `rh` ou `documentation`. Ce modèle doit être lié à l'employé (`CustomUser`), au `job_title` et aux dates du contrat. | `rh` ou `documentation` |
+| **3.5** | **Génération de Contrat Dynamique** : Créer une vue qui utilise un template pour générer le contrat en PDF en fonction du poste de l'employé et des spécificités du pays (référencé à l'étape 2.1). | `rh`, `documentation` |
+| **3.6** | **Consultation et Signature Électronique** : Permettre à l'employé de consulter son contrat (vue restreinte). Pour la "signature", le plus simple est d'ajouter un champ `is_signed = BooleanField()` et une vue simple permettant à l'utilisateur de cliquer sur "J'accepte et je signe" pour marquer le contrat comme signé. (Pour une valeur légale, il faudrait une solution de signature électronique tierce, mais la simple acceptation est un bon point de départ). | `rh` |
+
+---
+
+## 🤝 Innovation et Modernité
+
+Pour rendre ce système **moderne et innovant**, voici des points d'amélioration :
+
+| Fonctionnalité | Innovation/Modernité |
+| :--- | :--- |
+| **Workflow Unique** | Utiliser une approche **déclarative** dans le modèle de workflow pour définir les étapes d'approbation (ex: Si `CountryManager` et `FinanceDirector` doivent approuver, définir cette chaîne dans le modèle plutôt qu'en dur dans le code). |
+| **Accès Conditionnel (RBAC)** | Utiliser le lien du `CustomUser` vers le `Country` et le `manager` pour que les utilisateurs voient **uniquement** les documents/demandes qui les concernent ou qui concernent leur pays. |
+| **Système de Points** | Étant donné que votre modèle `TaskType` dans `projects` a déjà un champ `points_value`, intégrez cette logique au module `rh` pour des rapports de performance plus riches basés sur les tâches complétées et les certifications obtenues. |
+
+Ce plan d'action vous donne une feuille de route claire, structurée et modulaire. Êtes-vous d'accord avec cette approche, et par quelle étape souhaitez-vous commencer à coder ?

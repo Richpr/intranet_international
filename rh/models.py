@@ -44,3 +44,15 @@ class PaiementSalaire(models.Model):
 
     def __str__(self):
         return f"Salaire de {self.employe} pour {self.mois}/{self.annee}"
+
+
+class Contract(models.Model):
+    employee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='contracts')
+    job_title = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    is_signed = models.BooleanField(default=False)
+    file = models.FileField(upload_to='contracts/', null=True, blank=True)
+
+    def __str__(self):
+        return f"Contract for {self.employee.username} - {self.job_title}"

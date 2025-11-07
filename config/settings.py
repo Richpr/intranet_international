@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "logistique.apps.LogistiqueConfig",
     "rh.apps.RhConfig",
     "data_analytics.apps.DataAnalyticsConfig",
+    "workflow.apps.WorkflowConfig",
+    "documentation.apps.DocumentationConfig",
     
 ]
 

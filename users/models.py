@@ -64,6 +64,7 @@ class CustomUser(AbstractUser):
         default="ACTIF",
         verbose_name=_("Statut actuel"),
     )
+    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='team_members', verbose_name=_("Manager"))
 
     class Meta:
         verbose_name = "Employé"

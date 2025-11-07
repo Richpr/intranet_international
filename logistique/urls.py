@@ -13,4 +13,6 @@ urlpatterns = [
     path('missions/create/', views.MissionLogistiqueCreateView.as_view(), name='missionlogistique_create'),
     path('missions/<int:pk>/update/', views.MissionLogistiqueUpdateView.as_view(), name='missionlogistique_update'),
     path('missions/<int:pk>/delete/', views.MissionLogistiqueDeleteView.as_view(), name='missionlogistique_delete'),
+    path('missions/<int:pk>/', views.MissionLogistiqueDetailView.as_view(), name='missionlogistique_detail'),
+    path('missions/<int:pk>/pdf/', views.MissionLetterPdfView.as_view(), name='mission_letter_pdf'),
 ]

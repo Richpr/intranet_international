@@ -1,0 +1,19 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Détails du Contrat{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Détails du Contrat</h1>
+    <p><strong>Employé:</strong> {{ contract.employee.username }}</p>
+    <p><strong>Titre du poste:</strong> {{ contract.job_title }}</p>
+    <p><strong>Date de début:</strong> {{ contract.start_date }}</p>
+    <p><strong>Date de fin:</strong> {{ contract.end_date|default:"N/A" }}</p>
+    <p><strong>Statut:</strong> {% if contract.is_signed %}Signé{% else %}Non signé{% endif %}</p>
+
+    <a href="{% url 'rh:contract_pdf' contract.pk %}" class="btn btn-primary">Télécharger le PDF</a>
+    {% if not contract.is_signed and request.user == contract.employee %}
+        <a href="{% url 'rh:contract_sign' contract.pk %}" class="btn btn-success">Signer le contrat</a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -17,4 +17,9 @@ urlpatterns = [
     path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
     path('employees/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee_detail'),
     path('employees/performance/', views.EmployeePerformanceView.as_view(), name='employee_performance'),
+
+    path('contracts/', views.ContractListView.as_view(), name='contract_list'),
+    path('contracts/<int:pk>/', views.ContractDetailView.as_view(), name='contract_detail'),
+    path('contracts/<int:pk>/pdf/', views.ContractPdfView.as_view(), name='contract_pdf'),
+    path('contracts/<int:pk>/sign/', views.ContractSignView.as_view(), name='contract_sign'),
 ]

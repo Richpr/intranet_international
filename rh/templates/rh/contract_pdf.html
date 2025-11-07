@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contrat de Travail</title>
+    <style>
+        body { font-family: sans-serif; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Contrat de Travail</h1>
+    <p><strong>Employé:</strong> {{ contract.employee.username }}</p>
+    <p><strong>Titre du poste:</strong> {{ contract.job_title }}</p>
+    <p><strong>Date de début:</strong> {{ contract.start_date }}</p>
+    <p><strong>Date de fin:</strong> {{ contract.end_date|default:"N/A" }}</p>
+</body>
+</html>

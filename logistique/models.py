@@ -30,8 +30,11 @@ class Vehicule(models.Model):
 class MissionLogistique(models.Model):
     vehicule = models.ForeignKey(Vehicule, on_delete=models.CASCADE, related_name="missions", verbose_name=_("Véhicule"))
     conducteur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="missions_conduites", verbose_name=_("Conducteur"))
+    team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="missions_equipe", verbose_name=_("Membres de l'équipe"))
     motif = models.CharField(max_length=255, verbose_name=_("Motif"))
     site_concerne = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="missions_logistiques", verbose_name=_("Site concerné"))
+    start_date = models.DateField(verbose_name=_("Date de début"))
+    end_date = models.DateField(verbose_name=_("Date de fin"))
 
     class Meta:
         verbose_name = _("Mission Logistique")

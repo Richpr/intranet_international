@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Contrats{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Contrats</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Titre du poste</th>
+                <th>Date de début</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contract in contracts %}
+            <tr>
+                <td>{{ contract.employee.username }}</td>
+                <td>{{ contract.job_title }}</td>
+                <td>{{ contract.start_date }}</td>
+                <td>{% if contract.is_signed %}Signé{% else %}Non signé{% endif %}</td>
+                <td>
+                    <a href="{% url 'rh:contract_detail' contract.pk %}" class="btn btn-sm btn-info">Détails</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
