@@ -442,7 +442,8 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
         month_filter = self.request.GET.get('month', '')
         # Utiliser l'ID ou le nom exact pour le filtre
         installation_type_filter = self.request.GET.get('installation_type', '')
-        
+        site_status_filter = self.request.GET.get('site_status', 'unfinished')
+
         # 2. Appliquer les filtres au queryset des sites
         if year_filter:
             sites = sites.filter(start_date__year=year_filter)
@@ -456,6 +457,11 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
             
         if installation_type_filter:
             sites = sites.filter(installation_type__name=installation_type_filter)
+
+        if site_status_filter == 'unfinished':
+            sites = sites.exclude(status__icontains='COMPLETED')
+        elif site_status_filter == 'completed':
+            sites = sites.filter(status__icontains='COMPLETED')
 
         # 🚨 MODIFICATION CRITIQUE : Tri par Date de Démarrage et ID Client
         sites = sites.order_by('start_date', 'site_id_client')
@@ -510,6 +516,7 @@ class ProjectDetailView(CountryIsolationMixin, DetailView):
             "installation_type": installation_type_filter,
             "year": year_filter,
             "month": month_filter,
+            "site_status": site_status_filter,
         }
 
         # 1. Le CM est-il le CM du pays du projet ?

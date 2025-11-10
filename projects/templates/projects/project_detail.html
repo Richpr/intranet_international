@@ -172,11 +172,20 @@
                     {% endfor %}
                 </select>
             </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Statut du Site</label>
+                <select class="form-select form-select-sm" name="site_status" onchange="this.form.submit()">
+                    <option value="unfinished" {% if filters.site_status == 'unfinished' %}selected{% endif %}>Sites non terminés</option>
+                    <option value="completed" {% if filters.site_status == 'completed' %}selected{% endif %}>Sites terminés</option>
+                    <option value="all" {% if filters.site_status == 'all' %}selected{% endif %}>Tous les sites</option>
+                </select>
+            </div>
             
-            <div class="col-md-5 d-flex align-items-end">
+            <div class="col-md-2 d-flex align-items-end">
                 {# Bouton de réinitialisation qui redirige vers l'URL du projet sans paramètres GET #}
                 <a href="{% url 'projects:project_detail' pk=project.pk %}" class="btn btn-outline-secondary btn-sm w-100">
-                    <i class="me-1">🔄</i> Réinitialiser les Filtres Serveur
+                    <i class="me-1">🔄</i> Réinitialiser
                 </a>
             </div>
         </form>
