@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Attestation de Travail</title>
+    <style>
+        @page {
+            margin: 50px;
+        }
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            line-height: 1.6;
+        }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header-logo img {
+            width: 100%;
+            max-width: 600px;
+        }
+        .company-name {
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .date-ref {
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin-top: 30px;
+            font-size: 24px;
+            text-decoration: underline;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .content {
+            margin-top: 30px;
+            text-align: justify;
+        }
+        .content p {
+            margin-bottom: 15px;
+        }
+        .signature-section {
+            margin-top: 80px;
+            text-align: right;
+        }
+        .signature-section img {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            width: 150px;
+        }
+        .signature-section p {
+            margin: 2px 0;
+        }
+        ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            font-weight: bold;
+        }
+        .footer-logo {
+            position: fixed;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        .footer-logo img {
+            width: 100%;
+            max-width: 700px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-logo">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    </div>
+
+    
+    
+    <div class="date-ref">
+        <p><strong>Cotonou, le {{ generation_date }}</strong></p>
+        <p><strong><em>Réf : NTC-G/HR/AT/{{ year }}</em></strong></p>
+    </div>
+
+    <div class="header">
+        <h1>ATTESTATION DE TRAVAIL</h1>
+    </div>
+
+    <div class="content">
+        <p>
+            Je soussigné, ATIKPA L.S. Ulrich, Directeur Général au sein de l'entreprise NTC Group,
+            atteste par la présente que <strong>Monsieur {{ employee.first_name }} {{ employee.last_name }}</strong> exerce au sein de notre
+            entreprise en qualité de {{ employee.main_role }} depuis le {{ employee.date_joined|date:"d/m/Y" }} à ce jour.
+        </p>
+        <p>
+            Dans le cadre de ses fonctions, <strong>Monsieur {{ employee.first_name }} {{ employee.last_name }}</strong> accomplit les tâches
+            suivantes :
+        </p>
+        <ul>
+            {% if employee.main_role == "Team Lead" %}
+                <li>Assurer le leadership technique et l'expertise en la matière.</li>
+                <li>Superviser et assister les mouvements, ajouts, modifications et projets.</li>
+                <li>Élaborer et exécuter des plans de projet pour l'intégration de sites distants.</li>
+                <li>Travailler avec les fournisseurs pour identifier les opportunités d'amélioration.</li>
+                <li>Assurer le leadership de l'équipe, la coordination quotidienne et la priorisation de la charge de travail.</li>
+                <li>Suivre les performances de l'équipe et fournir des retours réguliers.</li>
+            {% elif employee.main_role == "Technicien" %}
+                <li>Installer et configurer les systèmes, le matériel et les logiciels de télécommunication.</li>
+                <li>Mettre à niveau et maintenir les systèmes de télécommunication existants.</li>
+                <li>Effectuer des tests de diagnostic pour identifier et résoudre les pannes techniques.</li>
+                <li>Évaluer les besoins des clients et planifier les installations.</li>
+                <li>Tenir des registres précis des ordres de travail et documenter les configurations techniques.</li>
+            {% elif employee.main_role == "Chauffeur" %}
+                <li>Conduire des véhicules commerciaux réglementés par le DOT en toute sécurité.</li>
+                <li>Effectuer des inspections avant et après le voyage.</li>
+                <li>Assurer le chargement, la sécurisation et le transport corrects des matériaux et de l'équipement.</li>
+                <li>Assister les chefs d'équipe et les membres de l'équipe dans les tâches de construction télécom.</li>
+                <li>Effectuer des tests de conduite des réseaux mobiles.</li>
+            {% elif employee.main_role == "Monteur" %}
+                <li>Installer, entretenir et réparer les équipements de télécommunication sur les pylônes et les toits.</li>
+                <li>Effectuer des tâches en hauteur, en respectant des protocoles de sécurité stricts.</li>
+                <li>Exécuter des activités de gréement, y compris le levage et le hissage d'équipements.</li>
+                <li>Installer, épisser et réparer divers types de câbles.</li>
+                <li>Effectuer des tests de base des systèmes installés.</li>
+            {% elif employee.main_role == "Coordinateur de Projet" %}
+                <li>Définir les exigences, la portée et les objectifs du projet.</li>
+                <li>Coordonner les activités de gestion de projet, les ressources et les informations.</li>
+                <li>Suivre l'avancement global du projet et la réalisation des jalons.</li>
+                <li>Servir de point de point de communication principal entre les équipes, les clients et les fournisseurs.</li>
+                <li>Suivre et gérer les aspects financiers du projet.</li>
+            {% elif employee.main_role == "Country Manager" %}
+                <li>Élaborer et exécuter des plans stratégiques pour la croissance de l'entreprise.</li>
+                <li>Superviser tous les aspects des opérations nationales, y compris les ventes, le marketing et les finances.</li>
+                <li>Gérer les budgets et être responsable des profits et pertes.</li>
+                <li>Recruter, former et gérer les équipes locales.</li>
+                <li>Établir et maintenir des relations solides avec les principales parties prenantes.</li>
+            {% else %}
+                <li>Tâches générales non spécifiées pour ce rôle.</li>
+            {% endif %}
+        </ul>
+        <p>
+            Cette attestation est délivrée à la demande de l'intéressé pour servir et valoir ce que de droit.
+        </p>
+    </div>
+
+    <div class="signature-section">
+        <p>La Direction</p>
+        <img src="{% static 'images/signature.png' %}" alt="Signature">
+        <p><strong>Ulrich L.S ATIKPA</strong></p>
+    </div>
+
+    <div class="footer-logo">
+        <img src="{% static 'images/pied.png' %}" alt="Pied de page">
+    </div>
+</body>
+</html>

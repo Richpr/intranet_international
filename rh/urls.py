@@ -16,6 +16,8 @@ urlpatterns = [
 
     path('employees/', views.EmployeeListView.as_view(), name='employee_list'),
     path('employees/<int:pk>/', views.EmployeeDetailView.as_view(), name='employee_detail'),
+    path('employees/<int:pk>/attestation/', views.AttestationPDFView.as_view(), name='attestation_pdf'),
+    path('employees/<int:pk>/certificat/', views.CertificatTravailPDFView.as_view(), name='certificat_travail_pdf'),
     path('employees/performance/', views.EmployeePerformanceView.as_view(), name='employee_performance'),
 
     path('contracts/', views.ContractListView.as_view(), name='contract_list'),

@@ -19,6 +19,16 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'rh:attestation_pdf' pk=employee.pk %}" class="btn btn-primary">Générer Attestation</a>
+            <a href="{% url 'rh:certificat_travail_pdf' pk=employee.pk %}" class="btn btn-secondary">Générer Certificat</a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Certifications</h6>
         </div>
         <div class="card-body">

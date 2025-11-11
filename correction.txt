@@ -1,7 +1,0 @@
-les ameliorationa a apporter 
-
-- dans chaque project seul les sites qui ne sont pas encore terminés seront affiché les autres istes déjà terminee pourront 
-t etre vu si l utilisateur mets dans le filtres tous les sites.
-
-
-

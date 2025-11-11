@@ -7,7 +7,61 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from .forms import CertificationForm
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from weasyprint import HTML
+from weasyprint import HTML, CSS
+import datetime
+from django.conf import settings
+import os
+import mimetypes
+from pathlib import Path
+from urllib.parse import urlparse
+from django.contrib.staticfiles import finders
+from django.core.files.storage import default_storage
+import weasyprint
+
+def django_weasyprint_url_fetcher(url, *args, **kwargs):
+    """
+    Custom URL fetcher for WeasyPrint that handles Django static and media files.
+    """
+    # 1. Handle file:// URLs directly
+    if url.startswith('file:'):
+        parsed_url = urlparse(url)
+        file_path = Path(parsed_url.path)
+        if file_path.exists():
+            mime_type, encoding = mimetypes.guess_type(file_path.name)
+            return {
+                'file_obj': open(file_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
+
+    # 2. Handle Django static files
+    if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
+        static_path = url.replace(settings.STATIC_URL, '', 1)
+        # Use Django's finders to locate the static file
+        absolute_path = finders.find(static_path)
+        if absolute_path:
+            mime_type, encoding = mimetypes.guess_type(absolute_path)
+            return {
+                'file_obj': open(absolute_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
+
+    # 3. Handle Django media files
+    if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
+        media_path = url.replace(settings.MEDIA_URL, '', 1)
+        # Construct the absolute path for media files
+        absolute_path = Path(settings.MEDIA_ROOT) / media_path
+        if absolute_path.exists():
+            mime_type, encoding = mimetypes.guess_type(absolute_path.name)
+            return {
+                'file_obj': open(absolute_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
+
+    # 4. Fallback to WeasyPrint's default URL fetcher for other URLs (e.g., external HTTP/HTTPS)
+    return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 class ContractListView(LoginRequiredMixin, ListView):
     model = Contract
@@ -31,7 +85,7 @@ class ContractPdfView(LoginRequiredMixin, DetailView):
 
     def render_to_response(self, context, **response_kwargs):
         html_string = render_to_string(self.template_name, context)
-        html = HTML(string=html_string)
+        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
         pdf = html.write_pdf()
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="contract_{self.object.pk}.pdf"'
@@ -156,3 +210,42 @@ class EmployeePerformanceView(LoginRequiredMixin, ListView):
 
         sorted_users = sorted(users, key=sort_key, reverse=True)
         return sorted_users
+
+class AttestationPDFView(LoginRequiredMixin, DetailView):
+    model = CustomUser
+    template_name = 'rh/attestation_pdf.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['employee'] = self.object
+        context['year'] = datetime.date.today().year
+        context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        html_string = render_to_string(self.template_name, context)
+        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
+        pdf = html.write_pdf()
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="attestation_{self.object.username}.pdf"'
+        return response
+
+class CertificatTravailPDFView(LoginRequiredMixin, DetailView):
+    model = CustomUser
+    template_name = 'rh/certificat_travail_pdf.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['employee'] = self.object
+        context['contract'] = self.object.contracts.order_by('-start_date').first()
+        context['year'] = datetime.date.today().year
+        context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        html_string = render_to_string(self.template_name, context)
+        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
+        pdf = html.write_pdf()
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="certificat_{self.object.username}.pdf"'
+        return response
