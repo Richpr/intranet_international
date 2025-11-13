@@ -21,6 +21,7 @@ import weasyprint
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
     Custom URL fetcher for WeasyPrint that handles Django static and media files.
+    Gère les URL absolues générées lorsque base_url est défini.
     """
     # 1. Handle file:// URLs directly
     if url.startswith('file:'):
@@ -34,22 +35,28 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
                 'encoding': encoding,
             }
 
-    # 2. Handle Django static files
-    if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
-        # CORRECTION DE ROBUSTESSE: Utiliser .lower() pour gérer la casse sur Linux
-        static_path = url.replace(settings.STATIC_URL, '', 1).lower() 
+    # 2. Handle Django static files (Correction clé pour base_url absolu)
+    if settings.STATIC_URL:
+        parsed_url = urlparse(url)
+        # On travaille avec le chemin (path) de l'URL absolue (ex: /static/images/logo.png)
+        path = parsed_url.path
+        
+        # Le chemin doit commencer par STATIC_URL (ex: /static/)
+        if path.startswith(settings.STATIC_URL):
+            # Enlever le préfixe STATIC_URL et forcer la casse en minuscule
+            static_path = path.replace(settings.STATIC_URL, '', 1).lower()
 
-        # Utilisation de os.path.join pour construire le chemin absolu de manière fiable
-        absolute_path = os.path.join(settings.STATIC_ROOT, static_path) 
+            # Utilisation de os.path.join pour construire le chemin absolu de manière fiable
+            absolute_path = os.path.join(settings.STATIC_ROOT, static_path) 
 
-        if os.path.exists(absolute_path):
-            mime_type, encoding = mimetypes.guess_type(absolute_path)
+            if os.path.exists(absolute_path):
+                mime_type, encoding = mimetypes.guess_type(absolute_path)
 
-            return {
-                'file_obj': open(absolute_path, 'rb'),
-                'mime_type': mime_type,
-                'encoding': encoding,
-            }
+                return {
+                    'file_obj': open(absolute_path, 'rb'),
+                    'mime_type': mime_type,
+                    'encoding': encoding,
+                }
 
     # 3. Handle Django media files
     if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
