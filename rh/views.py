@@ -61,7 +61,8 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
             }
 
     # 4. Fallback to WeasyPrint's default URL fetcher for other URLs (e.g., external HTTP/HTTPS)
-    return weasyprint.default_url_fetcher(url, *args, **kwargs)
+    #return weasyprint.default_url_fetcher(url, *args, **kwargs)
+    raise IOError(f"Ressource non trouvée localement: {url}")
 
 class ContractListView(LoginRequiredMixin, ListView):
     model = Contract
