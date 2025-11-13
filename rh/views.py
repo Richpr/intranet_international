@@ -37,31 +37,20 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
     # 2. Handle Django static files
     if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
         static_path = url.replace(settings.STATIC_URL, '', 1)
-        
-        # UTILISATION DU CHEMIN ABSOLU STATIC_ROOT (Remplacement de finders.find())
-        absolute_path = Path(settings.STATIC_ROOT) / static_path 
-        
-        # --- LOGS DE DÉBOGAGE AJOUTÉS ---
-        print(f"WeasyPrint REQUÊTE: {url}")
-        print(f"Chemin Statique (Relatif): {static_path}")
-        print(f"Chemin Absolu (Vérification): {absolute_path}")
-        
-        if absolute_path.exists():
-            print(f"SUCCÈS: Fichier trouvé et chargé.")
-            # --- FIN LOGS DE DÉBOGAGE ---
-            
-            mime_type, encoding = mimetypes.guess_type(absolute_path.name)
+
+        # **MODIFICATION CLÉ : Utiliser os.path.join pour la robustesse**
+        absolute_path = os.path.join(settings.STATIC_ROOT, static_path)
+
+        # Utiliser os.path.exists pour être compatible avec os.path.join
+        if os.path.exists(absolute_path): 
+            mime_type, encoding = mimetypes.guess_type(absolute_path)
+
+            # Le mime_type doit être basé sur le chemin absolu entier
             return {
                 'file_obj': open(absolute_path, 'rb'),
                 'mime_type': mime_type,
                 'encoding': encoding,
             }
-        else:
-            # --- LOGS DE DÉBOGAGE AJOUTÉS ---
-            print(f"ERREUR: Le fichier n'existe PAS à l'emplacement: {absolute_path}")
-            # --- FIN LOGS DE DÉBOGAGE ---
-            
-            # Ne pas retourner, laisser le fetcher par défaut essayer (il échouera)
 
     # 3. Handle Django media files (section non modifiée)
     if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
