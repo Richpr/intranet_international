@@ -22,50 +22,37 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
     Custom URL fetcher for WeasyPrint that handles Django static and media files.
     """
-    # 1. Handle file:// URLs directly
-    if url.startswith('file:'):
-        parsed_url = urlparse(url)
-        file_path = Path(parsed_url.path)
-        if file_path.exists():
-            mime_type, encoding = mimetypes.guess_type(file_path.name)
-            return {
-                'file_obj': open(file_path, 'rb'),
-                'mime_type': mime_type,
-                'encoding': encoding,
-            }
+    # (Laissez les sections 1. Handle file:// et 3. Handle media files intactes)
 
     # 2. Handle Django static files
     if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
         static_path = url.replace(settings.STATIC_URL, '', 1)
 
-        # **MODIFICATION CLÉ : Utiliser os.path.join pour la robustesse**
-        absolute_path = os.path.join(settings.STATIC_ROOT, static_path)
+        # --- Utilisation de os.path.join pour le chemin le plus fiable ---
+        absolute_path = os.path.join(settings.STATIC_ROOT, static_path) 
 
-        # Utiliser os.path.exists pour être compatible avec os.path.join
-        if os.path.exists(absolute_path): 
+        # --- LOGS DE DÉBOGAGE AJOUTÉS ---
+        print(f"WeasyPrint REQUÊTE: {url}")
+        print(f"Chemin Relatif: {static_path}")
+        print(f"Chemin Absolu TENTÉ: {absolute_path}")
+
+        if os.path.exists(absolute_path):
+            print(f"SUCCÈS: Fichier trouvé et chargé.")
+            # --- FIN LOGS DE DÉBOGAGE ---
+
             mime_type, encoding = mimetypes.guess_type(absolute_path)
 
-            # Le mime_type doit être basé sur le chemin absolu entier
             return {
                 'file_obj': open(absolute_path, 'rb'),
                 'mime_type': mime_type,
                 'encoding': encoding,
             }
+        else:
+            # --- LOGS DE DÉBOGAGE AJOUTÉS ---
+            print(f"ERREUR: Le fichier N'EXISTE PAS à: {absolute_path}")
+            # --- FIN LOGS DE DÉBOGAGE ---
 
-    # 3. Handle Django media files (section non modifiée)
-    if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
-        # ... (votre code existant ici)
-        media_path = url.replace(settings.MEDIA_URL, '', 1)
-        absolute_path = Path(settings.MEDIA_ROOT) / media_path
-        if absolute_path.exists():
-            mime_type, encoding = mimetypes.guess_type(absolute_path.name)
-            return {
-                'file_obj': open(absolute_path, 'rb'),
-                'mime_type': mime_type,
-                'encoding': encoding,
-            }
-
-    # 4. Fallback to WeasyPrint's default URL fetcher (section non modifiée)
+    # (Laissez la section 4. Fallback intacte)
     return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 class ContractListView(LoginRequiredMixin, ListView):
