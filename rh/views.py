@@ -20,7 +20,7 @@ import weasyprint
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
-    Custom URL fetcher robuste avec gestion d'erreur
+    Custom URL fetcher robuste avec gestion d'erreur complète
     """
     try:
         # 1. Gérer les fichiers statiques Django
@@ -47,12 +47,11 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
                     'encoding': encoding,
                 }
 
-        # 3. Fallback pour toutes les URLs externes
+        # 3. Fallback pour toutes les autres URLs
         return weasyprint.default_url_fetcher(url, *args, **kwargs)
         
     except Exception as e:
-        # En cas d'erreur (403, timeout, etc.), retourner un fichier vide
-        print(f"⚠️  Erreur URL fetcher pour {url}: {e}")
+        # En cas d'erreur, retourner un fichier vide
         from io import BytesIO
         return {
             'file_obj': BytesIO(b''),
