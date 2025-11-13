@@ -20,45 +20,49 @@ import weasyprint
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
-    Custom URL fetcher robuste avec gestion d'erreur complète
+    Custom URL fetcher for WeasyPrint that handles Django static and media files.
     """
-    try:
-        # 1. Gérer les fichiers statiques Django
-        if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
-            static_path = url.replace(settings.STATIC_URL, '', 1)
-            absolute_path = finders.find(static_path)
-            if absolute_path:
-                mime_type, encoding = mimetypes.guess_type(absolute_path)
-                return {
-                    'file_obj': open(absolute_path, 'rb'),
-                    'mime_type': mime_type,
-                    'encoding': encoding,
-                }
+    # 1. Handle file:// URLs directly
+    if url.startswith('file:'):
+        parsed_url = urlparse(url)
+        file_path = Path(parsed_url.path)
+        if file_path.exists():
+            mime_type, encoding = mimetypes.guess_type(file_path.name)
+            return {
+                'file_obj': open(file_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
 
-        # 2. Gérer les fichiers media Django
-        if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
-            media_path = url.replace(settings.MEDIA_URL, '', 1)
-            absolute_path = Path(settings.MEDIA_ROOT) / media_path
-            if absolute_path.exists():
-                mime_type, encoding = mimetypes.guess_type(absolute_path.name)
-                return {
-                    'file_obj': open(absolute_path, 'rb'),
-                    'mime_type': mime_type,
-                    'encoding': encoding,
-                }
+    # 2. Handle Django static files
+    if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
+        static_path = url.replace(settings.STATIC_URL, '', 1)
+        # Use Django's finders to locate the static file
+        #absolute_path = finders.find(static_path)
+        absolute_path = Path(settings.STATIC_ROOT) / static_path
+        if absolute_path:
+            mime_type, encoding = mimetypes.guess_type(absolute_path)
+            return {
+                'file_obj': open(absolute_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
 
-        # 3. Fallback pour toutes les autres URLs
-        return weasyprint.default_url_fetcher(url, *args, **kwargs)
-        
-    except Exception as e:
-        # En cas d'erreur, retourner un fichier vide
-        from io import BytesIO
-        return {
-            'file_obj': BytesIO(b''),
-            'mime_type': 'application/octet-stream',
-            'encoding': None,
-        }
-    
+    # 3. Handle Django media files
+    if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
+        media_path = url.replace(settings.MEDIA_URL, '', 1)
+        # Construct the absolute path for media files
+        absolute_path = Path(settings.MEDIA_ROOT) / media_path
+        if absolute_path.exists():
+            mime_type, encoding = mimetypes.guess_type(absolute_path.name)
+            return {
+                'file_obj': open(absolute_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
+
+    # 4. Fallback to WeasyPrint's default URL fetcher for other URLs (e.g., external HTTP/HTTPS)
+    return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 class ContractListView(LoginRequiredMixin, ListView):
     model = Contract
@@ -246,3 +250,15 @@ class CertificatTravailPDFView(LoginRequiredMixin, DetailView):
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="certificat_{self.object.username}.pdf"'
         return response
+
+def generate_work_card(request, employee_id):
+    employee = get_object_or_404(CustomUser, id=employee_id)
+    contract = Contract.objects.filter(employee=employee).order_by('-start_date').first()
+    certifications = Certification.objects.filter(employe=employee)
+
+    context = {
+        'employee': employee,
+        'contract': contract,
+        'certifications': certifications,
+    }
+    return render(request, 'rh/work_card.html', context)

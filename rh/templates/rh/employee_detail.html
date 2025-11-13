@@ -24,6 +24,7 @@
         <div class="card-body">
             <a href="{% url 'rh:attestation_pdf' pk=employee.pk %}" class="btn btn-primary">Générer Attestation</a>
             <a href="{% url 'rh:certificat_travail_pdf' pk=employee.pk %}" class="btn btn-secondary">Générer Certificat</a>
+            <a href="{% url 'rh:generate_work_card' employee_id=employee.pk %}" class="btn btn-info">Générer la carte de travail</a>
         </div>
     </div>
 

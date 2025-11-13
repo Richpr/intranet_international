@@ -1,0 +1,262 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTC Safety Passport</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+        }
+
+        .card {
+            width: 850px;
+            height: 480px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .left-section {
+            flex: 1.5;
+        }
+
+        .right-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 120px;
+            text-align: center;
+            margin-right: 20px;
+        }
+
+        .logo .ng {
+            font-size: 60px;
+            font-weight: bold;
+            color: #1E90FF;
+            line-height: 1;
+            background: -webkit-linear-gradient(#1E90FF, #4169E1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo .g-yellow {
+            color: #FFD700;
+            background: -webkit-linear-gradient(#FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: -15px;
+        }
+
+        .logo .ntcgroup {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFA500;
+            letter-spacing: 1px;
+        }
+
+        .company-title {
+            text-align: left;
+        }
+
+        .company-name {
+            font-size: 26px;
+            font-weight: bold;
+            color: #004a8d;
+        }
+
+        .passport-title {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+            margin-top: 10px; /* Ajustement */
+        }
+
+        .info {
+            margin-bottom: 25px;
+        }
+
+        .info p {
+            margin: 8px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .info .label {
+            color: #004a8d;
+        }
+
+        .photo {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 20px; /* Ajustement */
+            margin-bottom: 30px;
+            background-color: #f39c12;
+        }
+
+        .safety-badge {
+            width: 220px;
+            border: 2px solid #333;
+            border-radius: 25px;
+            padding: 10px;
+            text-align: center;
+            background-color: white;
+        }
+
+        .safety-first {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border-radius: 15px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .work-safely {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .certifications {
+            margin-top: 30px;
+        }
+
+        .cert-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #004a8d;
+        }
+
+        .cert-items {
+            display: flex;
+        }
+
+        .cert-item {
+            margin-right: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .cert-box {
+            width: 35px;
+            height: 35px;
+            border: 2px solid #004a8d;
+            margin-top: 5px;
+        }
+        
+        .cert-box.filled {
+            background-color: #004a8d;
+        }
+
+        .footer-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .footer-blue-bar {
+            background-color: #004a8d;
+            padding: 8px 20px;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            font-size: 14px;
+        }
+
+        .footer-orange-bar {
+            background-color: #f39c12;
+            height: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="main-content">
+            <div class="left-section">
+                <div class="header">
+                     <img src="{% static 'rh/logo.jpg' %}" alt="NTC Group Logo" class="logo">
+                    <div class="company-title">
+                        <div class="company-name">NEW TECH COMPANY GROUP</div>
+                        <div class="passport-title">NTC SAFETY PASSPORT</div>
+                    </div>
+                </div>
+
+                <div class="info">
+                    <p><span class="label">NOM :</span> {{ employee.last_name }}</p>
+                    <p><span class="label">PRENOM :</span> {{ employee.first_name }}</p>
+                    <p><span class="label">Job Role :</span> {{ contract.job_title }}</p>
+                    <p><span class="label">National ID :</span></p>
+                    <p><span class="label">Insurance No :</span></p>
+                </div>
+
+                <div class="certifications">
+                    <div class="cert-title">EHS Certification</div>
+                    <div class="cert-items">
+                        {% for cert in certifications %}
+                        <div class="cert-item">
+                            <div>{{ cert.nom_certification }}</div>
+                            <div class="cert-box filled"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <img src="{% static 'rh/photo.jpg' %}" alt="Employee Photo" class="photo">
+                <div class="safety-badge">
+                    <div class="safety-first">SAFETY FIRST</div>
+                    <div class="work-safely">WORK SAFELY</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-container">
+            <div class="footer-blue-bar">
+                 <span>Bénin : 65 73 73 04</span>
+                 <span>Gabon : 62 74 86 41</span>
+                 <span>Burkina-Faso : 78 76 34 74 </span>
+            </div>
+            <div class="footer-orange-bar"></div>
+        </div>
+    </div>
+
+</body>
+</html>
