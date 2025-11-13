@@ -37,21 +37,36 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
     # 2. Handle Django static files
     if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
         static_path = url.replace(settings.STATIC_URL, '', 1)
-        # Use Django's finders to locate the static file
-        #absolute_path = finders.find(static_path)
-        absolute_path = Path(settings.STATIC_ROOT) / static_path
-        if absolute_path:
-            mime_type, encoding = mimetypes.guess_type(absolute_path)
+        
+        # UTILISATION DU CHEMIN ABSOLU STATIC_ROOT (Remplacement de finders.find())
+        absolute_path = Path(settings.STATIC_ROOT) / static_path 
+        
+        # --- LOGS DE DÉBOGAGE AJOUTÉS ---
+        print(f"WeasyPrint REQUÊTE: {url}")
+        print(f"Chemin Statique (Relatif): {static_path}")
+        print(f"Chemin Absolu (Vérification): {absolute_path}")
+        
+        if absolute_path.exists():
+            print(f"SUCCÈS: Fichier trouvé et chargé.")
+            # --- FIN LOGS DE DÉBOGAGE ---
+            
+            mime_type, encoding = mimetypes.guess_type(absolute_path.name)
             return {
                 'file_obj': open(absolute_path, 'rb'),
                 'mime_type': mime_type,
                 'encoding': encoding,
             }
+        else:
+            # --- LOGS DE DÉBOGAGE AJOUTÉS ---
+            print(f"ERREUR: Le fichier n'existe PAS à l'emplacement: {absolute_path}")
+            # --- FIN LOGS DE DÉBOGAGE ---
+            
+            # Ne pas retourner, laisser le fetcher par défaut essayer (il échouera)
 
-    # 3. Handle Django media files
+    # 3. Handle Django media files (section non modifiée)
     if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
+        # ... (votre code existant ici)
         media_path = url.replace(settings.MEDIA_URL, '', 1)
-        # Construct the absolute path for media files
         absolute_path = Path(settings.MEDIA_ROOT) / media_path
         if absolute_path.exists():
             mime_type, encoding = mimetypes.guess_type(absolute_path.name)
@@ -61,7 +76,7 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
                 'encoding': encoding,
             }
 
-    # 4. Fallback to WeasyPrint's default URL fetcher for other URLs (e.g., external HTTP/HTTPS)
+    # 4. Fallback to WeasyPrint's default URL fetcher (section non modifiée)
     return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 class ContractListView(LoginRequiredMixin, ListView):
