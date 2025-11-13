@@ -22,24 +22,27 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
     Custom URL fetcher for WeasyPrint that handles Django static and media files.
     """
-    # (Laissez les sections 1. Handle file:// et 3. Handle media files intactes)
+    # 1. Handle file:// URLs directly
+    if url.startswith('file:'):
+        parsed_url = urlparse(url)
+        file_path = Path(parsed_url.path)
+        if file_path.exists():
+            mime_type, encoding = mimetypes.guess_type(file_path.name)
+            return {
+                'file_obj': open(file_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
 
     # 2. Handle Django static files
     if settings.STATIC_URL and url.startswith(settings.STATIC_URL):
-        static_path = url.replace(settings.STATIC_URL, '', 1)
+        # CORRECTION DE ROBUSTESSE: Utiliser .lower() pour gérer la casse sur Linux
+        static_path = url.replace(settings.STATIC_URL, '', 1).lower() 
 
-        # --- Utilisation de os.path.join pour le chemin le plus fiable ---
+        # Utilisation de os.path.join pour construire le chemin absolu de manière fiable
         absolute_path = os.path.join(settings.STATIC_ROOT, static_path) 
 
-        # --- LOGS DE DÉBOGAGE AJOUTÉS ---
-        print(f"WeasyPrint REQUÊTE: {url}")
-        print(f"Chemin Relatif: {static_path}")
-        print(f"Chemin Absolu TENTÉ: {absolute_path}")
-
         if os.path.exists(absolute_path):
-            print(f"SUCCÈS: Fichier trouvé et chargé.")
-            # --- FIN LOGS DE DÉBOGAGE ---
-
             mime_type, encoding = mimetypes.guess_type(absolute_path)
 
             return {
@@ -47,12 +50,20 @@ def django_weasyprint_url_fetcher(url, *args, **kwargs):
                 'mime_type': mime_type,
                 'encoding': encoding,
             }
-        else:
-            # --- LOGS DE DÉBOGAGE AJOUTÉS ---
-            print(f"ERREUR: Le fichier N'EXISTE PAS à: {absolute_path}")
-            # --- FIN LOGS DE DÉBOGAGE ---
 
-    # (Laissez la section 4. Fallback intacte)
+    # 3. Handle Django media files
+    if settings.MEDIA_URL and url.startswith(settings.MEDIA_URL):
+        media_path = url.replace(settings.MEDIA_URL, '', 1)
+        absolute_path = os.path.join(settings.MEDIA_ROOT, media_path)
+        if os.path.exists(absolute_path):
+            mime_type, encoding = mimetypes.guess_type(absolute_path)
+            return {
+                'file_obj': open(absolute_path, 'rb'),
+                'mime_type': mime_type,
+                'encoding': encoding,
+            }
+
+    # 4. Fallback to WeasyPrint's default URL fetcher
     return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 class ContractListView(LoginRequiredMixin, ListView):
@@ -77,7 +88,8 @@ class ContractPdfView(LoginRequiredMixin, DetailView):
 
     def render_to_response(self, context, **response_kwargs):
         html_string = render_to_string(self.template_name, context)
-        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
+        # CORRECTION BASE_URL: Utilisation de l'URL externe fixe
+        html = HTML(string=html_string, base_url='http://extranet.ntc-group.org/', url_fetcher=django_weasyprint_url_fetcher)
         pdf = html.write_pdf()
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="contract_{self.object.pk}.pdf"'
@@ -159,9 +171,6 @@ class PaiementSalaireDeleteView(PermissionRequiredMixin, DeleteView):
     permission_required = 'rh.delete_paiementsalaire'
 
 
-
-
-
 class EmployeeListView(LoginRequiredMixin, ListView):
 
     model = CustomUser
@@ -169,7 +178,6 @@ class EmployeeListView(LoginRequiredMixin, ListView):
     template_name = 'rh/employee_list.html'
 
     context_object_name = 'employees'
-
 
 
 class EmployeeDetailView(LoginRequiredMixin, DetailView):
@@ -216,7 +224,8 @@ class AttestationPDFView(LoginRequiredMixin, DetailView):
 
     def render_to_response(self, context, **response_kwargs):
         html_string = render_to_string(self.template_name, context)
-        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
+        # CORRECTION BASE_URL: Utilisation de l'URL externe fixe
+        html = HTML(string=html_string, base_url='http://extranet.ntc-group.org/', url_fetcher=django_weasyprint_url_fetcher)
         pdf = html.write_pdf()
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="attestation_{self.object.username}.pdf"'
@@ -236,7 +245,8 @@ class CertificatTravailPDFView(LoginRequiredMixin, DetailView):
 
     def render_to_response(self, context, **response_kwargs):
         html_string = render_to_string(self.template_name, context)
-        html = HTML(string=html_string, base_url=self.request.build_absolute_uri("/"), url_fetcher=django_weasyprint_url_fetcher)
+        # CORRECTION BASE_URL: Utilisation de l'URL externe fixe
+        html = HTML(string=html_string, base_url='http://extranet.ntc-group.org/', url_fetcher=django_weasyprint_url_fetcher)
         pdf = html.write_pdf()
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="certificat_{self.object.username}.pdf"'
