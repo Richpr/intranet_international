@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from django.contrib.staticfiles import finders
 from django.core.files.storage import default_storage
 import weasyprint
+from .utils import generer_reference_sequentielle
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
@@ -227,6 +228,11 @@ class AttestationPDFView(LoginRequiredMixin, DetailView):
         context['employee'] = self.object
         context['year'] = datetime.date.today().year
         context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        # Generate sequential reference for attestation
+        context['reference'] = generer_reference_sequentielle(
+            document_type='ATTESTATION',
+            code_document_prefix='AT'
+        )
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -248,6 +254,11 @@ class CertificatTravailPDFView(LoginRequiredMixin, DetailView):
         context['contract'] = self.object.contracts.order_by('-start_date').first()
         context['year'] = datetime.date.today().year
         context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        # Generate sequential reference for certificat de travail
+        context['reference'] = generer_reference_sequentielle(
+            document_type='CERTIFICAT_TRAVAIL',
+            code_document_prefix='CT'
+        )
         return context
 
     def render_to_response(self, context, **response_kwargs):

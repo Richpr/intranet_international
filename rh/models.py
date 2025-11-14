@@ -56,3 +56,16 @@ class Contract(models.Model):
 
     def __str__(self):
         return f"Contract for {self.employee.username} - {self.job_title}"
+
+class DocumentCounter(models.Model):
+    document_type = models.CharField(max_length=50, verbose_name=_("Type de document"))
+    year = models.IntegerField(verbose_name=_("Année"))
+    last_number = models.IntegerField(default=0, verbose_name=_("Dernier numéro utilisé"))
+
+    class Meta:
+        verbose_name = _("Compteur de document")
+        verbose_name_plural = _("Compteurs de documents")
+        unique_together = ('document_type', 'year')
+
+    def __str__(self):
+        return f"Compteur pour {self.document_type} ({self.year}): {self.last_number}"

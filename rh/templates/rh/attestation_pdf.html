@@ -23,18 +23,36 @@
             max-width: 700px;
         }
 
-
-
-
         .company-name {
             font-weight: bold;
             margin-bottom: 20px;
             text-align: left;
         }
+        
+        /* Conteneur principal */
         .date-ref {
             margin-bottom: 30px;
         }
+        
+        /* 1. Date : flotte à droite (Ligne 1) */
+        .date-ref .date-droite {
+            float: right;
+            width: 45%; 
+            text-align: right;
+            margin: 0; 
+        }
+
+        /* 2. Référence : forcée à la ligne (clear: both) et AUGMENTATION D'ESPACE */
+        .date-ref .ref-gauche {
+            clear: both; /* FORCE le saut de ligne sous l'élément flottant */
+            text-align: left; /* Assure l'alignement à gauche */
+            margin-top: 90px; /* <--- NOUVEL ESPACEMENT : Augmenté pour garantir 3 lignes */
+            margin-bottom: 0;
+        }
+
         .header h1 {
+            /* Assure que le titre vient sous TOUS les éléments ci-dessus */
+            clear: both; 
             margin-top: 30px;
             font-size: 24px;
             text-decoration: underline;
@@ -91,8 +109,9 @@
     
     
     <div class="date-ref">
-        <p><strong>Cotonou, le {{ generation_date }}</strong></p>
-        <p><strong><em>Réf : NTC-G/HR/AT/{{ year }}</em></strong></p>
+        <p class="date-droite"><strong>Cotonou, le {{ generation_date }}</strong></p>
+        
+        <p class="ref-gauche"><strong><em>{{ reference }}</em></strong></p>
     </div>
 
     <div class="header">
@@ -107,7 +126,7 @@
         </p>
         <p>
             Dans le cadre de ses fonctions, <strong>Monsieur {{ employee.first_name }} {{ employee.last_name }}</strong> accomplit les tâches
-            suivantes :
+             suivantes :
         </p>
         <ul>
             {% if employee.main_role == "Team Lead" %}
