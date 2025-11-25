@@ -1,11 +1,13 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-from .models import Certification, PaiementSalaire, Contract
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
+from .models import Certification, PaiementSalaire, Contract, DocumentRequest
 from users.models import CustomUser
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .forms import CertificationForm
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
+import uuid
 from django.template.loader import render_to_string
 from weasyprint import HTML, CSS
 import datetime
@@ -18,6 +20,7 @@ from django.contrib.staticfiles import finders
 from django.core.files.storage import default_storage
 import weasyprint
 from .utils import generer_reference_sequentielle
+from django.core.exceptions import FieldDoesNotExist
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
@@ -281,3 +284,91 @@ def generate_work_card(request, employee_id):
         'certifications': certifications,
     }
     return render(request, 'rh/work_card.html', context)
+
+class RequestDocumentView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        document_type = request.POST.get("document_type")
+        if document_type in ["attestation", "certificat"]:
+            if not DocumentRequest.objects.filter(employee=request.user, document_type=document_type, status="pending").exists():
+                DocumentRequest.objects.create(
+                    employee=request.user,
+                    document_type=document_type
+                )
+                messages.success(request, f"Votre demande de {document_type} a été soumise.")
+            else:
+                messages.warning(request, f"Vous avez déjà une demande de {document_type} en attente.")
+        else:
+            messages.error(request, "Type de document invalide.")
+        
+        return redirect("users:profile_update")
+
+
+
+class DocumentRequestListView(PermissionRequiredMixin, ListView):
+    model = DocumentRequest
+    template_name = "rh/documentrequest_list.html"
+    context_object_name = "requests"
+    permission_required = "rh.view_documentrequest"
+
+    def get_queryset(self):
+        return DocumentRequest.objects.filter(status="pending")
+
+class DocumentRequestDetailView(PermissionRequiredMixin, UpdateView):
+    model = DocumentRequest
+    template_name = "rh/documentrequest_detail.html"
+    fields = ["status", "comments"]
+    success_url = reverse_lazy("rh:documentrequest_list")
+    permission_required = "rh.change_documentrequest"
+
+    def form_valid(self, form):
+        instance = form.save(commit=False)
+        instance.reviewed_by = self.request.user
+        instance.approved_at = datetime.datetime.now()
+        instance.save()
+        
+        # TODO: Trigger email to user with the download link
+        
+        return super().form_valid(form)
+
+class DownloadDocumentView(LoginRequiredMixin, View):
+    def get(self, request, token):
+        try:
+            # Validate that the token is a valid UUID
+            uuid.UUID(token)
+        except ValueError:
+            return HttpResponseForbidden("Invalid token format.")
+
+        doc_request = get_object_or_404(DocumentRequest, token=token, employee=request.user)
+
+        if doc_request.is_downloaded:
+            messages.error(request, "Ce lien de téléchargement a déjà été utilisé.")
+            return redirect("users:profile_update")
+
+        if doc_request.status != "approved":
+            messages.error(request, "Cette demande n'a pas été approuvée.")
+            return redirect("users:profile_update")
+
+        # Generate the PDF based on document_type
+        if doc_request.document_type == "attestation":
+            view_class = AttestationPDFView
+        elif doc_request.document_type == "certificat":
+            view_class = CertificatTravailPDFView
+        else:
+            messages.error(request, "Type de document inconnu.")
+            return redirect("users:profile_update")
+        
+        # We need to instantiate the view to call its methods
+        view_instance = view_class()
+        view_instance.request = request
+        view_instance.kwargs = {'pk': doc_request.employee.pk}
+        view_instance.object = doc_request.employee
+        context = view_instance.get_context_data()
+        
+        # We call render_to_response directly
+        response = view_instance.render_to_response(context)
+        
+        # Mark as downloaded and save
+        doc_request.is_downloaded = True
+        doc_request.save()
+        
+        return response

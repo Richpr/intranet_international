@@ -11,6 +11,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Ajoutez les URLs d'authentification (connexion, déconnexion, etc.)
     path("accounts/", include("django.contrib.auth.urls")),
+    path("users/", include("users.urls", namespace="users")),
     path("projects/", include("projects.urls")),
     path("finance/", include("finance.urls")),
     path("reporting/", include("reporting.urls")),

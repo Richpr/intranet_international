@@ -1,0 +1,36 @@
+{% extends "core/base.html" %}
+
+
+{% block content %}
+<div class="container">
+    <h2>Détails de la mise à jour du profil pour {{ update.employee.first_name }} {{ update.employee.last_name }}</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Champ</th>
+                <th>Ancienne valeur</th>
+                <th>Nouvelle valeur</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, value in formatted_data.items %}
+            <tr>
+                <td>{{ key }}</td> 
+                <td>{{ value.old }}</td>
+                <td>{{ value.new }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="comments">Commentaires</label>
+            <textarea name="comments" id="comments" class="form-control"></textarea>
+        </div>
+        <button type="submit" name="approve" class="btn btn-success">Approuver</button>
+        <button type="submit" name="reject" class="btn btn-danger">Rejeter</button>
+    </form>
+</div>
+{% endblock %}

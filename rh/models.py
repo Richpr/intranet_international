@@ -69,3 +69,35 @@ class DocumentCounter(models.Model):
 
     def __str__(self):
         return f"Compteur pour {self.document_type} ({self.year}): {self.last_number}"
+import uuid
+
+class DocumentRequest(models.Model):
+    DOCUMENT_CHOICES = (
+        ("attestation", _("Attestation de travail")),
+        ("certificat", _("Certificat de travail")),
+    )
+    STATUS_CHOICES = (
+        ("pending", _("En attente")),
+        ("approved", _("Approuvé")),
+        ("rejected", _("Rejeté")),
+    )
+
+    employee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="document_requests")
+    document_type = models.CharField(max_length=20, choices=DOCUMENT_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    
+    # For one-time download
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    is_downloaded = models.BooleanField(default=False)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    # HR feedback
+    comments = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="reviewed_document_requests")
+
+    def __str__(self):
+        return f"Demande de {self.get_document_type_display()} pour {self.employee.username}"
+

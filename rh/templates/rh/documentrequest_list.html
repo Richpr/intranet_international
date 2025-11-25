@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Demandes de documents en attente</h2>
+    {% if requests %}
+        <ul class="list-group">
+            {% for req in requests %}
+                <a href="{% url 'rh:documentrequest_detail' pk=req.pk %}" class="list-group-item list-group-item-action">
+                    Demande de {{ req.get_document_type_display }} pour {{ req.employee.username }} le {{ req.created_at|date:"d/m/Y" }}
+                </a>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucune demande de document en attente.</p>
+    {% endif %}
+</div>
+{% endblock %}

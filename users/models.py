@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from projects.models import Project, Task
 from decimal import Decimal
 from django.db.models import F
+from phonenumber_field.modelfields import PhoneNumberField
 
 # =================================================================
 # 1. Modèle Country (Le Locataire / Tenant)
@@ -42,6 +43,39 @@ class Role(models.Model):
         return self.name
 
 # =================================================================
+#   Nouveaux Modèles pour les menus déroulants
+# =================================================================
+
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Nom du Département"))
+
+    def __str__(self):
+        return self.name
+
+class ContractType(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Type de Contrat"))
+
+    def __str__(self):
+        return self.name
+
+class IDType(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Type de Pièce d'Identité"))
+
+    def __str__(self):
+        return self.name
+
+class Bank(models.Model):
+    name = models.CharField(max_length=100, verbose_name=_("Nom de la Banque"))
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, verbose_name=_("Pays"))
+
+    class Meta:
+        unique_together = ('name', 'country')
+
+    def __str__(self):
+        return f"{self.name} ({self.country.name})"
+
+
+# =================================================================
 # 3. Modèle CustomUser (L'Employé)
 # =================================================================
 
@@ -51,10 +85,44 @@ EMPLOYEE_STATUS_CHOICES = (
     ("INACTIF", _("Inactif")),
 )
 
+BLOOD_GROUP_CHOICES = (
+    ('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'),
+    ('AB+', 'AB+'), ('AB-', 'AB-'), ('O+', 'O+'), ('O-', 'O-'),
+)
+
 class CustomUser(AbstractUser):
-    phone_number = models.CharField(
-        max_length=20, blank=True, null=True, verbose_name="Numéro de téléphone"
+    # Informations de base
+    phone_number = PhoneNumberField(
+        blank=True, null=True, verbose_name="Numéro de téléphone"
     )
+
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Département"))
+    contract_type = models.ForeignKey(ContractType, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Type de Contrat"))
+    hire_date = models.DateField(null=True, blank=True, verbose_name=_("Date d'embauche"))
+    job_role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Rôle"))
+    nationality = models.CharField(max_length=100, blank=True, verbose_name=_("Nationalité"))
+    assigned_countries = models.ManyToManyField(Country, blank=True, verbose_name=_("Pays d'affectation"))
+
+    # Informations de profil détaillées
+    other_first_name = models.CharField(max_length=150, blank=True, verbose_name=_("Autres prénoms"))
+    birth_date = models.DateField(null=True, blank=True, verbose_name=_("Date de naissance"))
+    birth_country = models.CharField(max_length=100, blank=True, verbose_name=_("Pays de naissance"))
+    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, blank=True, verbose_name=_("Groupe Sanguin"))
+    address = models.TextField(blank=True, verbose_name=_("Adresse"))
+    id_type = models.ForeignKey(IDType, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Type de pièce d'identité"))
+    id_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro de la pièce d'identité"))
+    professional_email = models.EmailField(blank=True, verbose_name=_("Adresse email professionnelle"))
+    allergies = models.TextField(blank=True, verbose_name=_("Allergies"))
+    recurring_illness = models.TextField(blank=True, verbose_name=_("Maladie récurrente"))
+    special_allergies = models.TextField(blank=True, verbose_name=_("Allergie particulière"))
+    isignum_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro ISIGNUM"))
+    eritop_id = models.CharField(max_length=100, blank=True, verbose_name=_("ID ERITOP"))
+    bank = models.ForeignKey(Bank, on_delete=models.SET_NULL, null=True, blank=True, verbose_name=_("Banque"))
+    bank_account_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro de compte bancaire"))
+    social_security_number = models.CharField(max_length=100, blank=True, verbose_name=_("Numéro de sécurité sociale"))
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True, verbose_name=_("Photo de profil"))
+
+    # Champs de l'ancien modèle
     salaire_mensuel_base = models.DecimalField(
         max_digits=10, decimal_places=2, default=Decimal("0.00"), verbose_name=_("Salaire Mensuel de Base")
     )
@@ -66,9 +134,25 @@ class CustomUser(AbstractUser):
     )
     manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='team_members', verbose_name=_("Manager"))
 
+    # Matricule
+    employee_id = models.CharField(max_length=20, unique=True, blank=True, null=True, verbose_name=_("Numéro Matricule"))
+
+
     class Meta:
         verbose_name = "Employé"
         verbose_name_plural = "Employés"
+
+    def save(self, *args, **kwargs):
+        if not self.employee_id:
+            last_employee = CustomUser.objects.all().order_by('id').last()
+            last_id = last_employee.id if last_employee else 0
+            current_year = date.today().year
+            self.employee_id = f"{current_year}-{last_id + 1:04d}"
+        
+        if not self.username:
+            self.username = f"{self.first_name.lower()}.{self.last_name.lower()}"
+
+        super().save(*args, **kwargs)
 
     # Méthodes de vérification de rôle (version méthode)
     def is_team_lead_user(self):
@@ -279,3 +363,30 @@ class EmployeeCountryAssignment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.role.name} ({self.country.code})"
+
+# =================================================================
+# 6. Modèle pour les documents des employés
+# =================================================================
+class EmployeeDocument(models.Model):
+    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=100, verbose_name=_("Type de document"))
+    document = models.FileField(upload_to='employee_documents/', verbose_name=_("Document"))
+    upload_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.username} - {self.document_type}"
+
+# =================================================================
+# 7. Modèle pour les mises à jour de profil en attente
+# =================================================================
+class ProfileUpdate(models.Model):
+    employee = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pending_update')
+    data = models.JSONField()
+    status = models.CharField(max_length=20, choices=(('pending', _('En attente')), ('approved', _('Approuvé')), ('rejected', _('Rejeté'))), default='pending')
+    comments = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_updates')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Mise à jour pour {self.employee.username} ({self.status})"

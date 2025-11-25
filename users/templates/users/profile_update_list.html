@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Demandes de mise à jour de profil en attente</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Date de la demande</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for update in updates %}
+            <tr>
+                <td>{{ update.employee.first_name }} {{ update.employee.last_name }}</td>
+                <td>{{ update.created_at }}</td>
+                <td><a href="{% url 'users:profile_update_detail' update.pk %}" class="btn btn-primary">Voir les détails</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

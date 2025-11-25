@@ -1,0 +1,51 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Liste des employés</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Photo</th>
+                <th>Matricule</th>
+                <th>ID</th>
+                <th>Nom d'utilisateur</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Département</th>
+                <th>Rôle</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>
+                    {% if employee.profile_picture %}
+                        <img src="{{ employee.profile_picture.url }}" alt="Photo de profil" style="width: 40px; height: 40px; border-radius: 50%;">
+                    {% else %}
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #ccc;"></div>
+                    {% endif %}
+                </td>
+                <td>{{ employee.employee_id }}</td>
+                <td>{{ employee.pk }}</td>
+                <td>{{ employee.username }}</td>
+                <td>{{ employee.last_name }}</td>
+                <td>{{ employee.first_name }}</td>
+                <td>{{ employee.email }}</td>
+                <td>{{ employee.phone_number }}</td>
+                <td>{{ employee.department }}</td>
+                <td>{{ employee.job_role }}</td>
+                <td>
+                    <a href="{% url 'rh:employee_detail' employee.pk %}" class="btn btn-info btn-sm">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

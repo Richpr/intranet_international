@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <h2>Détail de la demande</h2>
+    <p><strong>Employé :</strong> {{ object.employee.username }}</p>
+    <p><strong>Type de document :</strong> {{ object.get_document_type_display }}</p>
+    <p><strong>Date de la demande :</strong> {{ object.created_at|date:"d/m/Y" }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary mt-3">Mettre à jour</button>
+    </form>
+</div>
+{% endblock %}

@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     "data_analytics.apps.DataAnalyticsConfig",
     "workflow.apps.WorkflowConfig",
     "documentation.apps.DocumentationConfig",
-    
+    "phonenumber_field",
+    "django_countries",
 ]
 
 MIDDLEWARE = [
@@ -74,7 +75,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [BASE_DIR / "templates", BASE_DIR / "core" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -129,6 +130,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Configuration pour phonenumber_field - PAS DE RÉGION PAR DÉFAUT
+PHONENUMBER_DEFAULT_REGION = None  # Aucune région par défaut
+PHONENUMBER_DB_FORMAT = "E164"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -146,6 +150,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+TEMP_MEDIA_ROOT = os.path.join(BASE_DIR, "temp_media")
 # Configuration WhiteNoise pour les fichiers statiques
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 os.makedirs(MEDIA_ROOT, exist_ok=True)
+os.makedirs(TEMP_MEDIA_ROOT, exist_ok=True)

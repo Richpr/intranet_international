@@ -25,4 +25,11 @@ urlpatterns = [
     path('contracts/<int:pk>/', views.ContractDetailView.as_view(), name='contract_detail'),
     path('contracts/<int:pk>/pdf/', views.ContractPdfView.as_view(), name='contract_pdf'),
     path('contracts/<int:pk>/sign/', views.ContractSignView.as_view(), name='contract_sign'),
+
+    path('documents/request/', views.RequestDocumentView.as_view(), name='request_document'),
+
+    path('documents/requests/', views.DocumentRequestListView.as_view(), name='documentrequest_list'),
+    path('documents/requests/<int:pk>/', views.DocumentRequestDetailView.as_view(), name='documentrequest_detail'),
+
+    path('documents/download/<str:token>/', views.DownloadDocumentView.as_view(), name='download_document'),
 ]

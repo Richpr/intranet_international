@@ -1,0 +1,143 @@
+<!-- users/templates/users/profile_update.html (AMÉLIORÉ) -->
+
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css" />
+<style>
+.phone-error {
+    font-size: 0.875em;
+}
+.iti {
+    width: 100%;
+}
+.iti__flag {background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags.png");}
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .iti__flag {background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags@2x.png");}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Mettre à jour votre profil</h2>
+    
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if last_update and last_update.status != 'pending' %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Statut de votre dernière demande de mise à jour</h5>
+        </div>
+        <div class="card-body">
+            {% if last_update.status == 'approved' %}
+                <div class="alert alert-success" role="alert">
+                    <p class="mb-0">Votre demande du <strong>{{ last_update.created_at|date:"d/m/Y" }}</strong> a été <strong>approuvée</strong>.</p>
+                    {% if last_update.comments %}
+                        <hr>
+                        <p class="mb-0"><strong>Commentaire :</strong> {{ last_update.comments }}</p>
+                    {% endif %}
+                </div>
+            {% elif last_update.status == 'rejected' %}
+                <div class="alert alert-danger" role="alert">
+                    <p>Votre demande du <strong>{{ last_update.created_at|date:"d/m/Y" }}</strong> a été <strong>rejetée</strong>.</p>
+                    {% if last_update.comments %}
+                        <hr>
+                        <p class="mb-0"><strong>Motif du rejet :</strong> {{ last_update.comments }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <a href="#" class="btn btn-secondary btn-sm" onclick="this.parentElement.parentElement.style.display='none'">Masquer</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Veuillez corriger les erreurs ci-dessous:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary mt-3">Mettre à jour</button>
+    </form>
+
+    <hr class="my-4">
+
+    <div class="documents-section mt-5">
+        <h3>Mes Documents</h3>
+        {% if documents %}
+            <ul class="list-group">
+                {% for doc in documents %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ doc.document_type }}
+                        <a href="{{ doc.document.url }}" class="btn btn-sm btn-outline-primary" download>Télécharger</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Vous n'avez aucun document.</p>
+        {% endif %}
+        <a href="{% url 'users:employee_document_upload' %}" class="btn btn-secondary mt-3">Téléverser un nouveau document</a>
+
+        <h4 class="mt-4">Demander des documents</h4>
+        <div class="d-flex gap-2">
+            <form action="{% url 'rh:request_document' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="document_type" value="attestation">
+                <button type="submit" class="btn btn-info">Demander une attestation de travail</button>
+            </form>
+            <form action="{% url 'rh:request_document' %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="document_type" value="certificat">
+                <button type="submit" class="btn btn-warning">Demander un certificat de travail</button>
+            </form>
+        </div>
+
+        <h4 class="mt-5">Mes demandes de documents</h4>
+        {% with requests=user.document_requests.all %}
+            {% if requests %}
+                <ul class="list-group">
+                    {% for req in requests %}
+                        <li class="list-group-item">
+                            Demande de {{ req.get_document_type_display }} du {{ req.created_at|date:"d/m/Y" }} - Statut : {{ req.get_status_display }}
+                            {% if req.status == 'approved' and not req.is_downloaded %}
+                                <a href="{% url 'rh:download_document' token=req.token %}" class="btn btn-success btn-sm float-end">Télécharger</a>
+                            {% elif req.status == 'rejected' and req.comments %}
+                                <p class="text-danger mb-0"><strong>Commentaire :</strong> {{ req.comments }}</p>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Vous n'avez aucune demande de document.</p>
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+<script src="{% static 'js/profile_update.js' %}"></script>
+{% endblock %}
