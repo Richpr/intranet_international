@@ -238,19 +238,14 @@ class TaskForm(ModelForm):
                 assignments__end_date__isnull=True,
             ).distinct()
 
-            # ⬇️ CORRECTION: Filtrer pour n'inclure que les Team Leads et Field Teams
-            team_lead_role = Role.objects.filter(name="Team Lead").first()
-            field_team_role = Role.objects.filter(name="Field Team").first()
+            # Filter for assignable roles: Team Lead, Field Team, Technician, and Rigger
+            assignable_roles = Role.objects.filter(
+                name__in=["Team Lead", "Field Team", "Technician", "Rigger"]
+            )
 
-            if team_lead_role or field_team_role:
-                role_filter = Q()
-                if team_lead_role:
-                    role_filter |= Q(assignments__role=team_lead_role)
-                if field_team_role:
-                    role_filter |= Q(assignments__role=field_team_role)
-
+            if assignable_roles.exists():
                 assigned_users_in_country = assigned_users_in_country.filter(
-                    role_filter
+                    assignments__role__in=assignable_roles
                 )
 
             self.fields["assigned_to"].queryset = assigned_users_in_country

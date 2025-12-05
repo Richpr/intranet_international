@@ -142,14 +142,38 @@ class CustomUser(AbstractUser):
         verbose_name = "Employé"
         verbose_name_plural = "Employés"
 
-    def save(self, *args, **kwargs):
-        if not self.employee_id:
-            last_employee = CustomUser.objects.all().order_by('id').last()
-            last_id = last_employee.id if last_employee else 0
-            current_year = date.today().year
-            self.employee_id = f"{current_year}-{last_id + 1:04d}"
+    def _generate_employee_id(self):
+        if not self.hire_date:
+            return None
+
+        year_str = str(self.hire_date.year)[-2:]
+        month_str = f"{self.hire_date.month:02d}"
+
+        # Find the count of employees hired in the same month and year
+        # Order by 'id' to ensure a stable rank for existing employees if generated retroactively
+        employees_in_month = CustomUser.objects.filter(
+            hire_date__year=self.hire_date.year,
+            hire_date__month=self.hire_date.month
+        ).order_by('id')
+
+        # Determine the rank (NN)
+        rank = 0
+        for i, emp in enumerate(employees_in_month):
+            if emp.pk == self.pk: # If self is already in the database, use its position
+                rank = i + 1
+                break
         
-        if not self.username:
+        if rank == 0: # If self is new or not yet saved, assume it's the next in rank
+             rank = employees_in_month.count() + 1
+             
+        return f"{year_str}{month_str}{rank:02d}"
+
+
+    def save(self, *args, **kwargs):
+        if not self.employee_id and self.hire_date:
+            self.employee_id = self._generate_employee_id()
+        
+        if not self.username and self.first_name and self.last_name: # Ensure first_name and last_name exist
             self.username = f"{self.first_name.lower()}.{self.last_name.lower()}"
 
         super().save(*args, **kwargs)
