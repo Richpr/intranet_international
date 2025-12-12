@@ -197,16 +197,16 @@ class ProfileUpdateView(LoginRequiredMixin, View):
                         return redirect('users:profile_update')
                     
                     # Créer ou mettre à jour la demande
-                    ProfileUpdate.objects.update_or_create(
-                        employee=request.user,
-                        status='pending',
-                        defaults={
-                            'data': serializable_data,
-                            'comments': '',
-                            'reviewed_by': None,
-                            'reviewed_at': None
-                        }
+                    update_request, created = ProfileUpdate.objects.get_or_create(
+                        employee=request.user
                     )
+                    
+                    update_request.data = serializable_data
+                    update_request.status = 'pending'
+                    update_request.comments = ''
+                    update_request.reviewed_by = None
+                    update_request.reviewed_at = None
+                    update_request.save()
                 
                 messages.success(request, 
                     "Votre demande de mise à jour a été soumise avec succès. "
