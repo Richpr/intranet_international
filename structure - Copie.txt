@@ -1,0 +1,694 @@
+rich@rich:~/intranet_international$ tree -L 5
+.
+├── add_test_data.py
+├── apport.txt
+├── ATTESTATION CARLOS.pdf
+├── backup_to_drive.py
+├── CERTIFICAT PAULIN.pdf
+├── config
+│   ├── asgi.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── settings.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── wsgi.cpython-312.pyc
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── core
+│   ├── admin.py
+│   ├── apps.py
+│   ├── context_processors.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── mixins.py
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── context_processors.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── mixins.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   ├── core
+│   │   │   ├── base.html
+│   │   │   ├── home.html
+│   │   │   └── login_base.html
+│   │   └── registration
+│   │       └── login.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── correction.txt
+├── data_analytics
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   ├── utils.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── data_analytics
+│   │       └── dashboard.html
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils.py
+│   └── views.py
+├── db.sqlite3
+├── documentation
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── documentation
+│   │       ├── document_form.html
+│   │       └── document_list.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── fichier_24.xlsx
+├── fichier_GW.xlsx
+├── finance
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_alter_workcompletionrecord_options_and_more.py
+│   │   ├── 0003_alter_workcompletionrecord_options_and_more.py
+│   │   ├── 0004_workcompletionrecord_cost_and_more.py
+│   │   ├── 0005_alter_workcompletionrecord_options_and_more.py
+│   │   ├── 0006_alter_salarystructure_unique_together_and_more.py
+│   │   ├── 0007_salarystructure.py
+│   │   ├── 0008_alter_depense_recu_scan.py
+│   │   ├── 0009_obligationfiscale_depense_equipement_concerne_and_more.py
+│   │   ├── 0010_depense_vehicule_concerne_alter_depense_categorie_and_more.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       ├── 0002_alter_workcompletionrecord_options_and_more.cpython-312.pyc
+│   │       ├── 0003_alter_workcompletionrecord_options_and_more.cpython-312.pyc
+│   │       ├── 0004_workcompletionrecord_cost_and_more.cpython-312.pyc
+│   │       ├── 0005_alter_workcompletionrecord_options_and_more.cpython-312.pyc
+│   │       ├── 0006_alter_salarystructure_unique_together_and_more.cpython-312.pyc
+│   │       ├── 0007_salarystructure.cpython-312.pyc
+│   │       ├── 0008_alter_depense_recu_scan.cpython-312.pyc
+│   │       ├── 0009_obligationfiscale_depense_equipement_concerne_and_more.cpython-312.pyc
+│   │       ├── 0010_depense_vehicule_concerne_alter_depense_categorie_and_more.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── signals.py
+│   ├── templates
+│   │   └── finance
+│   │       ├── depense_pdf.html
+│   │       ├── expense_form.html
+│   │       ├── expense_list.html
+│   │       ├── finance_dashboard (Copie).html
+│   │       ├── finance_dashboard.html
+│   │       ├── obligationfiscale_confirm_delete.html
+│   │       ├── obligationfiscale_form.html
+│   │       ├── obligationfiscale_list.html
+│   │       ├── revenu_form.html
+│   │       ├── revenu_list.html
+│   │       ├── salary_structure_list.html
+│   │       ├── work_completion_form.html
+│   │       └── work_completion_list.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── inventaire
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── inventaire
+│   │       ├── allocationequipement_confirm_delete.html
+│   │       ├── allocationequipement_form.html
+│   │       ├── allocationequipement_list.html
+│   │       ├── equipement_confirm_delete.html
+│   │       ├── equipement_form.html
+│   │       └── equipement_list.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── logistique
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_missionlogistique_end_date_and_more.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       ├── 0002_missionlogistique_end_date_and_more.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── logistique
+│   │       ├── mission_letter_pdf.html
+│   │       ├── missionlogistique_confirm_delete.html
+│   │       ├── missionlogistique_detail.html
+│   │       ├── missionlogistique_form.html
+│   │       ├── missionlogistique_list.html
+│   │       ├── vehicule_confirm_delete.html
+│   │       ├── vehicule_form.html
+│   │       └── vehicule_list.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── manage.py
+├── media
+├── p.png
+├── projects
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── management
+│   │   └── commands
+│   │       ├── import_sites_for_project.py
+│   │       ├── optimize_photos.py
+│   │       ├── __pycache__
+│   │       │   └── import_sites_for_project.cpython-312.pyc
+│   │       ├── seed_task_results.py
+│   │       └── seed_task_types.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_alter_task_options_task_expected_duration_hours_and_more.py
+│   │   ├── 0003_site_antenna_plan_site_atp_done_site_bb_plan_and_more.py
+│   │   ├── 0004_alter_inspection_options_and_more.py
+│   │   ├── 0005_site_last_inspection_result.py
+│   │   ├── 0006_alter_project_start_date.py
+│   │   ├── 0007_site_progress_percentage.py
+│   │   ├── 0008_alter_task_options_project_progress_percentage_and_more.py
+│   │   ├── 0009_antennatype_batch_bbmltype_enclosuretype_radiotype_and_more.py
+│   │   ├── 0010_alter_task_created_by.py
+│   │   ├── 0011_installationtype_sitetype_site_installation_type_and_more.py
+│   │   ├── 0012_projecttype_project_is_active_project_is_completed_and_more.py
+│   │   ├── 0013_remove_installationtype_is_transmission_link.py
+│   │   ├── 0014_site_is_transmission_a_site_and_more.py
+│   │   ├── 0015_tasktype_alter_task_task_type.py
+│   │   ├── 0016_taskresulttype_task_completion_date_and_more.py
+│   │   ├── 0017_remove_task_photos.py
+│   │   ├── 0018_site_last_inspection_result.py
+│   │   ├── 0019_site_departement.py
+│   │   ├── 0020_client_remove_project_client_name_project_client.py
+│   │   ├── 0021_site_end_date_site_start_date.py
+│   │   ├── 0022_task_ticket_number.py
+│   │   ├── 0023_project_budget_alloue_project_statut.py
+│   │   ├── 0024_workcompletionrecord.py
+│   │   ├── 0025_site_po_recu_site_prix_facturation.py
+│   │   ├── 0026_uninstallationreport_uninstalledequipment.py
+│   │   ├── 0027_create_desinstallation_task_type.py
+│   │   ├── 0028_uninstalledequipment_quantity.py
+│   │   ├── 0029_alter_site_installation_type_and_more.py
+│   │   ├── 0030_alter_transmissionlink_link_id.py
+│   │   ├── 0031_alter_transmissionlink_site_a_and_more.py
+│   │   ├── 0032_tasktype_points_value.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       ├── 0002_alter_task_options_task_expected_duration_hours_and_more.cpython-312.pyc
+│   │       ├── 0003_site_antenna_plan_site_atp_done_site_bb_plan_and_more.cpython-312.pyc
+│   │       ├── 0004_alter_inspection_options_and_more.cpython-312.pyc
+│   │       ├── 0005_site_last_inspection_result.cpython-312.pyc
+│   │       ├── 0006_alter_project_start_date.cpython-312.pyc
+│   │       ├── 0007_site_progress_percentage.cpython-312.pyc
+│   │       ├── 0008_alter_task_options_project_progress_percentage_and_more.cpython-312.pyc
+│   │       ├── 0009_antennatype_batch_bbmltype_enclosuretype_radiotype_and_more.cpython-312.pyc
+│   │       ├── 0010_alter_task_created_by.cpython-312.pyc
+│   │       ├── 0011_installationtype_sitetype_site_installation_type_and_more.cpython-312.pyc
+│   │       ├── 0012_projecttype_project_is_active_project_is_completed_and_more.cpython-312.pyc
+│   │       ├── 0013_remove_installationtype_is_transmission_link.cpython-312.pyc
+│   │       ├── 0014_site_is_transmission_a_site_and_more.cpython-312.pyc
+│   │       ├── 0015_tasktype_alter_task_task_type.cpython-312.pyc
+│   │       ├── 0016_taskresulttype_task_completion_date_and_more.cpython-312.pyc
+│   │       ├── 0017_remove_task_photos.cpython-312.pyc
+│   │       ├── 0018_site_last_inspection_result.cpython-312.pyc
+│   │       ├── 0019_site_departement.cpython-312.pyc
+│   │       ├── 0020_client_remove_project_client_name_project_client.cpython-312.pyc
+│   │       ├── 0021_site_end_date_site_start_date.cpython-312.pyc
+│   │       ├── 0022_task_ticket_number.cpython-312.pyc
+│   │       ├── 0023_project_budget_alloue_project_statut.cpython-312.pyc
+│   │       ├── 0024_workcompletionrecord.cpython-312.pyc
+│   │       ├── 0025_site_po_recu_site_prix_facturation.cpython-312.pyc
+│   │       ├── 0026_uninstallationreport_uninstalledequipment.cpython-312.pyc
+│   │       ├── 0027_create_desinstallation_task_type.cpython-312.pyc
+│   │       ├── 0028_uninstalledequipment_quantity.cpython-312.pyc
+│   │       ├── 0029_alter_site_installation_type_and_more.cpython-312.pyc
+│   │       ├── 0030_alter_transmissionlink_link_id.cpython-312.pyc
+│   │       ├── 0031_alter_transmissionlink_site_a_and_more.cpython-312.pyc
+│   │       ├── 0032_tasktype_points_value.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── signals.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── signals.py
+│   ├── templates
+│   │   └── projects
+│   │       ├── inspection_form.html
+│   │       ├── partials
+│   │       │   └── project_list_partial.html
+│   │       ├── project_detail.html
+│   │       ├── project_form.html
+│   │       ├── project_list.html
+│   │       ├── project_table.html
+│   │       ├── site_detail.html
+│   │       ├── site_form.html
+│   │       ├── task_form.html
+│   │       ├── task_photo_upload.html
+│   │       ├── task_report.html
+│   │       ├── task_update_advanced.html
+│   │       ├── task_update_form.html
+│   │       ├── team_lead_tasks.html
+│   │       ├── transmission_link_form.html
+│   │       └── uninstallation_report_form.html
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── reporting
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   ├── utils.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── reporting
+│   │       ├── base.html
+│   │       ├── cost_per_vehicle_report.html
+│   │       ├── inventory_status_report.html
+│   │       ├── performance_annuelle.html
+│   │       ├── ran_site_list.html
+│   │       ├── ran_site_list_pdf.html
+│   │       ├── site_profitability_report.html
+│   │       ├── survey_site_list.html
+│   │       ├── survey_site_list_pdf.html
+│   │       ├── transmission_site_list.html
+│   │       └── transmission_site_list_pdf.html
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils.py
+│   └── views.py
+├── requirements.txt
+├── rh
+│   ├── admin.py
+│   ├── apps.py
+│   ├── C.png
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_certification_fichier_certificat.py
+│   │   ├── 0003_contract.py
+│   │   ├── 0004_documentcounter.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       ├── 0002_certification_fichier_certificat.cpython-312.pyc
+│   │       ├── 0003_contract.cpython-312.pyc
+│   │       ├── 0004_documentcounter.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   ├── utils.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── static
+│   │   └── rh
+│   │       ├── logo.jpg
+│   │       └── photo.jpg
+│   ├── templates
+│   │   └── rh
+│   │       ├── attestation_pdf.html
+│   │       ├── certification_confirm_delete.html
+│   │       ├── certification_form.html
+│   │       ├── certification_list.html
+│   │       ├── certificat_travail_pdf.html
+│   │       ├── contract_detail.html
+│   │       ├── contract_list.html
+│   │       ├── contract_pdf.html
+│   │       ├── contract_sign.html
+│   │       ├── employee_detail.html
+│   │       ├── employee_list.html
+│   │       ├── employee_performance.html
+│   │       ├── paiementsalaire_confirm_delete.html
+│   │       ├── paiementsalaire_form.html
+│   │       ├── paiementsalaire_list.html
+│   │       └── work_card.html
+│   ├── tests.py
+│   ├── urls.py
+│   ├── utils.py
+│   └── views.py
+├── settings.yaml
+├── static
+│   ├── css
+│   │   └── login.css
+│   ├── images
+│   │   ├── logo.png
+│   │   ├── pied.jpg
+│   │   ├── pied.png
+│   │   └── signature.png
+│   └── js
+│       └── profile_update.js
+├── structure.txt
+├── tache.txt
+├── temp_media
+├── users
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   ├── 0001_initial.py
+│   │   ├── 0002_customuser_salaire_mensuel_base_and_more.py
+│   │   ├── 0003_customuser_manager.py
+│   │   ├── 0004_contracttype_department_idtype_customuser_address_and_more.py
+│   │   ├── 0005_alter_customuser_phone_number.py
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       ├── 0001_initial.cpython-312.pyc
+│   │       ├── 0002_customuser_salaire_mensuel_base_and_more.cpython-312.pyc
+│   │       ├── 0003_customuser_manager.cpython-312.pyc
+│   │       ├── 0004_contracttype_department_idtype_customuser_address_and_more.cpython-312.pyc
+│   │       ├── 0005_alter_customuser_phone_number.cpython-312.pyc
+│   │       └── __init__.cpython-312.pyc
+│   ├── models.py
+│   ├── __pycache__
+│   │   ├── admin.cpython-312.pyc
+│   │   ├── apps.cpython-312.pyc
+│   │   ├── forms.cpython-312.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── models.cpython-312.pyc
+│   │   ├── urls.cpython-312.pyc
+│   │   └── views.cpython-312.pyc
+│   ├── templates
+│   │   └── users
+│   │       ├── employee_create.html
+│   │       ├── employee_document_upload.html
+│   │       ├── employee_list.html
+│   │       ├── profile_update_detail.html
+│   │       ├── profile_update.html
+│   │       ├── profile_update_list.html
+│   │       └── profile_update_pending.html
+│   ├── templatetags
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── user_tags.cpython-312.pyc
+│   │   └── user_tags.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── venv
+│   ├── bin
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── Activate.ps1
+│   │   ├── black
+│   │   ├── blackd
+│   │   ├── django-admin
+│   │   ├── fonttools
+│   │   ├── normalizer
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.12
+│   │   ├── pyftmerge
+│   │   ├── pyftsubset
+│   │   ├── pyrsa-decrypt
+│   │   ├── pyrsa-encrypt
+│   │   ├── pyrsa-keygen
+│   │   ├── pyrsa-priv2pub
+│   │   ├── pyrsa-sign
+│   │   ├── pyrsa-verify
+│   │   ├── python -> python3
+│   │   ├── python3 -> /usr/bin/python3
+│   │   ├── python3.12 -> python3
+│   │   ├── ruff
+│   │   ├── sqlformat
+│   │   ├── ttx
+│   │   └── weasyprint
+│   ├── include
+│   │   └── python3.12
+│   ├── lib
+│   │   └── python3.12
+│   │       └── site-packages
+│   │           ├── 30fcd23745efe32ce681__mypyc.cpython-312-x86_64-linux-gnu.so
+│   │           ├── apiclient
+│   │           ├── asgiref
+│   │           ├── asgiref-3.9.2.dist-info
+│   │           ├── black
+│   │           ├── black-25.9.0.dist-info
+│   │           ├── blackd
+│   │           ├── _black_version.py
+│   │           ├── _black_version.pyi
+│   │           ├── blib2to3
+│   │           ├── Brotli-1.1.0.dist-info
+│   │           ├── _brotli.cpython-312-x86_64-linux-gnu.so
+│   │           ├── brotli.py
+│   │           ├── cachetools
+│   │           ├── cachetools-6.2.1.dist-info
+│   │           ├── certifi
+│   │           ├── certifi-2025.10.5.dist-info
+│   │           ├── cffi
+│   │           ├── cffi-2.0.0.dist-info
+│   │           ├── _cffi_backend.cpython-312-x86_64-linux-gnu.so
+│   │           ├── charset_normalizer
+│   │           ├── charset_normalizer-3.4.4.dist-info
+│   │           ├── click
+│   │           ├── click-8.3.0.dist-info
+│   │           ├── crispy_bootstrap5
+│   │           ├── crispy_bootstrap5-2025.6.dist-info
+│   │           ├── crispy_forms
+│   │           ├── cryptography
+│   │           ├── cryptography-43.0.3.dist-info
+│   │           ├── cssselect2
+│   │           ├── cssselect2-0.8.0.dist-info
+│   │           ├── django
+│   │           ├── django-5.2.6.dist-info
+│   │           ├── django_countries
+│   │           ├── django_countries-8.1.1.dist-info
+│   │           ├── django_crispy_forms-2.4.dist-info
+│   │           ├── django_environ-0.12.0.dist-info
+│   │           ├── django_phonenumber_field-8.3.0.dist-info
+│   │           ├── environ
+│   │           ├── et_xmlfile
+│   │           ├── et_xmlfile-2.0.0.dist-info
+│   │           ├── fontTools
+│   │           ├── fonttools-4.60.1.dist-info
+│   │           ├── google
+│   │           ├── googleapiclient
+│   │           ├── google_api_core-2.28.1.dist-info
+│   │           ├── google_api_python_client-2.186.0.dist-info
+│   │           ├── googleapis_common_protos-1.71.0.dist-info
+│   │           ├── google_auth-2.42.1.dist-info
+│   │           ├── google_auth_httplib2-0.2.1.dist-info
+│   │           ├── google_auth_httplib2.py
+│   │           ├── httplib2
+│   │           ├── httplib2-0.31.0.dist-info
+│   │           ├── idna
+│   │           ├── idna-3.11.dist-info
+│   │           ├── mypy_extensions-1.1.0.dist-info
+│   │           ├── mypy_extensions.py
+│   │           ├── oauth2client
+│   │           ├── oauth2client-4.1.3.dist-info
+│   │           ├── openpyxl
+│   │           ├── openpyxl-3.1.5.dist-info
+│   │           ├── OpenSSL
+│   │           ├── packaging
+│   │           ├── packaging-25.0.dist-info
+│   │           ├── pathspec
+│   │           ├── pathspec-0.12.1.dist-info
+│   │           ├── phonenumber_field
+│   │           ├── phonenumbers
+│   │           ├── phonenumbers-9.0.18.dist-info
+│   │           ├── PIL
+│   │           ├── pillow-11.3.0.dist-info
+│   │           ├── pillow.libs
+│   │           ├── pip
+│   │           ├── pip-24.0.dist-info
+│   │           ├── platformdirs
+│   │           ├── platformdirs-4.5.0.dist-info
+│   │           ├── proto
+│   │           ├── protobuf-6.33.0.dist-info
+│   │           ├── proto_plus-1.26.1.dist-info
+│   │           ├── pyasn1
+│   │           ├── pyasn1-0.6.1.dist-info
+│   │           ├── pyasn1_modules
+│   │           ├── pyasn1_modules-0.4.2.dist-info
+│   │           ├── __pycache__
+│   │           ├── pycparser
+│   │           ├── pycparser-2.23.dist-info
+│   │           ├── pydrive2
+│   │           ├── PyDrive2-1.21.3.dist-info
+│   │           ├── pydyf
+│   │           ├── pydyf-0.11.0.dist-info
+│   │           ├── pyOpenSSL-24.2.1.dist-info
+│   │           ├── pyparsing
+│   │           ├── pyparsing-3.2.5.dist-info
+│   │           ├── pyphen
+│   │           ├── pyphen-0.17.2.dist-info
+│   │           ├── pytokens
+│   │           ├── pytokens-0.2.0.dist-info
+│   │           ├── pyyaml-6.0.3.dist-info
+│   │           ├── requests
+│   │           ├── requests-2.32.5.dist-info
+│   │           ├── rsa
+│   │           ├── rsa-4.9.1.dist-info
+│   │           ├── ruff
+│   │           ├── ruff-0.14.1.dist-info
+│   │           ├── six-1.17.0.dist-info
+│   │           ├── six.py
+│   │           ├── sqlparse
+│   │           ├── sqlparse-0.5.3.dist-info
+│   │           ├── tinycss2
+│   │           ├── tinycss2-1.4.0.dist-info
+│   │           ├── tinyhtml5
+│   │           ├── tinyhtml5-2.0.0.dist-info
+│   │           ├── typing_extensions-4.15.0.dist-info
+│   │           ├── typing_extensions.py
+│   │           ├── uritemplate
+│   │           ├── uritemplate-4.2.0.dist-info
+│   │           ├── urllib3
+│   │           ├── urllib3-2.5.0.dist-info
+│   │           ├── weasyprint
+│   │           ├── weasyprint-66.0.dist-info
+│   │           ├── webencodings
+│   │           ├── webencodings-0.5.1.dist-info
+│   │           ├── whitenoise
+│   │           ├── whitenoise-6.11.0.dist-info
+│   │           ├── _yaml
+│   │           ├── yaml
+│   │           ├── zopfli
+│   │           └── zopfli-0.2.3.post1.dist-info
+│   ├── lib64 -> lib
+│   ├── pyvenv.cfg
+│   └── share
+│       └── man
+│           └── man1
+│               └── ttx.1
+└── workflow
+    ├── admin.py
+    ├── apps.py
+    ├── forms.py
+    ├── __init__.py
+    ├── migrations
+    │   ├── 0001_initial.py
+    │   ├── 0002_alter_permissionrequest_request_type.py
+    │   ├── __init__.py
+    │   └── __pycache__
+    │       ├── 0001_initial.cpython-312.pyc
+    │       ├── 0002_alter_permissionrequest_request_type.cpython-312.pyc
+    │       └── __init__.cpython-312.pyc
+    ├── models.py
+    ├── __pycache__
+    │   ├── admin.cpython-312.pyc
+    │   ├── apps.cpython-312.pyc
+    │   ├── forms.cpython-312.pyc
+    │   ├── __init__.cpython-312.pyc
+    │   ├── models.cpython-312.pyc
+    │   ├── urls.cpython-312.pyc
+    │   └── views.cpython-312.pyc
+    ├── templates
+    │   └── workflow
+    │       ├── approvalrequest_form.html
+    │       ├── approvalrequest_list.html
+    │       ├── attestation_pdf.html
+    │       ├── certification_pdf.html
+    │       ├── permission_pdf.html
+    │       ├── permissionrequest_detail.html
+    │       ├── permissionrequest_form.html
+    │       └── permissionrequest_list.html
+    ├── tests.py
+    ├── urls.py
+    └── views.py
+
+211 directories, 479 files
+
