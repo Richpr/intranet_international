@@ -3,8 +3,8 @@
 from django import forms
 from django.forms import (
     ModelForm,
-    inlineformset_factory, # 💡 AJOUT
-)  # 💡 AJOUT : Import de inlineformset_factory
+    inlineformset_factory,
+)
 from django.forms.widgets import DateInput
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -19,27 +19,25 @@ from .models import (
     RadioType,
     SiteType,
     InstallationType,
-    TaskResultType,  # ⬅️ AJOUTEZ CET IMPORT
-    TaskType,  # ⬅️ AJOUTEZ AUSSI TaskType SI NÉCESSAIRE
+    TaskResultType,
+    TaskType,
     TaskPhoto,
-    UninstallationReport,    # 💡 AJOUT
-    UninstalledEquipment,  # 💡 AJOUT
+    UninstallationReport,
+    UninstalledEquipment,
 )
-from users.models import CustomUser, Role  # Import des modèles externes
+from users.models import CustomUser, Role
 
 
 # -----------------------------------------------------------------------------
 # 1. Project Form
-# (Pas de changement)
 # -----------------------------------------------------------------------------
 class ProjectForm(ModelForm):
-    # ... (Code existant)
     class Meta:
         model = Project
         exclude = (
             "progress_percentage",
-            "created_by",  # ⬅️ NE DOIT PAS APPARAÎTRE
-            "updated_by",  # ⬅️ NE DOIT PAS APPARAÎTRE
+            "created_by",
+            "updated_by",
         )
         widgets = {
             "start_date": DateInput(attrs={"type": "date"}),
@@ -47,7 +45,8 @@ class ProjectForm(ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)  # noqa: F841
+        # ✅ Le 'user' est extrait correctement ici
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
         if user:
@@ -62,7 +61,7 @@ class ProjectForm(ModelForm):
                     role=cm_role, is_active=True, end_date__isnull=True
                 ).values_list("country__id", flat=True)
 
-                # ✅ CORRECTION : Utilisez le queryset du champ country au lieu de user.country_set
+                # CORRECTION : Utilise le queryset du champ country
                 self.fields["country"].queryset = self.fields[
                     "country"
                 ].queryset.filter(id__in=active_cm_country_ids)
@@ -94,22 +93,21 @@ class SiteForm(ModelForm):
 
     class Meta:
         model = Site
-        # 💡 MISE À JOUR : Exclure les champs gérés automatiquement
+        # MISE À JOUR : Exclure les champs gérés automatiquement
         exclude = (
             "progress_percentage",
-            "created_by",  # ⬅️ NE DOIT PAS APPARAÎTRE
-            "updated_by",  # ⬅️ NE DOIT PAS APPARAÎTRE
-            "is_transmission_a_site",  # Probablement déjà exclu (si vous l'utilisez)
-            "is_transmission_b_site",  # Probablement déjà exclu (si vous l'utilisez)
+            "created_by",
+            "updated_by",
+            "is_transmission_a_site",
+            "is_transmission_b_site",
         )
         widgets = {
-            # ... (widgets existants) ...
             "start_date": DateInput(attrs={"type": "date"}),
             "end_date": DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, **kwargs):
-        # 1. EXTRAIRE les arguments personnalisés (user, project) AVANT le super().
+        # 1. EXTRAIRE les arguments personnalisés (project) AVANT le super().
         project = kwargs.pop("project", None)  # On extrait 'project' ici
 
         site_instance = kwargs.get("instance")
@@ -123,8 +121,6 @@ class SiteForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         # 3. Utiliser les variables extraites pour la logique de filtrage
-        # 💡 AJOUT : Limiter les options aux types actifs
-
         self.fields["site_type"].queryset = SiteType.objects.filter(is_active=True)
         self.fields["installation_type"].queryset = InstallationType.objects.filter(
             is_active=True
@@ -155,11 +151,10 @@ class SiteForm(ModelForm):
 
         # 2. Rendre optionnels les champs de référence technique pour la création rapide
         # Ces champs sont déjà null=True/blank=True dans models.py, donc ils sont facultatifs ici par défaut.
-        # On peut expliciter si on voulait surcharger le comportement du modèle.
 
 
 # -----------------------------------------------------------------------------
-# 3. SiteRadioConfiguration Formset (NOUVEAU)
+# 3. SiteRadioConfiguration Formset
 # -----------------------------------------------------------------------------
 class SiteRadioConfigurationForm(ModelForm):
     """
@@ -185,7 +180,7 @@ class SiteRadioConfigurationForm(ModelForm):
         fields = ["radio_type", "quantity"]
 
 
-# Crée le Formset. max_num=10 limite le nombre de radios qu'on peut ajouter
+# Crée le Formset.
 SiteRadioConfigurationFormset = inlineformset_factory(
     Site,
     SiteRadioConfiguration,
@@ -197,7 +192,7 @@ SiteRadioConfigurationFormset = inlineformset_factory(
 
 
 # -----------------------------------------------------------------------------
-# 4. Task Form (Pas de changement, car TaskUpdateForm est géré séparément)
+# 4. Task Form
 # -----------------------------------------------------------------------------
 class TaskForm(ModelForm):
     class Meta:
@@ -222,6 +217,9 @@ class TaskForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         site = kwargs.pop("site", None)
+        # 🟢 CORRECTION PRINCIPALE : Extraction de l'argument 'user'
+        user = kwargs.pop("user", None) # noqa: F841 - Extrait l'utilisateur, même s'il n'est pas utilisé après
+        
         super().__init__(*args, **kwargs)
 
         self.fields["task_type"].queryset = TaskType.objects.filter(is_active=True)
@@ -267,9 +265,9 @@ class TaskUpdateForm(ModelForm):
         self.uploaded_by = kwargs.pop("uploaded_by", None)
         super().__init__(*args, **kwargs)
 
-        # 👇 AJOUTEZ CETTE LIGNE POUR VERROUILLER LE CHAMP
+        # AJOUTEZ CETTE LIGNE POUR VERROUILLER LE CHAMP
         self.fields["task_type"].disabled = True
-        # 👆 FIN DE L'AJOUT
+        # FIN DE L'AJOUT
 
         self.fields["task_type"].queryset = TaskType.objects.filter(is_active=True)
 
@@ -297,7 +295,7 @@ class TaskUpdateForm(ModelForm):
 
 class MultipleFileInput(
     forms.FileInput
-):  # Gardez cette classe (ou celle basée sur ClearableFileInput, au choix)
+):
     def __init__(self, attrs=None):
         super().__init__(attrs)
         if attrs is not None:
@@ -339,11 +337,9 @@ class TaskPhotoForm(forms.ModelForm):
 
 # -----------------------------------------------------------------------------
 # 6. Inspection Form
-# (Pas de changement)
 # -----------------------------------------------------------------------------
 class InspectionForm(ModelForm):
 
-    # ... (Code existant)
     class Meta:
         model = Inspection
         exclude = (
@@ -397,7 +393,7 @@ class SimpleTaskUpdateForm(ModelForm):
         # Gérer le résultat DONE/NOT_DONE
         result_done = self.cleaned_data.get("result_done")
         if result_done:
-            # ⬇️ CORRECTION : TaskResultType est maintenant importé
+            # CORRECTION : TaskResultType est maintenant importé
             result_type, created = TaskResultType.objects.get_or_create(
                 code=result_done,
                 defaults={
