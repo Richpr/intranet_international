@@ -15,7 +15,7 @@ from .forms import DepenseForm, WorkCompletionForm, RevenuForm
 
 # --- Imports Externes (d'autres apps) ---
 from projects.models import WorkCompletionRecord
-from core.mixins import TeamLeadOrCoordinatorRequiredMixin, ExpenseManagementMixin
+from core.mixins import ExpenseManagementMixin
 
 
 # ==========================================================
@@ -141,7 +141,6 @@ class WorkRecordListView(FinanceCountryIsolationMixin, ListView):
 # VUES DE CRÉATION (Formulaires)
 # ==========================================================
 
-from django.shortcuts import render, get_object_or_404
 
 class DepenseCreateView(ExpenseManagementMixin, CreateView):
     """Vue pour créer une nouvelle dépense."""

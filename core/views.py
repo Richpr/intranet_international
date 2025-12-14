@@ -2,14 +2,13 @@
 
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q, Prefetch, Count, Case, When
+from django.db.models import Prefetch, Count, Case, When
 from datetime import date
 import json
 
 # 👇 IMPORTS AJOUTÉS DE MA PROPOSITION
-from django.db.models import Sum, Avg, DecimalField
+from django.db.models import Sum, DecimalField
 from django.db.models.functions import Coalesce
-from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from projects.models import Project, Task, Site

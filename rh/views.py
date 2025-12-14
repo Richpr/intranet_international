@@ -9,18 +9,15 @@ from .forms import CertificationForm
 from django.http import HttpResponse, HttpResponseForbidden
 import uuid
 from django.template.loader import render_to_string
-from weasyprint import HTML, CSS
+from weasyprint import HTML
 import datetime
 from django.conf import settings
 import os
 import mimetypes
 from pathlib import Path
 from urllib.parse import urlparse
-from django.contrib.staticfiles import finders
-from django.core.files.storage import default_storage
 import weasyprint
 from .utils import generer_reference_sequentielle
-from django.core.exceptions import FieldDoesNotExist
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """

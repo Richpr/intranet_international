@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core.exceptions import FieldDoesNotExist
@@ -10,16 +10,14 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from django.contrib.auth import login
 
 from datetime import date, datetime
-import json
 import os
 import io
 from PIL import Image
 
 from .forms import EnhancedLoginForm, EmployeeCreateForm, ProfileUpdateForm, EmployeeDocumentForm
-from .models import CustomUser, ProfileUpdate, EmployeeDocument
+from .models import CustomUser, ProfileUpdate, ProfileUpdateHistory
 from phonenumber_field.phonenumber import PhoneNumber
 
 
@@ -120,9 +118,9 @@ class ProfileUpdateView(LoginRequiredMixin, View):
         documents = request.user.documents.all()
         
         # Récupérer la dernière demande traitée
-        last_processed = ProfileUpdate.objects.filter(
+        last_processed = ProfileUpdateHistory.objects.filter(
             employee=request.user
-        ).exclude(status='pending').order_by('-created_at').first()
+        ).order_by('-reviewed_at').first()
         
         context = {
             'form': form,
@@ -134,7 +132,8 @@ class ProfileUpdateView(LoginRequiredMixin, View):
 
     def post(self, request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
-        
+        if not form.is_valid():
+            print(form.errors)
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -196,17 +195,19 @@ class ProfileUpdateView(LoginRequiredMixin, View):
                         messages.info(request, "Aucun changement détecté.")
                         return redirect('users:profile_update')
                     
+                    print(serializable_data)
                     # Créer ou mettre à jour la demande
                     update_request, created = ProfileUpdate.objects.get_or_create(
-                        employee=request.user
+                        employee=request.user,
+                        status='pending'
                     )
                     
                     update_request.data = serializable_data
-                    update_request.status = 'pending'
                     update_request.comments = ''
                     update_request.reviewed_by = None
                     update_request.reviewed_at = None
                     update_request.save()
+                    print(update_request.data)
                 
                 messages.success(request, 
                     "Votre demande de mise à jour a été soumise avec succès. "
@@ -259,6 +260,32 @@ class ProfileUpdateListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['pending_count'] = self.get_queryset().count()
+
+        # Logic for history
+        history_queryset = ProfileUpdateHistory.objects.all().order_by('-reviewed_at')
+        
+        # Filtrage par mois et année
+        month = self.request.GET.get('month')
+        year = self.request.GET.get('year')
+
+        # Si l'année n'est pas spécifiée, utiliser l'année en cours par défaut
+        if not year:
+            year = str(timezone.now().year)
+        
+        if month:
+            history_queryset = history_queryset.filter(reviewed_at__month=month)
+        if year: # Appliquer le filtre année (même si par défaut)
+            history_queryset = history_queryset.filter(reviewed_at__year=year)
+        
+        context['history'] = history_queryset
+        context['months'] = [
+            {'value': i, 'name': date(2000, i, 1).strftime('%B')}
+            for i in range(1, 13)
+        ]
+        context['years'] = range(2023, timezone.now().year + 1) # Adjust start year as needed
+        context['selected_month'] = month
+        context['selected_year'] = year
+
         return context
 
 
@@ -332,27 +359,32 @@ class ProfileUpdateDetailView(LoginRequiredMixin, View):
                     employee.save()
                     
                     # Mettre à jour la demande
-                    update.status = 'approved'
-                    update.comments = comments
-                    update.reviewed_by = request.user
-                    update.reviewed_at = timezone.now()
-                    update.save()
-                    
+                    status = 'approved'
                     messages.success(request, 
                         f"La mise à jour du profil de {employee.get_full_name()} a été approuvée."
                     )
                     
                 elif action == 'reject':
-                    update.status = 'rejected'
-                    update.comments = comments
-                    update.reviewed_by = request.user
-                    update.reviewed_at = timezone.now()
-                    update.save()
-                    
+                    status = 'rejected'
                     messages.warning(request, "La demande a été rejetée.")
                 
                 else:
                     messages.error(request, "Action non reconnue.")
+                    return redirect('users:profile_update_list')
+
+                # Créer l'historique
+                ProfileUpdateHistory.objects.create(
+                    employee=employee,
+                    data=update.data,
+                    status=status,
+                    comments=comments,
+                    created_at=update.created_at,
+                    reviewed_by=request.user,
+                    reviewed_at=timezone.now()
+                )
+                
+                # Supprimer la demande en attente
+                update.delete()
                     
         except Exception as e:
             messages.error(request, f"Erreur lors du traitement : {str(e)}")
@@ -382,7 +414,6 @@ class ProfileUpdateDetailView(LoginRequiredMixin, View):
                 img_content = ContentFile(img_io.getvalue())
                 
                 # Générer un nom unique
-                from django.utils.text import get_valid_filename
                 unique_name = f"profile_{employee.pk}_{int(timezone.now().timestamp())}.jpg"
                 
                 employee.profile_picture.save(unique_name, img_content, save=False)
@@ -426,6 +457,39 @@ class ProfileUpdateDetailView(LoginRequiredMixin, View):
             setattr(employee, field_name, value)
 
 
+class ProfileUpdateHistoryView(LoginRequiredMixin, ListView):
+    """Vue pour l'historique des mises à jour de profil"""
+    model = ProfileUpdateHistory
+    template_name = 'users/profile_update_history.html'
+    context_object_name = 'history'
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = ProfileUpdateHistory.objects.filter(employee=self.request.user).order_by('-reviewed_at')
+        
+        # Filtrage par mois et année
+        month = self.request.GET.get('month')
+        year = self.request.GET.get('year')
+        
+        if month:
+            queryset = queryset.filter(reviewed_at__month=month)
+        if year:
+            queryset = queryset.filter(reviewed_at__year=year)
+            
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['months'] = [
+            {'value': i, 'name': date(2000, i, 1).strftime('%B')}
+            for i in range(1, 13)
+        ]
+        context['years'] = range(2023, timezone.now().year + 1)
+        context['selected_month'] = self.request.GET.get('month')
+        context['selected_year'] = self.request.GET.get('year')
+        return context
+
+
 class EmployeeDocumentUploadView(LoginRequiredMixin, View):
     """Upload de documents pour l'employé"""
     
@@ -458,3 +522,9 @@ class EmployeeDocumentUploadView(LoginRequiredMixin, View):
             'form': form,
             'documents': documents
         })
+
+class EmployeeDetailView(LoginRequiredMixin, DetailView):
+    """Vue pour afficher les détails d'un employé"""
+    model = CustomUser
+    template_name = 'users/employee_detail.html'
+    context_object_name = 'employee'

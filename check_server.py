@@ -1,5 +1,4 @@
 import psutil
-import time
 
 def check_server(port, pid):
     try:

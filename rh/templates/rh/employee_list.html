@@ -22,7 +22,7 @@
                         {% for employee in employees %}
                         <tr>
                             <td>{{ employee.username }}</td>
-                            <td>{{ employee.get_full_name }}</td>
+                            <td><a href="{% url 'rh:employee_detail' employee.pk %}">{{ employee.get_full_name }}</a></td>
                             <td>{{ employee.email }}</td>
                             <td>
                                 <a href="{% url 'rh:employee_detail' employee.pk %}" class="btn btn-info btn-sm">

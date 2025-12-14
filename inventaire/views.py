@@ -1,9 +1,8 @@
-from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import Equipement, AllocationEquipement
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from .forms import EquipementForm, AllocationEquipementForm
+from .forms import EquipementForm
 
 class EquipementListView(LoginRequiredMixin, ListView):
     model = Equipement

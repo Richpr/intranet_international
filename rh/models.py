@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -69,7 +70,6 @@ class DocumentCounter(models.Model):
 
     def __str__(self):
         return f"Compteur pour {self.document_type} ({self.year}): {self.last_number}"
-import uuid
 
 class DocumentRequest(models.Model):
     DOCUMENT_CHOICES = (
@@ -100,4 +100,3 @@ class DocumentRequest(models.Model):
 
     def __str__(self):
         return f"Demande de {self.get_document_type_display()} pour {self.employee.username}"
-

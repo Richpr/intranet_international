@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Historique des mises à jour de profil" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{% trans "Historique des mises à jour de profil" %}</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{% trans "Filtrer l'historique" %}</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label for="month" class="form-label">{% trans "Mois" %}</label>
+                    <select name="month" id="month" class="form-select">
+                        <option value="">{% trans "Tous les mois" %}</option>
+                        {% for m in months %}
+                            <option value="{{ m.value }}" {% if m.value|stringformat:"s" == selected_month %}selected{% endif %}>{{ m.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="year" class="form-label">{% trans "Année" %}</label>
+                    <select name="year" id="year" class="form-select">
+                        <option value="">{% trans "Toutes les années" %}</option>
+                        {% for y in years %}
+                            <option value="{{ y }}" {% if y|stringformat:"s" == selected_year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Filtrer" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if history %}
+        <div class="list-group">
+            {% for item in history %}
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 shadow-sm">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">
+                            {% if item.status == 'approved' %}
+                                <span class="badge bg-success">{% trans "Approuvé" %}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{% trans "Rejeté" %}</span>
+                            {% endif %}
+                        </h5>
+                        <small>{{ item.reviewed_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{% trans "Traité par:" %} <strong>{{ item.reviewed_by.get_full_name|default:"N/A" }}</strong></p>
+                    {% if item.comments %}
+                        <p class="mb-1"><em>{% trans "Commentaires:" %} {{ item.comments }}</em></p>
+                    {% endif %}
+                    <hr>
+                    <h6>{% trans "Modifications demandées :" %}</h6>
+                    <ul>
+                        {% for field, values in item.data.items %}
+                            <li><strong>{{ field|title }}:</strong> {{ values }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% include "includes/pagination.html" %}
+
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            {% trans "Aucun historique de mise à jour trouvé pour la période sélectionnée." %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

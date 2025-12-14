@@ -1,7 +1,7 @@
 # finance/forms.py
 from django import forms
 from .models import Depense, Revenu
-from projects.models import WorkCompletionRecord, Task
+from projects.models import WorkCompletionRecord
 # 'CustomUser' n'est plus nécessaire ici, mais 'Task' l'est
 # from users.models import CustomUser 
 

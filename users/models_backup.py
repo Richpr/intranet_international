@@ -403,8 +403,8 @@ class EmployeeDocument(models.Model):
 # 7. Modèle pour les mises à jour de profil en attente
 # =================================================================
 class ProfileUpdate(models.Model):
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='pending_updates')
-    data = models.JSONField(null=True, blank=True, default=dict)
+    employee = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pending_update')
+    data = models.JSONField()
     status = models.CharField(max_length=20, choices=(('pending', _('En attente')), ('approved', _('Approuvé')), ('rejected', _('Rejeté'))), default='pending')
     comments = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -413,18 +413,3 @@ class ProfileUpdate(models.Model):
 
     def __str__(self):
         return f"Mise à jour pour {self.employee.username} ({self.status})"
-
-# =================================================================
-# 8. Modèle pour l'historique des mises à jour de profil
-# =================================================================
-class ProfileUpdateHistory(models.Model):
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='update_history')
-    data = models.JSONField()
-    status = models.CharField(max_length=20, choices=(('approved', _('Approuvé')), ('rejected', _('Rejeté'))))
-    comments = models.TextField(blank=True)
-    created_at = models.DateTimeField()
-    reviewed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_history')
-    reviewed_at = models.DateTimeField()
-
-    def __str__(self):
-        return f"Historique pour {self.employee.username} ({self.status}) le {self.reviewed_at.strftime('%d-%m-%Y')}"

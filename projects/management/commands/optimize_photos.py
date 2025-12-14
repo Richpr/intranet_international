@@ -3,7 +3,6 @@
 from django.core.management.base import BaseCommand
 from projects.models import TaskPhoto
 from django.db import transaction
-from django.utils import timezone
 
 class Command(BaseCommand):
     help = 'Re-sauvegarde toutes les photos de tâche pour appliquer la compression/redimensionnement.'

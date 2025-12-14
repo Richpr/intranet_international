@@ -1,62 +1,51 @@
 # projects/views.py
 
-from django.views.generic import (
-    ListView,
-    DetailView,
-    CreateView,
-    UpdateView,
-    TemplateView,
-    View, # 💡 AJOUT
-    
-)
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
-    AccessMixin,
-    UserPassesTestMixin,
-)
-from users.models import Country, CustomUser
-
-from django.shortcuts import get_object_or_404, redirect, render # 💡 AJOUT de render
-from django.db import transaction, IntegrityError
-from django.db.models import (
-    Count,
-    Q,
-    Avg,
-)
-from django.db.models.functions import ExtractYear
-from django.urls import reverse_lazy, reverse
 from datetime import date
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.contrib import messages  # AJOUT
-from .forms import (
-    ProjectForm,
-    SiteForm,
-    TaskForm,
-    TaskUpdateForm,
-    InspectionForm,
-    SiteRadioConfigurationFormset,
+from django.db import transaction
+from django.db.models import Avg, Count, Q
+from django.db.models.functions import ExtractYear
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    FormView,
+    ListView,
+    TemplateView,
+    UpdateView,
+    View,
 )
 
-# 💡 AJOUTEZ CETTE LIGNE
-from django.utils.translation import gettext_lazy as _
-from django.views.generic import FormView
-
-from .forms import TaskPhotoForm, SimpleTaskUpdateForm, UninstallationReportForm,  UninstalledEquipmentFormset  # 💡 AJOUT
+from .forms import (
+    InspectionForm,
+    ProjectForm,
+    SimpleTaskUpdateForm,
+    SiteForm,
+    SiteRadioConfigurationFormset,
+    TaskForm,
+    TaskPhotoForm,
+    TaskUpdateForm,
+    UninstalledEquipmentFormset,
+    UninstallationReportForm,
+)
 from .models import (
+    InstallationType,
+    Inspection,
     Project,
     Site,
     Task,
-    Inspection,
-    TransmissionLink,
     TaskPhoto,
-    UninstallationReport,     # 💡 AJOUT
-    UninstalledEquipment,   # 💡 AJOUT
-    InstallationType,
-)  # ⬅️ AJOUTER TaskPhoto
-
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-
+    TransmissionLink,
+    UninstallationReport,
+)
+from users.models import Country, CustomUser
 
 
 # =================================================================
@@ -336,62 +325,7 @@ class ProjectListView(CountryIsolationMixin, ListView):
         return super().render_to_response(context, **response_kwargs)
 
 
-# projects/views.py
 
-from django.views.generic import (
-    ListView,
-    DetailView,
-    CreateView,
-    UpdateView,
-    TemplateView,
-    View,
-)
-from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
-    AccessMixin,
-    UserPassesTestMixin,
-)
-from users.models import Country, CustomUser
-
-from django.shortcuts import get_object_or_404, redirect, render
-from django.db import transaction, IntegrityError
-from django.db.models import (
-    Count,
-    Q,
-    Avg,
-)
-from django.db.models.functions import ExtractYear
-from django.urls import reverse_lazy, reverse
-from datetime import date
-from django.core.exceptions import PermissionDenied
-from django.contrib import messages
-from .forms import (
-    ProjectForm,
-    SiteForm,
-    TaskForm,
-    TaskUpdateForm,
-    InspectionForm,
-    SiteRadioConfigurationFormset,
-)
-
-from django.utils.translation import gettext_lazy as _
-from django.views.generic import FormView
-
-from .forms import TaskPhotoForm, SimpleTaskUpdateForm, UninstallationReportForm,  UninstalledEquipmentFormset
-from .models import (
-    Project,
-    Site,
-    Task,
-    Inspection,
-    TransmissionLink,
-    TaskPhoto,
-    UninstallationReport,
-    UninstalledEquipment,
-    InstallationType,  # 💡 AJOUTEZ CET IMPORT
-)
-
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
 
 # ... (Mixins inchangés) ...
 

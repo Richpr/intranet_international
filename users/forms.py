@@ -5,7 +5,6 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 from .models import CustomUser, EmployeeDocument, Country
 from django_countries.fields import CountryField
-from phonenumber_field.formfields import PhoneNumberField
 import phonenumbers
 
 

@@ -387,7 +387,6 @@ class Project(models.Model):
         """Calcule le total des dépenses pour ce projet."""
         
         # 👇 IMPORTATION LOCALE
-        from finance.models import Depense 
         
         # ✅ CORRECTION :
         # On utilise 'projet_associe' qui est la clé étrangère

@@ -1,7 +1,6 @@
 from projects.models import Project, Site
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count
 from django.db.models.functions import ExtractYear
-from decimal import Decimal
 
 def get_project_performance_by_year(country_id=None):
     """Agrège les données de performance des projets par année."""

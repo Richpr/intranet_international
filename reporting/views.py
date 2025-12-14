@@ -1,9 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from projects.models import Site, TransmissionLink, Project  # 👈 AJOUT DE PROJECT
-from core.models import Departement
 from users.models import Country
-from finance.models import Depense
 from logistique.models import Vehicule
 from inventaire.models import Equipement
 from django.db.models import Sum, F, Q, Count

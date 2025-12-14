@@ -3,13 +3,11 @@
 from django import forms
 from django.forms import (
     ModelForm,
-    inlineformset_factory,
-    BaseInlineFormSet, # 💡 AJOUT
+    inlineformset_factory, # 💡 AJOUT
 )  # 💡 AJOUT : Import de inlineformset_factory
 from django.forms.widgets import DateInput
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.db.models import Q
 
 
 from .models import (
@@ -49,7 +47,7 @@ class ProjectForm(ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
+        user = kwargs.pop("user", None)  # noqa: F841
         super().__init__(*args, **kwargs)
 
         if user:
@@ -113,7 +111,6 @@ class SiteForm(ModelForm):
     def __init__(self, *args, **kwargs):
         # 1. EXTRAIRE les arguments personnalisés (user, project) AVANT le super().
         project = kwargs.pop("project", None)  # On extrait 'project' ici
-        user = kwargs.pop("user", None)
 
         site_instance = kwargs.get("instance")
 
@@ -225,7 +222,6 @@ class TaskForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         site = kwargs.pop("site", None)
-        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
         self.fields["task_type"].queryset = TaskType.objects.filter(is_active=True)

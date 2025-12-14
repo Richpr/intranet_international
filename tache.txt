@@ -1,18 +1,8 @@
-VOICI CE QUE TU DOIS FAIRE 
+les correction a apporter 
 
-Ma recommandation idéale : AAMMNN
-
-AA : Les deux derniers chiffres de l'année (ex: 25).
-MM : LE Mois d entree de l employé dans l entreprise 
-NN : LE RANG DE L EMPLOYER SI IL  EST LE PREMIER DEUXIEME OU TROISIEME ETC A ETRE ENREGISTRER DANS L ENTREPRISE 
+au niveau de la demande de mise a jour de profil en attente on doit pouvoir avoir afficher  les historique  si possible a voir un filtre permetant de filtrer les mois annees etcc  
 
 
-Exemple : 250001 (Premier employé de 2025).
+au niveau de la liste des employés  je voudrais que si on clique sur le nom d un employé que ca me redirige directment sur la page de l employee ou  on verra  toutes ses informations.
 
-et ca doit etre la date ou l employé est venu dans l entreprise 
 
-exemple   241002  annee 2024 ,MOIS 10, l employée N° 
-
-CHAQUE NUMERO DOIT ETRE UNIQUE . ET NE DOIT PAS CHANGER LORS DE LA MODIFICATION OU LE UPDATE DE L EMPLOYEE 
-
-AUSSI TU DOIS AUSSI VOIR COMMENT FAIRE POUR QUE TOUS LES EMPLOYEE MEME LES ANCIENS ON DOIT RAMENER SUR CE FORMAT 

@@ -8,7 +8,9 @@ from .views import (
     ProfileUpdateListView, 
     ProfileUpdateDetailView,
     EmployeeDocumentUploadView,
-    EnhancedLoginView
+    EnhancedLoginView,
+    ProfileUpdateHistoryView,
+    EmployeeDetailView
 )
 
 app_name = 'users'
@@ -37,10 +39,12 @@ urlpatterns = [
     # URLs des employés
     path('employees/', EmployeeListView.as_view(), name='employee_list'),
     path('employee/add/', EmployeeCreateView.as_view(), name='employee_add'),
+    path('employee/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
     
     # URLs de profil
     path('profile/', ProfileUpdateView.as_view(), name='profile_update'),
     path('profile/pending/', ProfileUpdatePendingView.as_view(), name='profile_update_pending'),
+    path('profile/history/', ProfileUpdateHistoryView.as_view(), name='profile_update_history'),
     path('profile/updates/', ProfileUpdateListView.as_view(), name='profile_update_list'),
     path('profile/updates/<int:pk>/', ProfileUpdateDetailView.as_view(), name='profile_update_detail'),
     
