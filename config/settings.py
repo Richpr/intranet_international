@@ -19,63 +19,64 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # The SECRET_KEY is now read from an environment variable
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')  #
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # The DEBUG setting is now read from an environment variable, defaulting to False
-DEBUG = env('DEBUG')
+DEBUG = env('DEBUG')  #
 
 # ALLOWED_HOSTS is now read from an environment variable
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')  #
 
 
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS')
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS')  #
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "users.apps.UsersConfig",
-    "projects.apps.ProjectsConfig",
-    "core.apps.CoreConfig",
-    "finance.apps.FinanceConfig",
-    "crispy_forms",
-    "crispy_bootstrap5",
-    "django.contrib.humanize",
-    "reporting.apps.ReportingConfig",
-    "inventaire.apps.InventaireConfig",
-    "logistique.apps.LogistiqueConfig",
-    "rh.apps.RhConfig",
-    "data_analytics.apps.DataAnalyticsConfig",
-    "workflow.apps.WorkflowConfig",
-    "documentation.apps.DocumentationConfig",
-    "phonenumber_field",
-    "django_countries",
+    "django.contrib.admin",  #
+    "django.contrib.auth",  #
+    "django.contrib.contenttypes",  #
+    "django.contrib.sessions",  #
+    "django.contrib.messages",  #
+    "django.contrib.staticfiles",  #
+    "users.apps.UsersConfig",  #
+    "projects.apps.ProjectsConfig",  #
+    "core.apps.CoreConfig",  #
+    "finance.apps.FinanceConfig",  #
+    "crispy_forms",  #
+    "crispy_bootstrap5",  #
+    "django.contrib.humanize",  #
+    "reporting.apps.ReportingConfig",  #
+    "inventaire.apps.InventaireConfig",  #
+    "logistique.apps.LogistiqueConfig",  #
+    "rh.apps.RhConfig",  #
+    "data_analytics.apps.DataAnalyticsConfig",  #
+    "workflow.apps.WorkflowConfig",  #
+    "documentation.apps.DocumentationConfig",  #
+    "phonenumber_field",  #
+    "django_countries",  #
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware", 
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.security.SecurityMiddleware",  #
+    "whitenoise.middleware.WhiteNoiseMiddleware",  #
+    "django.contrib.sessions.middleware.SessionMiddleware",  #
+    "django.middleware.common.CommonMiddleware",  #
+    "django.middleware.csrf.CsrfViewMiddleware",  #
+    "django.contrib.auth.middleware.AuthenticationMiddleware",  #
+    "django.contrib.messages.middleware.MessageMiddleware",  #
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",  #
 ]
 
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "config.urls"  #
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates", BASE_DIR / "core" / "templates"],
+        # 🟢 CORRECTION APPLIQUÉE ICI : Ajout de "core" à la fin du chemin
+        "DIRS": [BASE_DIR / "templates", BASE_DIR / "core" / "templates" / "core"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -89,14 +90,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"  #
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # Database configuration is now read from the DATABASE_URL environment variable
 DATABASES = {
-    'default': env.db(),
+    'default': env.db(),  #
 }
 
 
@@ -105,16 +106,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",  #
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",  #
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",  #
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",  #
     },
 ]
 
@@ -122,36 +123,41 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en-us"  #
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "UTC"  #
 
-USE_I18N = True
+USE_I18N = True  #
 
-USE_TZ = True
+USE_TZ = True  #
 
 # Configuration pour phonenumber_field - PAS DE RÉGION PAR DÉFAUT
-PHONENUMBER_DEFAULT_REGION = None  # Aucune région par défaut
-PHONENUMBER_DB_FORMAT = "E164"
+PHONENUMBER_DEFAULT_REGION = None  # Aucune région par défaut  #
+PHONENUMBER_DB_FORMAT = "E164"  #
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_URL = "static/"  #
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  #
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  #
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-AUTH_USER_MODEL = "users.CustomUser"
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-TEMP_MEDIA_ROOT = os.path.join(BASE_DIR, "temp_media")
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"  #
+AUTH_USER_MODEL = "users.CustomUser"  #
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"  #
+CRISPY_TEMPLATE_PACK = "bootstrap5"  #
+
+# Configuration des Fichiers Médias
+MEDIA_URL = "/media/"  #
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")  #
+TEMP_MEDIA_ROOT = os.path.join(BASE_DIR, "temp_media")  #
+
 # Configuration WhiteNoise pour les fichiers statiques
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-os.makedirs(MEDIA_ROOT, exist_ok=True)
-os.makedirs(TEMP_MEDIA_ROOT, exist_ok=True)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  #
+
+# Assure que les dossiers existent (utile pour le développement)
+os.makedirs(MEDIA_ROOT, exist_ok=True)  #
+os.makedirs(TEMP_MEDIA_ROOT, exist_ok=True)  #

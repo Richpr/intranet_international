@@ -31,9 +31,15 @@
                 </td>
                 <td>{{ employee.employee_id }}</td>
                 <td>{{ employee.pk }}</td>
-                <td>{{ employee.username }}</td>
-                <td><a href="{% url 'users:employee_detail' employee.pk %}">{{ employee.last_name }}</a></td>
-                <td><a href="{% url 'users:employee_detail' employee.pk %}">{{ employee.first_name }}</a></td>
+                
+                <td>
+                    <a href="{% url 'users:employee_detail' employee.pk %}" class="fw-bold">{{ employee.username }}</a>
+                </td>
+                
+                <td>{{ employee.last_name }}</td>
+                
+                <td>{{ employee.first_name }}</td>
+                
                 <td>{{ employee.email }}</td>
                 <td>{{ employee.phone_number }}</td>
                 <td>{{ employee.department }}</td>
