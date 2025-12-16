@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView, DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView,UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.core.exceptions import FieldDoesNotExist
 from django.db import transaction
@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.urls import reverse # 💡 Assurez-vous d'avoir 'reverse' ici
 
 from datetime import date, datetime
 import os
@@ -96,6 +97,25 @@ class EmployeeCreateView(LoginRequiredMixin, View):
         
         return render(request, 'users/employee_create.html', {'form': form})
 
+class EmployeeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """
+    Vue pour la mise à jour des détails d'un employé.
+    Nécessite une connexion et vérifie les permissions (super-utilisateur ou staff).
+    """
+    model = CustomUser
+    form_class = EmployeeCreateForm # On réutilise le formulaire de création
+    template_name = 'users/employee_update.html' # 💡 Nouveau template à créer
+    context_object_name = 'employee'
+
+    # Vérification des permissions : Seuls les super-utilisateurs ou les membres du staff peuvent modifier un employé
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_staff 
+    
+    # Redirection après succès
+    def get_success_url(self):
+        messages.success(self.request, _("Les informations de l'employé ont été mises à jour avec succès."))
+        # Rediriger vers la page de détail de l'employé (que vous avez déjà : employee_detail)
+        return reverse_lazy('users:employee_detail', kwargs={'pk': self.object.pk})
 
 class ProfileUpdateView(LoginRequiredMixin, View):
     """Mise à jour du profil utilisateur"""

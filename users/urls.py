@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from .views import (
     EmployeeListView,
+    EmployeeUpdateView,
     EmployeeCreateView, 
     ProfileUpdateView, 
     ProfileUpdatePendingView, 
@@ -40,6 +41,9 @@ urlpatterns = [
     path('employees/', EmployeeListView.as_view(), name='employee_list'),
     path('employee/add/', EmployeeCreateView.as_view(), name='employee_add'),
     path('employee/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
+
+    # 💡 AJOUTEZ CETTE LIGNE MANQUANTE
+    path('employee/<int:pk>/update/', EmployeeUpdateView.as_view(), name='employee_update'),
     
     # URLs de profil
     path('profile/', ProfileUpdateView.as_view(), name='profile_update'),

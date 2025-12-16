@@ -174,10 +174,12 @@ class ProfileUpdateForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'ID Eritop (optionnel)'
             }),
-            'bank': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nom de votre banque'
-            }),
+           # 'bank': forms.TextInput(attrs={
+            #    'class': 'form-control',
+            #    'placeholder': 'Nom de votre banque'
+           # }),
+
+            'bank': forms.Select(attrs={'class': 'form-control'}),
             'bank_account_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Numéro de compte bancaire'
