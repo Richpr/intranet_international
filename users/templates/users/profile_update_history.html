@@ -39,32 +39,78 @@
     </div>
 
     {% if history %}
-        <div class="list-group">
-            {% for item in history %}
-                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 shadow-sm">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">
-                            {% if item.status == 'approved' %}
-                                <span class="badge bg-success">{% trans "Approuvé" %}</span>
-                            {% else %}
-                                <span class="badge bg-danger">{% trans "Rejeté" %}</span>
-                            {% endif %}
-                        </h5>
-                        <small>{{ item.reviewed_at|date:"d/m/Y H:i" }}</small>
-                    </div>
-                    <p class="mb-1">{% trans "Traité par:" %} <strong>{{ item.reviewed_by.get_full_name|default:"N/A" }}</strong></p>
-                    {% if item.comments %}
-                        <p class="mb-1"><em>{% trans "Commentaires:" %} {{ item.comments }}</em></p>
-                    {% endif %}
-                    <hr>
-                    <h6>{% trans "Modifications demandées :" %}</h6>
-                    <ul>
-                        {% for field, values in item.data.items %}
-                            <li><strong>{{ field|title }}:</strong> {{ values }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endfor %}
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">{% trans "Date de la décision" %}</th>
+                        <th scope="col">{% trans "Traité par" %}</th>
+                        <th scope="col" class="text-center">{% trans "Statut" %}</th>
+                        <th scope="col">{% trans "Commentaires" %}</th> {# New column for comments #}
+                        <th scope="col" class="text-end">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                        <tr class="clickable-row">
+                            <td>{{ item.reviewed_at|date:"d/m/Y à H:i" }}</td>
+                            <td>{{ item.reviewed_by.get_full_name|default:"Système" }}</td>
+                            <td class="text-center">
+                                {% if item.status == 'approved' %}
+                                    <span class="badge bg-success">{% trans "Approuvée" %}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{% trans "Rejetée" %}</span>
+                                {% endif %}
+                            </td>
+                            <td> {# New cell for comments #}
+                                {% if item.comments %}
+                                    <span class="text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ item.comments }}">
+                                        (i) {% trans "Voir" %}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse-{{ forloop.counter }}">
+                                    {% trans "Détails" %}
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="p-0" style="border: none;"> {# Colspan adjusted to 5 #}
+                                <div class="collapse" id="collapse-{{ forloop.counter }}">
+                                    <div class="card card-body bg-light border-0">
+                                        {% if item.comments %}
+                                            <p class="mb-2"><strong>{% trans "Commentaires du manager :" %}</strong>
+                                            <em class="text-muted">{{ item.comments }}</em></p>
+                                            <hr>
+                                        {% endif %}
+                                        
+                                        <h6 class="mt-2"><strong>{% trans "Détails de la demande :" %}</strong></h6>
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-secondary">
+                                                <tr>
+                                                    <th style="width: 30%;">{% trans "Champ modifié" %}</th>
+                                                    <th>{% trans "Nouvelle valeur" %}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for field, values in item.data.items %}
+                                                <tr>
+                                                    <td><strong>{{ field|title }}</strong></td>
+                                                    <td>{{ values }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         
         {% include "includes/pagination.html" %}
