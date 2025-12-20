@@ -9,18 +9,15 @@ from .forms import CertificationForm
 from django.http import HttpResponse, HttpResponseForbidden
 import uuid
 from django.template.loader import render_to_string
-from weasyprint import HTML, CSS
+from weasyprint import HTML
 import datetime
 from django.conf import settings
 import os
 import mimetypes
 from pathlib import Path
 from urllib.parse import urlparse
-from django.contrib.staticfiles import finders
-from django.core.files.storage import default_storage
 import weasyprint
 from .utils import generer_reference_sequentielle
-from django.core.exceptions import FieldDoesNotExist
 
 def django_weasyprint_url_fetcher(url, *args, **kwargs):
     """
@@ -230,7 +227,7 @@ class AttestationPDFView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['employee'] = self.object
         context['year'] = datetime.date.today().year
-        context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        context['generation_date'] = datetime.date.today()
         # Generate sequential reference for attestation
         context['reference'] = generer_reference_sequentielle(
             document_type='ATTESTATION',
@@ -256,7 +253,7 @@ class CertificatTravailPDFView(LoginRequiredMixin, DetailView):
         context['employee'] = self.object
         context['contract'] = self.object.contracts.order_by('-start_date').first()
         context['year'] = datetime.date.today().year
-        context['generation_date'] = datetime.date.today().strftime("%d %B %Y")
+        context['generation_date'] = datetime.date.today()
         # Generate sequential reference for certificat de travail
         context['reference'] = generer_reference_sequentielle(
             document_type='CERTIFICAT_TRAVAIL',

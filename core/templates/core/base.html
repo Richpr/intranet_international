@@ -255,7 +255,7 @@
             <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
                 <span style="font-size: 1.5em; margin-right: 10px;">🏢</span>
                 <div>
-                    <div>Intranet NG</div>
+                    <div>Intranet NTC-G</div>
                     <small class="opacity-75" style="font-size: 0.7em; font-weight: 400;">Multi-Pays</small>
                 </div>
             </a>
@@ -533,7 +533,7 @@
                         </li>
                         <li class="sidebar-item">
                             <a class="sidebar-link {% if 'documents/requests' in request.path %}active{% endif %}" href="{% url 'rh:documentrequest_list' %}">
-                                <i class="fas fa-file-signature me-2"></i> Demandes de documents
+                                <i class="fas fa-file-signature me-2"></i> Attestation & Certificat de Travail
                             </a>
                         </li>
                         {% endif %}
@@ -587,6 +587,11 @@
                         <li class="sidebar-item">
                             <a class="sidebar-link" href="{% url 'users:profile_update' %}">
                                 <i class="fas fa-user-edit me-2"></i> Mon Profil
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{% url 'users:profile_update_history' %}">
+                                <i class="fas fa-history me-2"></i> Historique des demandes
                             </a>
                         </li>
                         <li class="sidebar-item">

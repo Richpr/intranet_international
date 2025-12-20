@@ -17,8 +17,7 @@ from projects.models import (
     RadioType,              
     AntennaType, 
     BBMLType, 
-    EnclosureType,
-    Departement, SitePhase, Batch, 
+    EnclosureType, 
 )
 from users.models import CustomUser 
 
@@ -128,7 +127,7 @@ class Command(BaseCommand):
                             defaults={'is_active': True}  # ✅ CORRECTION : pas de champ 'code'
                         )
                         if created:
-                            self.stdout.write(self.style.SUCCESS(f"✅ Type d'installation par défaut créé: 'Non spécifié'"))
+                            self.stdout.write(self.style.SUCCESS("✅ Type d'installation par défaut créé: 'Non spécifié'"))
 
                     team_lead_username = str(row[COL_TEAM_LEAD]).strip() if row[COL_TEAM_LEAD] else None
                     team_lead_instance = get_related_object(CustomUser, team_lead_username, lookup_field='username', required=False) 

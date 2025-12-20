@@ -1,6 +1,7 @@
 <!-- users/templates/users/profile_update.html (AMÉLIORÉ) -->
 
 {% extends "core/base.html" %}
+{% load i18n %}
 {% load crispy_forms_tags %}
 {% load static %}
 
@@ -23,7 +24,12 @@
 
 {% block content %}
 <div class="container">
-    <h2>Mettre à jour votre profil</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Mettre à jour votre profil</h2>
+        <a href="{% url 'users:profile_update_history' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-history"></i> {% trans "Voir l'historique" %}
+        </a>
+    </div>
     
     {% if messages %}
     <div class="messages">

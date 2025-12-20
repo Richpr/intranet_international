@@ -5,7 +5,6 @@ from users.models import Country, Role, CustomUser
 from projects.models import Project, Site
 from logistique.models import Vehicule
 from inventaire.models import Equipement
-from django.conf import settings
 from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile

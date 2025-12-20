@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Détails de l'employé" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">{{ employee.get_full_name }}</h4>
+            <span class="badge bg-primary">{{ employee.job_role.name|default:"N/A" }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    {% if employee.profile_picture %}
+                        <img src="{{ employee.profile_picture.url }}" alt="Photo de profil" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="card-title">{{ employee.first_name }} {{ employee.last_name }}</h5>
+                    <p class="text-muted">{{ employee.professional_email|default:employee.email }}</p>
+                </div>
+                <div class="col-md-8">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>{% trans "Département:" %}</strong> {{ employee.department.name|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Type de contrat:" %}</strong> {{ employee.contract_type.name|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Date d'embauche:" %}</strong> {{ employee.hire_date|date:"d/m/Y"|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Numéro de téléphone:" %}</strong> {{ employee.phone_number|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Adresse:" %}</strong> {{ employee.address|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Nationalité:" %}</strong> {{ employee.nationality|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Date de naissance:" %}</strong> {{ employee.birth_date|date:"d/m/Y"|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>{% trans "Groupe sanguin:" %}</strong> {{ employee.blood_group|default:"N/A" }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'users:employee_list' %}" class="btn btn-secondary">{% trans "Retour à la liste" %}</a>
+    </div>
+</div>
+{% endblock %}

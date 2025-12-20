@@ -7,7 +7,6 @@ from .utils import (
     get_employee_performance_data,
     get_yearly_site_creation_data,
     get_team_lead_performance_data,
-    get_site_creation_by_year_and_month,
     get_site_creation_pivot_data,
 )
 from users.models import Country

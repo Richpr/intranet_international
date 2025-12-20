@@ -10,9 +10,7 @@ from .views import (
     ProjectDetailView,
     TeamLeadTasksView,
     ProjectTableView,
-    TaskPhotoUploadView,
-    SiteDetailView,
-    UninstallationReportView, # 💡 AJOUT
+    SiteDetailView, # 💡 AJOUT
 )
 from projects.models import Site, Task
 

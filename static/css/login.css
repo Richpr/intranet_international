@@ -1,27 +1,117 @@
-
-body {
-    background: linear-gradient(to right, #00c6ff, #0072ff);
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+:root {
+    --primary-color: #3B82F6; /* blue-500 */
+    --primary-hover: #2563EB; /* blue-600 */
+    --light-gray: #F9FAFB;   /* gray-50 */
+    --medium-gray: #6B7280; /* gray-500 */
+    --dark-gray: #1F2937;   /* gray-800 */
 }
 
-.card {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', sans-serif; /* A more modern font, loaded from Google Fonts in base template */
 }
 
-.card-header {
-    border-top-left-radius: 1rem;
-    border-top-right-radius: 1rem;
+.login-wrapper {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* --- Colonne de gauche (Branding) --- */
+.login-branding-col {
+    background: linear-gradient(135deg, var(--primary-color), var(--dark-gray));
+    padding: 3rem;
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+}
+
+.branding-content {
+    animation: fadeIn 1.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Colonne de droite (Formulaire) --- */
+.login-form-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 2rem;
+}
+
+@media (max-width: 991.98px) {
+    .login-form-container {
+        background-color: var(--light-gray);
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .min-vh-100 {
+        background-color: white;
+    }
 }
 
 .form-control {
     border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #D1D5DB; /* gray-300 */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    outline: none;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--medium-gray);
+    cursor: pointer;
+    z-index: 10;
 }
 
 .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 0.8rem;
+    font-weight: 600;
     border-radius: 0.5rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.forgot-password-link {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+}
+
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+/* Crispy forms compatibility */
+.form-label {
+    font-weight: 500;
+    color: var(--dark-gray);
 }

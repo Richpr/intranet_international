@@ -11,6 +11,7 @@
         body {
             font-family: 'DejaVu Sans', sans-serif;
             line-height: 1.6;
+            
         }
         .header-logo {
             text-align: center;
@@ -66,18 +67,27 @@
         .content p {
             margin-bottom: 15px;
         }
+        /* Positionne la signature de façon fixe en bas à droite */
         .signature-section {
-            margin-top: 80px;
+            position: fixed;
+            bottom: 85px; /* Ajuste cette valeur pour monter/descendre par rapport au footer */
+            right: 0;
             text-align: right;
+            width: 250px;
         }
+
         .signature-section img {
-            margin-top: 10px;
-            margin-bottom: 5px;
+            display: block;
+            margin-left: auto; /* Aligne l'image à droite */
+            margin-bottom: 10px; /* Réduit l'espace entre l'image et le nom */
             width: 150px;
         }
+
         .signature-section p {
-            margin: 2px 0;
+            margin: 0;
+            font-weight: bold;
         }
+        
         ul {
             margin-left: 30px;
             margin-bottom: 20px;
@@ -90,7 +100,7 @@
         }
         .footer-logo {
             position: fixed;
-            bottom: -30px;
+            bottom: -40px;
             left: 0;
             right: 0;
             text-align: center;
@@ -109,7 +119,7 @@
     
     
     <div class="date-ref">
-        <p class="date-droite"><strong>Cotonou, le {{ generation_date }}</strong></p>
+        <p class="date-droite"><strong>Cotonou, le {{ generation_date|date:"d F Y" }}</strong></p>
         
         <p class="ref-gauche"><strong><em>{{ reference }}</em></strong></p>
     </div>
@@ -130,30 +140,32 @@
         </p>
         <ul>
             {% if employee.main_role == "Team Lead" %}
-                <li>Assurer le leadership technique et l'expertise en la matière.</li>
-                <li>Superviser et assister les mouvements, ajouts, modifications et projets.</li>
-                <li>Élaborer et exécuter des plans de projet pour l'intégration de sites distants.</li>
-                <li>Travailler avec les fournisseurs pour identifier les opportunités d'amélioration.</li>
-                <li>Assurer le leadership de l'équipe, la coordination quotidienne et la priorisation de la charge de travail.</li>
-                <li>Suivre les performances de l'équipe et fournir des retours réguliers.</li>
+                <li>Supervision et coordination des opérations des riggers et techniciens sur le terrain.</li>
+                <li>Garant du respect du planning, des procédures HSE, des standards qualité Ericsson et des spécifications techniques.</li>
+                <li>Interface technique directe avec le superviseur Ericsson et/ou le client.</li>
+                <li>Réalisation ou validation des intégrations complexes et supervision des tests SRS et IMK.</li>
+                <li>Reporting quotidien, gestion des anomalies et formation de l’équipe.</li>
+                
             {% elif employee.main_role == "Technicien" %}
-                <li>Installer et configurer les systèmes, le matériel et les logiciels de télécommunication.</li>
-                <li>Mettre à niveau et maintenir les systèmes de télécommunication existants.</li>
-                <li>Effectuer des tests de diagnostic pour identifier et résoudre les pannes techniques.</li>
-                <li>Évaluer les besoins des clients et planifier les installations.</li>
+                <li>Installation, configuration, intégration, maintenance et dépannage des équipements RAN Ericsson et de transmission.</li>
+                <li>Intégration sur site (hardware et software).</li>
+                <li>Réalisation des tests de mise en service (SRS - Site Readiness Survey) et des mesures de couverture (IMK - Inter Modulation Check).</li>
+                <li>Mesures techniques (VSWR, PIM, puissance) et rédaction des rapports d’intervention.</li>
                 <li>Tenir des registres précis des ordres de travail et documenter les configurations techniques.</li>
-            {% elif employee.main_role == "Chauffeur" %}
-                <li>Conduire des véhicules commerciaux réglementés par le DOT en toute sécurité.</li>
+            {% elif employee.main_role == "Driver" %}
+                <li>Transport sécurisé du personnel, du matériel et des équipements sensibles vers les sites d’intervention.</li>
                 <li>Effectuer des inspections avant et après le voyage.</li>
                 <li>Assurer le chargement, la sécurisation et le transport corrects des matériaux et de l'équipement.</li>
                 <li>Assister les chefs d'équipe et les membres de l'équipe dans les tâches de construction télécom.</li>
-                <li>Effectuer des tests de conduite des réseaux mobiles.</li>
-            {% elif employee.main_role == "Monteur" %}
-                <li>Installer, entretenir et réparer les équipements de télécommunication sur les pylônes et les toits.</li>
-                <li>Effectuer des tâches en hauteur, en respectant des protocoles de sécurité stricts.</li>
-                <li>Exécuter des activités de gréement, y compris le levage et le hissage d'équipements.</li>
-                <li>Installer, épisser et réparer divers types de câbles.</li>
-                <li>Effectuer des tests de base des systèmes installés.</li>
+                <li>Gestion de la logistique journalière (chargement, inventaire, déchargement).</li>
+                <li>Entretien du véhicule et respect des règles de sécurité routière.</li>
+                <li>Soutien opérationnel essentiel à la ponctualité et à l’efficacité des chantiers.</li>
+            {% elif employee.main_role == "Monteur" or employee.main_role == "Rigger" %}
+                <li>Montage, installation, démontage et sécurisation des structures supports (mâts, pylônes, toitures) et des équipements de télécommunication.</li>
+                <li>Levage et positionnement précis des antennes.</li>
+                <li>Réglage et alignement des antennes de transmission selon les azimuts et inclinaisons techniques.</li>
+                <li>Câblage et fixage mécanique.</li>
+                <li>Respect strict des normes HSE, des procédures qualité et des consignes techniques Ericsson.</li>
             {% elif employee.main_role == "Coordinateur de Projet" %}
                 <li>Définir les exigences, la portée et les objectifs du projet.</li>
                 <li>Coordonner les activités de gestion de projet, les ressources et les informations.</li>

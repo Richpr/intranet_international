@@ -251,11 +251,10 @@ class CustomUser(AbstractUser):
     def main_role(self):
         """
         Détermine le rôle principal de l'utilisateur selon une hiérarchie.
-        Robuste avec fallback sur `job_role`.
         """
         user_roles = {r.lower() for r in self.get_active_role_names()}
 
-        # 1. Définition de la hiérarchie basée sur les affectations et groupes
+        # Définition de la hiérarchie
         if self.is_superuser:
             return "Administrateur Système"
         if "country manager" in user_roles or "country_manager" in user_roles:
@@ -266,13 +265,8 @@ class CustomUser(AbstractUser):
             return "Team Lead"
         if "field team" in user_roles or "field_team" in user_roles:
             return "Field Team"
-        
-        # 2. Fallback sur le champ `job_role` si aucun rôle d'affectation n'est trouvé
-        if self.job_role:
-            return self.job_role.name
-
-        # 3. Dernier recours
-        return "Employé"
+        else:
+            return "Employé"
 
     def get_active_role_names(self):
         """
@@ -409,8 +403,8 @@ class EmployeeDocument(models.Model):
 # 7. Modèle pour les mises à jour de profil en attente
 # =================================================================
 class ProfileUpdate(models.Model):
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='pending_updates')
-    data = models.JSONField(null=True, blank=True, default=dict)
+    employee = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='pending_update')
+    data = models.JSONField()
     status = models.CharField(max_length=20, choices=(('pending', _('En attente')), ('approved', _('Approuvé')), ('rejected', _('Rejeté'))), default='pending')
     comments = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -419,18 +413,3 @@ class ProfileUpdate(models.Model):
 
     def __str__(self):
         return f"Mise à jour pour {self.employee.username} ({self.status})"
-
-# =================================================================
-# 8. Modèle pour l'historique des mises à jour de profil
-# =================================================================
-class ProfileUpdateHistory(models.Model):
-    employee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='update_history')
-    data = models.JSONField()
-    status = models.CharField(max_length=20, choices=(('approved', _('Approuvé')), ('rejected', _('Rejeté'))))
-    comments = models.TextField(blank=True)
-    created_at = models.DateTimeField()
-    reviewed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_history')
-    reviewed_at = models.DateTimeField()
-
-    def __str__(self):
-        return f"Historique pour {self.employee.username} ({self.status}) le {self.reviewed_at.strftime('%d-%m-%Y')}"

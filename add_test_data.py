@@ -1,16 +1,15 @@
 import os
 import django
-from datetime import date, timedelta
-from decimal import Decimal
+from datetime import date
 
 # Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from projects.models import Project, Site, ProjectType, Client
-from users.models import Country
-from finance.models import Depense, Revenu
-from users.models import CustomUser
+from projects.models import Project, Site, ProjectType, Client  # noqa: E402
+from users.models import Country  # noqa: E402
+from finance.models import Depense, Revenu  # noqa: E402
+from users.models import CustomUser  # noqa: E402
 
 
 def add_test_data():

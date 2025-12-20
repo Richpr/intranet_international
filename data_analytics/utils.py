@@ -1,4 +1,4 @@
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum
 from django.db.models.functions import ExtractYear, ExtractMonth
 from projects.models import Site
 from finance.models import Depense, Revenu

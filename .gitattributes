@@ -1,0 +1,17 @@
+# Déclare tous les fichiers comme étant du texte
+* text=auto
+
+# Force tous les fichiers "texte" à être stockés dans le dépôt avec des fins de ligne LF (Unix)
+# MAIS, au moment du 'checkout' :
+# - Sous Windows, Git les convertira en CRLF (localement pour l'édition).
+# - Sous Linux/Mac, Git les laissera en LF.
+* text eol=lf
+
+# Exclure explicitement les fichiers binaires pour éviter toute conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
