@@ -17,6 +17,10 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 import sys
 # 💡 FIN DE L'AJOUT
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
 
 # =================================================================
 # CHOIX EXISTANTS
@@ -1126,3 +1130,31 @@ class UninstalledEquipment(models.Model):
 
     def __str__(self):
         return f"{self.equipment_name} (x{self.quantity})"
+
+
+@receiver(post_save, sender=Task)
+def logic_recalcul_progression(sender, instance, **kwargs):
+    """
+    Dès qu'une tâche est modifiée (sauvegardée), 
+    on recalcule tout en cascade.
+    """
+    site = instance.site
+    if site:
+        # 1. Calcul de la progression du SITE (moyenne des tâches)
+        # On considère qu'une tâche est finie si son statut est 'COMPLETED'
+        total_tasks = site.tasks.count()
+        if total_tasks > 0:
+            completed = site.tasks.filter(status='COMPLETED').count()
+            site.progress_percentage = (completed / total_tasks) * 100
+        else:
+            site.progress_percentage = 0
+        
+        # On sauvegarde le site avec update_fields pour éviter les boucles infinies
+        site.save(update_fields=['progress_percentage'])
+
+        # 2. Calcul de la progression du PROJET (moyenne des sites)
+        project = site.project
+        if project:
+            avg_sites = project.sites.aggregate(avg=Avg('progress_percentage'))['avg']
+            project.progress_percentage = avg_sites or 0
+            project.save(update_fields=['progress_percentage'])
