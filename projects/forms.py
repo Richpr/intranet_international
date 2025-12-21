@@ -107,8 +107,10 @@ class SiteForm(ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # 1. EXTRAIRE les arguments personnalisés (project) AVANT le super().
-        project = kwargs.pop("project", None)  # On extrait 'project' ici
+        # 1. EXTRAIRE TOUS les arguments personnalisés AVANT le super().
+        # On retire 'project' ET 'user' du dictionnaire kwargs
+        project = kwargs.pop("project", None)
+        user = kwargs.pop("user", None)  # <--- AJOUTEZ CETTE LIGNE ICI 
 
         site_instance = kwargs.get("instance")
 
@@ -117,7 +119,7 @@ class SiteForm(ModelForm):
         if not project and site_instance:
             project = site_instance.project
 
-        # 2. Appeler le constructeur parent (kwargs est maintenant "propre")
+        # 2. Appeler le constructeur parent (kwargs est maintenant "propre", sans 'user')
         super().__init__(*args, **kwargs)
 
         # 3. Utiliser les variables extraites pour la logique de filtrage
@@ -127,8 +129,10 @@ class SiteForm(ModelForm):
         )
 
         if project:
-            # 1. Team Lead: Filtrer les Team Leads pour le pays du projet
+            # Filtrer les Team Leads pour le pays du projet
             team_lead_role = Role.objects.filter(name="Team Lead").first()
+            
+            # (Le reste de votre logique de filtrage est correcte)
             if team_lead_role:
                 team_leads_in_country = CustomUser.objects.filter(
                     assignments__country=project.country,
@@ -137,7 +141,6 @@ class SiteForm(ModelForm):
                     assignments__end_date__isnull=True,
                 ).distinct()
             else:
-                # Si le rôle 'Team Lead' n'existe pas, permettre tous les utilisateurs actifs du pays
                 team_leads_in_country = CustomUser.objects.filter(
                     assignments__country=project.country,
                     assignments__is_active=True,
