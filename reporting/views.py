@@ -102,50 +102,62 @@ def inventory_status_report_view(request):
 # =================================================================
 
 @login_required
+
+
+
 def ran_site_list_view(request):
+
     countries = Country.objects.filter(is_active=True)
     
-    # Récupérer tous les filtres
     selected_country_id = request.GET.get('country')
     selected_project_id = request.GET.get('project')
     selected_year = request.GET.get('year')
     selected_month = request.GET.get('month')
 
-    # Commencer les QuerySets
     projects_qs = Project.objects.filter(is_active=True, project_type__is_transmission=False)
+    
+    # 💡 CORRECTION : select_related uniquement pour les ForeignKey directes.
+    # On ajoute 'prefetch_related' pour les inspections et les tâches afin d'optimiser le template.
     sites_qs = Site.objects.filter(project__project_type__is_transmission=False).select_related(
-        'project__country', 'departement', 'site_type', 
-        'antenna_type', 'enclosure_type', 'bb_ml'
-    ).prefetch_related('radio_configurations__radio_type')
+        'project__country', 
+        'departement', 
+        'site_type', 
+        'antenna_type', 
+        'enclosure_type', 
+        'bb_ml'
+    ).prefetch_related(
+        'radio_configurations__radio_type',
+        'inspections',
+        'tasks'
+    )
 
-    # Filtrer par Pays (affecte les sites ET la liste des projets)
     if selected_country_id:
         sites_qs = sites_qs.filter(project__country_id=selected_country_id)
         projects_qs = projects_qs.filter(country_id=selected_country_id)
         
-    # Appliquer les nouveaux filtres
     if selected_project_id:
         sites_qs = sites_qs.filter(project_id=selected_project_id)
     if selected_year:
-        sites_qs = sites_qs.filter(start_date__year=selected_year) # Filtre sur site.start_date
+        sites_qs = sites_qs.filter(start_date__year=selected_year)
     if selected_month:
-        sites_qs = sites_qs.filter(start_date__month=selected_month) # Filtre sur site.start_date
+        sites_qs = sites_qs.filter(start_date__month=selected_month)
 
     context = {
         'sites': sites_qs,
         'countries': countries,
-        'projects': projects_qs, # Pour le dropdown
+        'projects': projects_qs,
         'selected_country_id': selected_country_id,
         'selected_project_id': selected_project_id,
         'selected_year': selected_year,
         'selected_month': selected_month,
-        'years': range(date.today().year + 1, date.today().year - 5, -1), # Années pour le dropdown
-        'months': range(1, 13), # Mois pour le dropdown
+        'years': range(date.today().year + 1, date.today().year - 5, -1),
+        'months': range(1, 13),
     }
     return render(request, 'reporting/ran_site_list.html', context)
 
 @login_required
 def ran_site_list_pdf(request):
+
     selected_country_id = request.GET.get('country')
     selected_project_id = request.GET.get('project')
     selected_year = request.GET.get('year')
@@ -173,17 +185,31 @@ def ran_site_list_pdf(request):
     return response
 
 @login_required
+
 def ran_site_list_excel(request):
+    # 1. RÉCUPÉRATION DES FILTRES (Identiques à ta vue de liste)
     selected_country_id = request.GET.get('country')
     selected_project_id = request.GET.get('project')
     selected_year = request.GET.get('year')
     selected_month = request.GET.get('month')
-    
-    sites_qs = Site.objects.filter(project__project_type__is_transmission=False).select_related(
-        'project__country', 'departement', 'site_type', 
-        'antenna_type', 'enclosure_type', 'bb_ml'
-    ).prefetch_related('radio_configurations__radio_type')
 
+    # 2. QUERYSET OPTIMISÉ (Important pour ne pas faire ramer le serveur)
+    sites_qs = Site.objects.filter(
+        project__project_type__is_transmission=False
+    ).select_related(
+        'project__country', 
+        'departement', 
+        'site_type', 
+        'antenna_type', 
+        'enclosure_type', 
+        'bb_ml'
+    ).prefetch_related(
+        'radio_configurations__radio_type',
+        'tasks__task_type',
+        'inspections'
+    ).order_by('name')
+
+    # Application des filtres
     if selected_country_id:
         sites_qs = sites_qs.filter(project__country_id=selected_country_id)
     if selected_project_id:
@@ -192,40 +218,74 @@ def ran_site_list_excel(request):
         sites_qs = sites_qs.filter(start_date__year=selected_year)
     if selected_month:
         sites_qs = sites_qs.filter(start_date__month=selected_month)
-    
+
+    # 3. CRÉATION DU WORKBOOK EXCEL
     workbook = openpyxl.Workbook()
     sheet = workbook.active
-    sheet.title = 'RAN Sites'
+    sheet.title = 'Rapport Déploiement RAN'
+
+    # Headers complets (Identification + Technique + Tes 9 Tâches)
     headers = [
-        "Nom du site", "Id du site", "Pays", "Departement", "Commune", "Type de site", 
-        "Project Name", "Annee", "Mois", "Type de radio", "Type d'antenne", 
-        "Type d'enclosure", "Indoor equipement (BB/ML)", "INSTALLATION", "INTEGRATION", 
-        "SRS", "IMK", "EHS", "QA", "QA STATUS", "ATP", "COMMENT"
+        "Site Name", "Site Id", "Pays", "Departement", "Commune", "Site Type", 
+        "Project Name", "Année", "Mois", "Radio Type", "Antenna Type", 
+        "Enclosure", "BB/ML", "INSTALLATION", "INTEGRATION", "EHS 1", 
+        "EHS 2", "IMK", "SRS", "QA (RESULT)", "ATP", "COMMENT"
     ]
     sheet.append(headers)
+
+    # 4. REMPLISSAGE DES DONNÉES
     for site in sites_qs:
-        radios = ", ".join([f"{radio.radio_type.name} ({radio.quantity})" for radio in site.radio_configurations.all()])
+        # On récupère toutes les tâches du site une seule fois
+        tasks = site.tasks.all()
+        
+        # Fonction interne pour extraire le statut d'une tâche par son nom
+        def get_task_status(name_to_find):
+            for t in tasks:
+                if name_to_find.upper() in t.task_type.name.upper():
+                    return t.get_status_display()
+            return "-"
+
+        # Préparation de la ligne
         row = [
-            site.name, site.site_id_client, site.project.country.name,
-            site.departement.name if site.departement else "",
-            site.location, site.site_type.name if site.site_type else "",
+            site.name,
+            site.site_id_client,
+            site.project.country.name,
+            site.departement.name if site.departement else "-",
+            site.location if site.location else "-",
+            site.site_type.name if site.site_type else "-",
             site.project.name,
-            site.start_date.year if site.start_date else "",
-            site.start_date.month if site.start_date else "",
-            radios, site.antenna_type.name if site.antenna_type else "",
-            site.enclosure_type.name if site.enclosure_type else "",
-            site.bb_ml.name if site.bb_ml else "",
-            str(site.installation_status), str(site.integration_status),
-            str(site.srs_status), str(site.imk_status), str(site.ehs_status),
-            str(site.qa_result), str(site.qa_result), str(site.atp_status),
-            site.comment,
+            site.start_date.year if site.start_date else "-",
+            site.start_date.strftime('%B') if site.start_date else "-",
+            ", ".join([r.radio_type.name for r in site.radio_configurations.all()]),
+            site.antenna_type.name if site.antenna_type else "-",
+            site.enclosure_type.name if site.enclosure_type else "-",
+            site.bb_ml.name if site.bb_ml else "-",
+            # Les 9 colonnes demandées
+            get_task_status("INSTALLATION"),
+            get_task_status("INTEGRATION"),
+            get_task_status("EHS 1"),
+            get_task_status("EHS 2"),
+            get_task_status("IMK"),
+            get_task_status("SRS"),
+            # QA basé sur l'inspection
+            site.inspections.first().get_resultat_inspection_display() if site.inspections.exists() else "-",
+            get_task_status("ATP"),
+            site.comment if site.comment else "-"
         ]
         sheet.append(row)
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="ran_sites_report.xlsx"'
+
+    # 5. MISE EN FORME BASIQUE (Optionnel : figer la première ligne)
+    sheet.freeze_panes = 'A2'
+    
+    # 6. GÉNÉRATION DE LA RÉPONSE
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f"Rapport_RAN_{date.today().strftime('%d_%m_%Y')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
     workbook.save(response)
     return response
-
 # =================================================================
 # VUES TRANSMISSION
 # =================================================================

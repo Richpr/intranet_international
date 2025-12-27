@@ -1,80 +1,211 @@
 {% extends "core/base.html" %}
 {% load crispy_forms_tags %} 
 {% load static %}
-
-{% block title %}Mise à Jour Tâche{% endblock %}
+{% load i18n %} {% block title %}Mise à Jour Tâche - {{ task.task_type.name }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
+    <div class="col-lg-10 col-md-12">
         <div class="card shadow">
             <div class="card-header bg-warning text-dark">
                 <h4 class="mb-0">
-                    <i class="me-2">🛠️</i> Mise à Jour de la Tâche
+                    <i class="me-2">🛠️</i> Mise à Jour: {{ task.task_type.name }}
                 </h4>
             </div>
             <div class="card-body">
-                <p class="text-muted">
-                    Site: <strong>{{ task.site.site_id_client }}</strong> | 
-                    Projet: <strong>{{ task.site.project.name }}</strong> |
-                    Assigné à: <strong>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</strong>
-                </p>
-                
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    
-                    <h5 class="text-primary mt-3">Informations de la Tâche</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ form.task_type|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.status|as_crispy_field }}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <a href="{% url 'projects:project_detail' pk=task.site.project.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour au Projet
+                    </a>
+                    <a href="{% url 'projects:task_report' pk=task.pk %}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-print me-1"></i>Générer le Rapport (PDF)
+                    </a>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>📍 Site:</strong> {{ task.site.site_id_client }}</p>
+                        <p class="mb-1"><strong>📋 Projet:</strong> {{ task.site.project.name }}</p>
+                        <p class="mb-1"><strong>🎯 Type:</strong> {{ task.task_type.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>👤 Assigné à:</strong>
+    {% if task.assigned_to %}
+        {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+    {% else %}
+        <span class="text-danger">Non assigné</span>
+    {% endif %}
+</p>
+                        <p class="mb-1"><strong>📅 Date limite:</strong> {{ task.due_date|date:"d M Y" }}</p>
+                        {% if task.completion_date %}
+                        <p class="mb-1"><strong>✅ Terminé le:</strong> {{ task.completion_date|date:"d M Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if task.task_type.code == "DESINSTALLATION" %}
+                <div class="alert alert-info shadow-sm border-primary">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clipboard-list fa-2x me-3 text-primary"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">{% trans "Rapport de Désinstallation" %}</h5>
+                            <p class="mb-2">{% trans "Cette tâche nécessite un rapport de désinstallation. Cliquez ici pour le remplir ou le modifier." %}</p>
+                            <a href="{% url 'projects:uninstallation_report' task_pk=task.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-1"></i> {% trans "Gérer le rapport de désinstallation" %}
+                            </a>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-12">
-                            {{ form.description|as_crispy_field }}
-                        </div>
+                </div>
+                {% endif %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-images me-2"></i>Gestion des Photos
+                        </h5>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ form.progress_percentage|as_crispy_field }}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <a href="{% url 'projects:task_photo_upload' task.pk %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Ajouter des Photos
+                            </a>
+                            {% if task.task_images.all %}
+                            <span class="badge bg-success">{{ task.task_images.count }} photo(s)</span>
+                            {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Progression visuelle</label>
-                                <div class="progress mt-2">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ form.instance.progress_percentage|default:0 }}%"
-                                         aria-valuenow="{{ form.instance.progress_percentage|default:0 }}" 
-                                         aria-valuemin="0" aria-valuemax="100">
-                                        {{ form.instance.progress_percentage|default:0 }}%
+                        
+                        {% if task.task_images.all %}
+                        <div class="row">
+                            {% for photo in task.task_images.all %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <img src="{{ photo.photo.url }}" class="card-img-top" alt="{{ photo.caption }}" 
+                                         style="height: 150px; object-fit: cover; cursor: pointer;" 
+                                         onclick="openModal('{{ photo.photo.url }}')">
+                                    <div class="card-body p-2">
+                                        <small class="text-muted d-block">{{ photo.caption|default:"Sans légende" }}</small>
+                                        <small class="text-muted d-block">{{ photo.uploaded_at|date:"d M Y H:i" }}</small>
+                                        <div class="btn-group w-100 mt-1">
+                                            <a href="{{ photo.photo.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>Voir
+                                            </a>
+                                            <a href="{{ photo.photo.url }}" download class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-download me-1"></i>Télécharger
+                                            </a>
+                                            <form method="post" action="{% url 'projects:task_photo_delete' photo.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette photo ?');">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">Aucune photo pour cette tâche.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="post" novalidate enctype="multipart/form-data" id="task-update-form">
+                    {% csrf_token %}
+                    
+                    {% if task.task_type.code in 'SRS,IMK' %}
+                    <div class="simple-interface">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.assigned_to|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.status|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.result_done|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.progress_percentage|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.ticket_number|as_crispy_field }}
                             </div>
                         </div>
                     </div>
                     
-                    <div class="alert alert-info mt-3">
-                        <small>
-                            <strong>Date limite:</strong> {{ task.due_date|date:"d M Y" }} |
-                            <strong>Créée le:</strong> {{ task.created_at|date:"d M Y" }}
-                        </small>
+                    {% else %}
+                    <div class="advanced-interface">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.task_type|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.assigned_to|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.status|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.due_date|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.progress_percentage|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.ticket_number|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div id="result-section" class="mt-4 {% if task.status != 'COMPLETED' %}d-none{% endif %}">
+                            <h5 class="text-success mb-3">✅ Résultat Final</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.result_type|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    {% endif %}
                     
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{% url 'projects:project_detail' pk=task.site.project.pk %}" class="btn btn-outline-secondary">
-                            Annuler / Retour au Projet
+                            <i class="fas fa-arrow-left me-1"></i>Retour au Projet
                         </a>
                         <button type="submit" class="btn btn-success">
-                            <i class="me-1">💾</i> Enregistrer la Mise à Jour
+                            <i class="fas fa-save me-1"></i>Enregistrer
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="photoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalPhoto" src="" alt="" style="max-width: 100%; max-height: 70vh;">
             </div>
         </div>
     </div>
@@ -84,18 +215,45 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Mise à jour automatique de la barre de progression
+    const statusSelect = document.getElementById('id_status');
+    const resultSection = document.getElementById('result-section');
     const progressInput = document.getElementById('id_progress_percentage');
     const progressBar = document.querySelector('.progress-bar');
     
-    if (progressInput && progressBar) {
-        progressInput.addEventListener('input', function() {
-            const value = this.value;
+    // Afficher/masquer la section résultat
+    function toggleResultSection() {
+        if (statusSelect && resultSection) {
+            if (statusSelect.value === 'COMPLETED') {
+                resultSection.classList.remove('d-none');
+            } else {
+                resultSection.classList.add('d-none');
+            }
+        }
+    }
+    
+    // Mise à jour de la barre de progression
+    function updateProgressBar() {
+        if (progressInput && progressBar) {
+            const value = progressInput.value;
             progressBar.style.width = value + '%';
             progressBar.setAttribute('aria-valuenow', value);
             progressBar.textContent = value + '%';
-        });
+        }
     }
+    
+    // Événements
+    if (statusSelect) statusSelect.addEventListener('change', toggleResultSection);
+    if (progressInput) progressInput.addEventListener('input', updateProgressBar);
+    
+    // Initialisation
+    toggleResultSection();
+    updateProgressBar();
 });
+
+// Fonction pour ouvrir la modal photo
+function openModal(photoUrl) {
+    document.getElementById('modalPhoto').src = photoUrl;
+    new bootstrap.Modal(document.getElementById('photoModal')).show();
+}
 </script>
 {% endblock %}

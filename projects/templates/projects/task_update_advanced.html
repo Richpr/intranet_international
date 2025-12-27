@@ -29,10 +29,17 @@
                         <p class="mb-1"><strong>🎯 Type:</strong> {{ task.task_type.name }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p class="mb-1"><strong>👤 Assigné à:</strong> {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</p>
+                        <p class="mb-1">
+                            <strong>👤 Assigné à:</strong> 
+                            {% if task.assigned_to %}
+                                {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                            {% else %}
+                                <span class="text-muted italic">Non assigné</span>
+                            {% endif %}
+                        </p>
                         <p class="mb-1"><strong>📅 Date limite:</strong> {{ task.due_date|date:"d M Y" }}</p>
                         {% if task.completion_date %}
-                        <p class="mb-1"><strong>✅ Terminé le:</strong> {{ task.completion_date|date:"d M Y" }}</p>
+                            <p class="mb-1"><strong>✅ Terminé le:</strong> {{ task.completion_date|date:"d M Y" }}</p>
                         {% endif %}
                     </div>
                 </div>

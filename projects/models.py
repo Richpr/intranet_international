@@ -403,7 +403,7 @@ class Project(models.Model):
 # 3. Modèle Site (Le Lieu d'Intervention)
 # =================================================================
 class Site(models.Model):
-    # Infos de base
+    # --- INFOS DE BASE ---
     project = models.ForeignKey(
         Project,
         on_delete=models.CASCADE,
@@ -412,17 +412,16 @@ class Site(models.Model):
     )
     site_id_client = models.CharField(
         max_length=50, verbose_name=_("ID du Site Client")
-    )  # ID du Site*
+    )
     name = models.CharField(
         max_length=200, verbose_name=_("Nom du Site")
-    )  # Nom du Site*
+    )
     location = models.CharField(
         max_length=255, blank=True, verbose_name=_("Localisation")
     )
     site_area = models.CharField(
         max_length=100, blank=True, verbose_name=_("Site Area")
-    )  # Site Area
-
+    )
     departement = models.ForeignKey(
         Departement,
         on_delete=models.PROTECT,
@@ -431,7 +430,7 @@ class Site(models.Model):
         verbose_name=_("Département"),
     )
 
-    # Ces champs doivent exister pour la logique transmission
+    # --- TRANSMISSION ---
     is_transmission_a_site = models.BooleanField(
         default=False, verbose_name=_("Site A de Transmission")
     )
@@ -439,7 +438,7 @@ class Site(models.Model):
         default=False, verbose_name=_("Site B de Transmission")
     )
 
-    # 📌 Team Lead Assigné
+    # --- ASSIGNATION ---
     team_lead = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -459,51 +458,51 @@ class Site(models.Model):
         blank=True
     )
 
-    # 📌 Clés Étrangères vers les NOUVELLES Références (Lookup Models)
+    # --- CONFIGURATION TECHNIQUE ---
     phase = models.ForeignKey(
-        SitePhase,  # ✅ OK
+        'SitePhase',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         verbose_name=_("Phase"),
-    )  # Phase
+    )
     batch = models.ForeignKey(
-        Batch,  # ✅ OK
+        'Batch',
         on_delete=models.PROTECT, 
         null=True, 
         blank=True, 
         verbose_name=_("Batch")
-    )  # Batch
+    )
     project_scope = models.TextField(
         blank=True, verbose_name=_("Portée du Projet")
-    )  # Portée du projet
+    )
     antenna_type = models.ForeignKey(
-        AntennaType,  # ✅ OK
+        'AntennaType',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         verbose_name=_("Type d'Antenne"),
-    )  # Type d'antenne
+    )
     enclosure_type = models.ForeignKey(
-        EnclosureType,  # ✅ OK
+        'EnclosureType',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         verbose_name=_("Type d'Enclosure"),
-    )  # Type d'ENCLOSURE
+    )
     bb_ml = models.ForeignKey(
-        BBMLType,  # ✅ OK
+        'BBMLType',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         verbose_name=_("BB / ML"),
-    )  # BB / ML
+    )
 
-    # NOUVEAU Champ COMMENTAIRE
     comment = models.TextField(
         blank=True, verbose_name=_("Commentaire du Site")
-    )  # COMMENT
+    )
 
+    # --- FINANCE ET STATUT ---
     prix_facturation = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -523,9 +522,8 @@ class Site(models.Model):
         verbose_name=_("Progression (%)"),
     )
 
-    # NOUVEAUX CHAMPS DE CONFIGURATION
     site_type = models.ForeignKey(
-        SiteType,  # ✅ OK
+        'SiteType',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -533,17 +531,14 @@ class Site(models.Model):
         verbose_name=_("Type de Site"),
     )
     
-
-    # 👇 MODIFICATION ICI 👇
     installation_type = models.ForeignKey(
-        InstallationType,
+        'InstallationType',
         on_delete=models.PROTECT,
-        null=True,  # 1. REMETTEZ CECI
-        blank=True, # 2. REMETTEZ CECI
+        null=True,
+        blank=True,
         related_name="sites",
         verbose_name=_("Type d'Installation"),
     )
-    # 👆 FIN DE LA MODIFICATION 👆
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -561,42 +556,57 @@ class Site(models.Model):
         verbose_name=_("Résultat Dernière Inspection"),
     )
 
+    # -------------------------------------------------------------------------
+    # MÉTHODE SAVE : Génération automatique des tâches RAN
+    # -------------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new:
+            # On vérifie si le projet est de type "RAN"
+            if self.project.project_type and self.project.project_type.name == "RAN":
+                
+                # LISTE STRICTE DES TÂCHES (NOM et CODE)
+                taches_ran = [
+                    {"code": "EHS_01", "nom": "EHS 01"},
+                    {"code": "EHS_02", "nom": "EHS 02"},
+                    {"code": "S_INSTALL", "nom": "Site Installation"},
+                    {"code": "S_INTEGRATION", "nom": "Site Integration"},
+                    {"code": "IMK", "nom": "IMK"},
+                    {"code": "SRS", "nom": "SRS"},
+                    {"code": "FINAL_QA", "nom": "QA"},
+                    {"code": "ATP", "nom": "ATP Client"},
+                ]
+
+                from .models import TaskType, Task
+                
+                for item in taches_ran:
+                    # 1. Récupère ou crée le TaskType
+                    task_type, _ = TaskType.objects.get_or_create(
+                        code=item["code"],
+                        defaults={'name': item["nom"]}
+                    )
+
+                    # 2. Crée la tâche (CORRECTIF : on ne passe pas 'name' car il n'existe pas dans Task)
+                    Task.objects.get_or_create(
+                        site=self,
+                        task_type=task_type,
+                        defaults={
+                            'status': 'TO_DO',
+                            'created_by': self.created_by or self.project.created_by,
+                            'due_date': self.end_date or self.start_date,
+                            'assigned_to': self.team_lead,
+                        }
+                    )
+
+    # --- PROPERTIES ---
     @property
     def transmission_display_name(self):
-        """
-        Calcule le nom d'affichage de la liaison en utilisant le format canonique
-        (Nom Site 1 - Nom Site 2, trié alphabétiquement), et l'affiche à côté
-        du nom du site actuel.
-        """
-        link = None
-        site_name_a = None
-        site_name_b = None
-        
-        # 1. Tente de trouver le lien où self est site_a
-        link_as_a = self.transmission_link_a.first()
-        if link_as_a:
-            link = link_as_a
-            site_name_a = self.name
-            site_name_b = link.site_b.name
-        else:
-            # 2. Tente de trouver le lien où self est site_b
-            link_as_b = self.transmission_link_b.first()
-            if link_as_b:
-                link = link_as_b
-                site_name_a = link.site_a.name
-                site_name_b = self.name
-        
+        link = self.transmission_link_a.first() or self.transmission_link_b.first()
         if link:
-            # 3. Ordonner les noms pour un affichage canonique du lien (ex: AZOVE 2 - AZOVE 5)
-            # Utilise sorted() pour que l'ordre du lien soit toujours le même (non directionnel)
-            ordered_names = sorted([site_name_a, site_name_b])
-            canonical_link_name = f"{ordered_names[0]} - {ordered_names[1]}"
-
-            # 4. Renvoyer le nom du site suivi du lien canonique entre parenthèses
-            # Ex: "AZOVE 5 (AZOVE 2 - AZOVE 5)"
-            return f"{canonical_link_name}"
-
-        # Si le site n'est pas impliqué dans une liaison
+            ordered_names = sorted([link.site_a.name, link.site_b.name])
+            return f"{ordered_names[0]} - {ordered_names[1]}"
         return self.name
 
     class Meta:
@@ -604,67 +614,16 @@ class Site(models.Model):
         verbose_name_plural = _("Sites")
         ordering = ["project", "site_id_client"]
 
-        # 💡 3. AJOUTÉ : Nouvelle contrainte d'unicité
-        #unique_together = ('project', 'site_id_client', 'installation_type')
-
     def __str__(self):
         return f"{self.site_id_client} - {self.name}"
 
-    def _get_task_status(self, task_type_code):
-        """Fonction utilitaire pour vérifier si une tâche de type donné est COMPLETED."""
-        task = (
-            self.tasks.filter(task_type__code=task_type_code)
-            .order_by("-due_date")
-            .first()
-        )
-        if task and task.status == "COMPLETED":
-            return _("Complété")
-        elif task:
-            return _("En Cours")
-        return _("À Faire")
-
-    @property
-    def installation_status(self):
-        return self._get_task_status("INSTALLATION")
-
-    @property
-    def integration_status(self):
-        return self._get_task_status("INTEGRATION")
-
-    @property
-    def srs_status(self):
-        return self._get_task_status("SRS")
-
-    @property
-    def imk_status(self):
-        return self._get_task_status("IMK")
-
-    @property
-    def atp_status(self):
-        return self._get_task_status("ATP")
-
-    @property
-    def ehs_status(self):
-        return self._get_task_status("EHS")
-
-    @property
-    def qa_result(self):
-        last_qa = (
-            self.inspections.filter(type_inspection="ATP")
-            .order_by("-date_inspection")
-            .first()
-        )
-        if last_qa:
-            return last_qa.get_resultat_inspection_display()
-        return _("N/A")
-
     def update_progress(self):
         """
-        Recalcule la progression du site basée sur les tâches et cascade au projet.
+        Recalcule la progression du site basée sur la moyenne des pourcentages des tâches.
         """
         progress_data = self.tasks.aggregate(avg_progress=Avg("progress_percentage"))
-
         new_progress = progress_data["avg_progress"] or Decimal("0.00")
+
         self.progress_percentage = new_progress
 
         if new_progress >= 100:
@@ -674,10 +633,28 @@ class Site(models.Model):
         else:
             self.status = 'TO_DO'
 
-        self.save()
+        # Utilise super().save() pour éviter les boucles de signaux infinies
+        super().save(update_fields=['progress_percentage', 'status'])
+        
+        if self.project:
+            self.project.update_progress()
 
-        # Cascade vers le projet parent
-        self.project.update_progress()
+    def _get_task_status(self, task_type_code):
+        task = self.tasks.filter(task_type__code=task_type_code).first()
+        if task and task.status == "COMPLETED": return _("Complété")
+        elif task: return _("En Cours")
+        return _("À Faire")
+
+    @property
+    def installation_status(self): return self._get_task_status("S_INSTALL")
+    @property
+    def integration_status(self): return self._get_task_status("S_INTEGRATION")
+    @property
+    def srs_status(self): return self._get_task_status("SRS")
+    @property
+    def imk_status(self): return self._get_task_status("IMK")
+    @property
+    def atp_status(self): return self._get_task_status("ATP")
 
 
 # =================================================================
@@ -752,9 +729,11 @@ class Task(models.Model):
 
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL, # Change PROTECT par SET_NULL pour ne pas bloquer la suppression d'un utilisateur
         related_name="assigned_tasks",
         verbose_name=_("Assigné à"),
+        null=True,   # <--- INDISPENSABLE : permet la valeur NULL en BDD
+        blank=True,  # <--- Permet de laisser le champ vide dans les formulaires Django
     )
     due_date = models.DateField(verbose_name=_("Date Limite"))
 
@@ -1131,30 +1110,3 @@ class UninstalledEquipment(models.Model):
     def __str__(self):
         return f"{self.equipment_name} (x{self.quantity})"
 
-
-@receiver(post_save, sender=Task)
-def logic_recalcul_progression(sender, instance, **kwargs):
-    """
-    Dès qu'une tâche est modifiée (sauvegardée), 
-    on recalcule tout en cascade.
-    """
-    site = instance.site
-    if site:
-        # 1. Calcul de la progression du SITE (moyenne des tâches)
-        # On considère qu'une tâche est finie si son statut est 'COMPLETED'
-        total_tasks = site.tasks.count()
-        if total_tasks > 0:
-            completed = site.tasks.filter(status='COMPLETED').count()
-            site.progress_percentage = (completed / total_tasks) * 100
-        else:
-            site.progress_percentage = 0
-        
-        # On sauvegarde le site avec update_fields pour éviter les boucles infinies
-        site.save(update_fields=['progress_percentage'])
-
-        # 2. Calcul de la progression du PROJET (moyenne des sites)
-        project = site.project
-        if project:
-            avg_sites = project.sites.aggregate(avg=Avg('progress_percentage'))['avg']
-            project.progress_percentage = avg_sites or 0
-            project.save(update_fields=['progress_percentage'])

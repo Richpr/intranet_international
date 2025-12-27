@@ -167,11 +167,19 @@
                 <tr>
                     <th>Team Lead</th>
                     <td>
-                        {{ site.team_lead.get_full_name|default:site.team_lead.username|default:"N/A" }}
+                        {% if site.team_lead %}
+                            {{ site.team_lead.get_full_name|default:site.team_lead.username }}
+                        {% else %}
+                            N/A
+                        {% endif %}
                     </td>
                     <th>Assigné à</th>
                     <td>
-                        {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                        {% if task.assigned_to %}
+                            {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                        {% else %}
+                            <span class="text-danger">Non assigné</span>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
@@ -201,7 +209,7 @@
                         <div class="photo-caption">Photo {{ forloop.counter }} - {{ photo.caption|default:"Aucune légende" }}</div>
                         <div class="photo-meta">
                             {# 🚨 CORRECTION : Affichage du username en cas d'absence du nom complet #}
-                            Par {{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.username }}<br>
+                            Par {% if photo.uploaded_by %}{{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.username }}{% else %}Utilisateur inconnu{% endif %}<br>
                             le {{ photo.uploaded_at|date:"d/m/Y à H:i" }}
                         </div>
                     </div>

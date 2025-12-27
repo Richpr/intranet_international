@@ -20,12 +20,11 @@
     </div>
 </div>
 
-<!-- Cartes de statistiques -->
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card bg-primary text-white">
             <div class="card-body text-center">
-                <h3 class="mb-0">{{ site.progress_percentage|default:0 }}%</h3>
+                <h3 class="mb-0">{{ site.progress_percentage|default:0|floatformat:1 }}%</h3>
                 <small>Progression</small>
             </div>
         </div>
@@ -56,7 +55,6 @@
     </div>
 </div>
 
-<!-- Informations du site -->
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card">
@@ -162,7 +160,6 @@
     </div>
 </div>
 
-<!-- Tâches du site -->
 <div class="card mb-4">
     <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
         <h5 class="mb-0">📝 Tâches ({{ tasks.count }})</h5>
@@ -192,7 +189,7 @@
                     <tr>
                         <td>
                             <a href="{% url 'projects:task_update' pk=task.pk %}" class="text-decoration-none fw-bold">
-                                {{ task.description|truncatewords:10 }}
+                                {{ task.name|default:task.task_type.name|default:"Tâche sans nom" }}
                             </a>
                             {% if task.is_paid_relevant %}
                                 <span class="badge bg-success ms-1">Paie</span>
@@ -204,7 +201,13 @@
                             {% endif %}
                         </td>
                         <td>
-                            <small>{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</small>
+                            <small>
+                                {% if task.assigned_to %}
+                                    {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                                {% else %}
+                                    <span class="text-muted italic">Non assigné</span>
+                                {% endif %}
+                            </small>
                         </td>
                         <td>
                             <span class="badge 
@@ -248,7 +251,6 @@
     </div>
 </div>
 
-<!-- Inspections du site -->
 <div class="card">
     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">⚠️ Inspections ({{ inspections.count }})</h5>
@@ -276,7 +278,11 @@
                     <tr>
                         <td>{{ inspection.get_type_inspection_display }}</td>
                         <td>
-                            <small>{{ inspection.inspector.get_full_name|default:inspection.inspector.username }}</small>
+                            <small>
+                                {% if inspection.inspector %}
+                                    {{ inspection.inspector.get_full_name|default:inspection.inspector.username }}
+                                {% else %}-{% endif %}
+                            </small>
                         </td>
                         <td>
                             <small>{{ inspection.date_inspection|date:"d/m/Y" }}</small>

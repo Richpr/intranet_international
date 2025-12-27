@@ -106,56 +106,53 @@ class SiteForm(ModelForm):
             "end_date": DateInput(attrs={"type": "date"}),
         }
 
+    
     def __init__(self, *args, **kwargs):
-        # 1. EXTRAIRE TOUS les arguments personnalisés AVANT le super().
-        # On retire 'project' ET 'user' du dictionnaire kwargs
+        # 1. EXTRAIRE les arguments personnalisés
         project = kwargs.pop("project", None)
-        user = kwargs.pop("user", None)  # <--- AJOUTEZ CETTE LIGNE ICI 
-
+        user = kwargs.pop("user", None) 
         site_instance = kwargs.get("instance")
 
-        # Si 'project' n'a pas été passé directement, mais que nous avons une instance,
-        # on essaie de le récupérer de l'instance.
         if not project and site_instance:
             project = site_instance.project
 
-        # 2. Appeler le constructeur parent (kwargs est maintenant "propre", sans 'user')
+        # 2. Appeler le constructeur parent
         super().__init__(*args, **kwargs)
 
-        # 3. Utiliser les variables extraites pour la logique de filtrage
+        # 3. Logique de filtrage générale (S'applique TOUJOURS)
         self.fields["site_type"].queryset = SiteType.objects.filter(is_active=True)
-        self.fields["installation_type"].queryset = InstallationType.objects.filter(
-            is_active=True
-        )
+        self.fields["installation_type"].queryset = InstallationType.objects.filter(is_active=True)
 
+        # --- SÉCURITÉ : Ces lignes doivent être ICI, hors du "if project" ---
+        # Cela garantit que même sans projet, le formulaire bloque si c'est vide
+        self.fields["installation_type"].required = True
+        self.fields["site_type"].required = True
+        
+        self.fields["installation_type"].error_messages = {
+            'required': "Le type d'installation est obligatoire pour enregistrer un site."
+        }
+        self.fields["site_type"].error_messages = {
+            'required': "Veuillez sélectionner un type de site."
+        }
+        # ------------------------------------------------------------------
+
+        # 4. Logique spécifique au Projet
         if project:
-            # Filtrer les Team Leads pour le pays du projet
             team_lead_role = Role.objects.filter(name="Team Lead").first()
             
-            # (Le reste de votre logique de filtrage est correcte)
-            if team_lead_role:
-                team_leads_in_country = CustomUser.objects.filter(
-                    assignments__country=project.country,
-                    assignments__role=team_lead_role,
-                    assignments__is_active=True,
-                    assignments__end_date__isnull=True,
-                ).distinct()
-            else:
-                team_leads_in_country = CustomUser.objects.filter(
-                    assignments__country=project.country,
-                    assignments__is_active=True,
-                    assignments__end_date__isnull=True,
-                ).distinct()
-
-            self.fields["team_lead"].queryset = team_leads_in_country
-            self.fields["team_lead"].label = _(
-                f"Team Lead (pour {project.country.code})"
+            # Filtrage des Team Leads
+            team_leads_in_country = CustomUser.objects.filter(
+                assignments__country=project.country,
+                assignments__is_active=True,
+                assignments__end_date__isnull=True,
             )
+            
+            if team_lead_role:
+                team_leads_in_country = team_leads_in_country.filter(assignments__role=team_lead_role)
 
-        # 2. Rendre optionnels les champs de référence technique pour la création rapide
-        # Ces champs sont déjà null=True/blank=True dans models.py, donc ils sont facultatifs ici par défaut.
-
-
+            self.fields["team_lead"].queryset = team_leads_in_country.distinct()
+            self.fields["team_lead"].label = _(f"Team Lead (pour {project.country.code})")
+            self.fields["team_lead"].required = False
 # -----------------------------------------------------------------------------
 # 3. SiteRadioConfiguration Formset
 # -----------------------------------------------------------------------------
@@ -235,16 +232,6 @@ class TaskForm(ModelForm):
                 assignments__end_date__isnull=True,
             ).distinct()
 
-            # Filter for assignable roles: Team Lead, Field Team, Technician, and Rigger
-            assignable_roles = Role.objects.filter(
-                name__in=["Team Lead", "Field Team", "Technician", "Rigger"]
-            )
-
-            if assignable_roles.exists():
-                assigned_users_in_country = assigned_users_in_country.filter(
-                    assignments__role__in=assignable_roles
-                )
-
             self.fields["assigned_to"].queryset = assigned_users_in_country
 
 
@@ -253,7 +240,9 @@ class TaskUpdateForm(ModelForm):
         model = Task
         fields = [
             "task_type",
+            "assigned_to",
             "status",
+            "due_date",
             "progress_percentage",
             "result_type",
             "description",
@@ -261,39 +250,117 @@ class TaskUpdateForm(ModelForm):
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
+            "due_date": forms.DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, **kwargs):
-        # ⬇️ CORRECTION : Extraire uploaded_by avant d'appeler super()
         self.uploaded_by = kwargs.pop("uploaded_by", None)
+        country = kwargs.pop("country", None)
         super().__init__(*args, **kwargs)
 
-        # AJOUTEZ CETTE LIGNE POUR VERROUILLER LE CHAMP
         self.fields["task_type"].disabled = True
-        # FIN DE L'AJOUT
 
-        self.fields["task_type"].queryset = TaskType.objects.filter(is_active=True)
-
-        if self.instance.task_type:
-            self.fields["result_type"].queryset = (
-                self.instance.task_type.allowed_result_types.all()
-            )
+        if self.instance and self.instance.task_type:
+            self.fields["result_type"].queryset = self.instance.task_type.allowed_result_types.all()
         else:
             self.fields["result_type"].queryset = TaskResultType.objects.none()
 
         if self.instance.status != "COMPLETED":
             self.fields["result_type"].widget = forms.HiddenInput()
 
+        if self.instance and self.instance.site and self.instance.site.project:
+            assigned_users_in_country = CustomUser.objects.filter(
+                assignments__country=self.instance.site.project.country,
+                assignments__is_active=True,
+                assignments__end_date__isnull=True,
+            ).distinct()
+            self.fields["assigned_to"].queryset = assigned_users_in_country.order_by('first_name', 'last_name')
+
+        self.fields["assigned_to"].label = _("Assigner à (Employé)")
+        self.fields["assigned_to"].empty_label = _("--- Sélectionner un membre de l'équipe ---")
+        self.fields["assigned_to"].label_from_instance = lambda obj: (
+            f"{obj.get_full_name()} ({obj.username})" if obj.get_full_name() else obj.username
+        )
+
+        for field in self.fields.values():
+            if not isinstance(field.widget, forms.HiddenInput):
+                existing_classes = field.widget.attrs.get("class", "")
+                field.widget.attrs.update({"class": f"{existing_classes} form-control".strip()})
+
     def save(self, commit=True):
         task = super().save(commit=False)
-
         if task.status == "COMPLETED" and task.result_type and not task.completion_date:
             task.completion_date = timezone.now()
-
         if commit:
             task.save()
-
         return task
+
+
+class SimpleTaskUpdateForm(ModelForm):
+    """Formulaire simplifié pour les tâches SRS/IMK qui n'ont besoin que de DONE/NOT_DONE"""
+
+    result_done = forms.ChoiceField(
+        choices=(
+            ("", "---------"),
+            ("DONE", "✅ Terminé (DONE)"),
+            ("NOT_DONE", "❌ Non Terminé (NOT_DONE)"),
+        ),
+        required=False,
+        label=_("Résultat"),
+    )
+
+    class Meta:
+        model = Task
+        fields = ["assigned_to", "status", "progress_percentage", "description", "ticket_number"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.uploaded_by = kwargs.pop("uploaded_by", None)
+        country = kwargs.pop("country", None)
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.site and self.instance.site.project:
+            assigned_users_in_country = CustomUser.objects.filter(
+                assignments__country=self.instance.site.project.country,
+                assignments__is_active=True,
+                assignments__end_date__isnull=True,
+            ).distinct()
+            self.fields["assigned_to"].queryset = assigned_users_in_country.order_by('first_name', 'last_name')
+            self.fields["assigned_to"].label = _("Assigner à (Employé)")
+            self.fields["assigned_to"].empty_label = _("--- Sélectionner un membre de l'équipe ---")
+            self.fields["assigned_to"].label_from_instance = lambda obj: (
+                f"{obj.get_full_name()} ({obj.username})" if obj.get_full_name() else obj.username
+            )
+
+        if self.instance.result_type:
+            if self.instance.result_type.code == "DONE":
+                self.fields["result_done"].initial = "DONE"
+            elif self.instance.result_type.code == "NOT_DONE":
+                self.fields["result_done"].initial = "NOT_DONE"
+
+    def save(self, commit=True):
+        task = super().save(commit=False)
+        result_done = self.cleaned_data.get("result_done")
+        if result_done:
+            result_type, created = TaskResultType.objects.get_or_create(
+                code=result_done,
+                defaults={
+                    "name": "Terminé" if result_done == "DONE" else "Non Terminé",
+                    "is_success": result_done == "DONE",
+                },
+            )
+            task.result_type = result_type
+            if result_done == "DONE" and task.status != "COMPLETED":
+                task.status = "COMPLETED"
+                task.progress_percentage = 100
+                from django.utils import timezone
+                task.completion_date = timezone.now()
+        if commit:
+            task.save()
+        return task
+
 
 
 class MultipleFileInput(
@@ -358,66 +425,7 @@ class InspectionForm(ModelForm):
         self.fields["rapport_photos_url"].required = False
 
 
-class SimpleTaskUpdateForm(ModelForm):
-    """Formulaire simplifié pour les tâches SRS/IMK qui n'ont besoin que de DONE/NOT_DONE"""
 
-    result_done = forms.ChoiceField(
-        choices=(
-            ("", "---------"),
-            ("DONE", "✅ Terminé (DONE)"),
-            ("NOT_DONE", "❌ Non Terminé (NOT_DONE)"),
-        ),
-        required=False,
-        label=_("Résultat"),
-    )
-
-    class Meta:
-        model = Task
-        fields = ["status", "progress_percentage", "description", "ticket_number"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        # ⬇️ CORRECTION : Extraire uploaded_by avant d'appeler super()
-        self.uploaded_by = kwargs.pop("uploaded_by", None)
-        super().__init__(*args, **kwargs)
-
-        # Pré-remplir le champ result_done si un résultat existe
-        if self.instance.result_type:
-            if self.instance.result_type.code == "DONE":
-                self.fields["result_done"].initial = "DONE"
-            elif self.instance.result_type.code == "NOT_DONE":
-                self.fields["result_done"].initial = "NOT_DONE"
-
-    def save(self, commit=True):
-        task = super().save(commit=False)
-
-        # Gérer le résultat DONE/NOT_DONE
-        result_done = self.cleaned_data.get("result_done")
-        if result_done:
-            # CORRECTION : TaskResultType est maintenant importé
-            result_type, created = TaskResultType.objects.get_or_create(
-                code=result_done,
-                defaults={
-                    "name": "Terminé" if result_done == "DONE" else "Non Terminé",
-                    "is_success": result_done == "DONE",
-                },
-            )
-            task.result_type = result_type
-
-            # Si marqué comme DONE, compléter automatiquement la tâche
-            if result_done == "DONE" and task.status != "COMPLETED":
-                task.status = "COMPLETED"
-                task.progress_percentage = 100
-                from django.utils import timezone
-
-                task.completion_date = timezone.now()
-
-        if commit:
-            task.save()
-
-        return task
 
 
 # -----------------------------------------------------------------------------

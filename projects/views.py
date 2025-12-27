@@ -624,8 +624,11 @@ class TaskCreateView(
 
 
 class TaskUpdateView(CountryIsolationMixin, UserPassesTestMixin, UpdateView):
+   
     model = Task
-    template_name = "projects/task_update_advanced.html"
+    form_class = TaskUpdateForm
+
+    template_name = "projects/task_update_form.html"
 
     def get_form_class(self):
         """Choisit le formulaire approprié selon le type de tâche"""
@@ -640,9 +643,11 @@ class TaskUpdateView(CountryIsolationMixin, UserPassesTestMixin, UpdateView):
 
     def get_form_kwargs(self):
         """Passe l'utilisateur connecté au formulaire"""
+        
         kwargs = super().get_form_kwargs()
-        # ⬇️ CORRECTION : Ne passez pas uploaded_by directement
-        # Le formulaire l'extrait maintenant dans son __init__
+        task = self.get_object()
+        
+        kwargs['country'] = self.object.site.project.country
         return kwargs
 
     def test_func(self):
@@ -695,11 +700,10 @@ class TaskUpdateView(CountryIsolationMixin, UserPassesTestMixin, UpdateView):
         messages.success(self.request, "Tâche mise à jour avec succès !")
         return response
 
+    
     def get_success_url(self):
-        return reverse(
-            "projects:project_detail", kwargs={"pk": self.object.site.project.pk}
-        )
-
+        # Retourne au détail du site après modification
+        return reverse_lazy("projects:site_detail", kwargs={"pk": self.object.site.pk})
 
 class TaskPhotoUploadView(CountryIsolationMixin, UserPassesTestMixin, FormView):
     form_class = TaskPhotoForm
