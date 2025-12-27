@@ -263,12 +263,11 @@ def ran_site_list_excel(request):
             # Les 9 colonnes demandées
             get_task_status("INSTALLATION"),
             get_task_status("INTEGRATION"),
-            get_task_status("EHS 1"),
-            get_task_status("EHS 2"),
+            get_task_status("EHS 01"),
+            get_task_status("EHS 02"),
             get_task_status("IMK"),
             get_task_status("SRS"),
-            # QA basé sur l'inspection
-            site.inspections.first().get_resultat_inspection_display() if site.inspections.exists() else "-",
+            get_task_status("QA"),
             get_task_status("ATP"),
             site.comment if site.comment else "-"
         ]

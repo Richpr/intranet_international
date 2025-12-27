@@ -121,22 +121,11 @@
                             {# TACHES SPECIFIQUES #}
                             <td>{% for t in site_tasks %}{% if "INSTALLATION" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
                             <td>{% for t in site_tasks %}{% if "INTEGRATION" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
-                            <td>{% for t in site_tasks %}{% if "EHS 1" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
-                            <td>{% for t in site_tasks %}{% if "EHS 2" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
+                            <td>{% for t in site_tasks %}{% if "EHS 01" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
+                            <td>{% for t in site_tasks %}{% if "EHS 02" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
                             <td>{% for t in site_tasks %}{% if "IMK" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
                             <td>{% for t in site_tasks %}{% if "SRS" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
-                            
-                            {# QA (RESULTAT INSPECTION) #}
-                            <td>
-                                {% with last_insp=site.inspections.first %}
-                                    {% if last_insp %}
-                                        <span class="badge {% if last_insp.resultat_inspection == 'FTR' %}bg-success{% else %}bg-danger{% endif %}">
-                                            {{ last_insp.get_resultat_inspection_display }}
-                                        </span>
-                                    {% else %}-{% endif %}
-                                {% endwith %}
-                            </td>
-
+                            <td>{% for t in site_tasks %}{% if "QA" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
                             <td>{% for t in site_tasks %}{% if "ATP" in t.task_type.name|upper %}{{ t.get_status_display }}{% endif %}{% endfor %}</td>
                             
                             {# COMMENTAIRE #}
