@@ -618,26 +618,33 @@ class Site(models.Model):
         return f"{self.site_id_client} - {self.name}"
 
     def update_progress(self):
-        """
-        Recalcule la progression du site basée sur la moyenne des pourcentages des tâches.
-        """
-        progress_data = self.tasks.aggregate(avg_progress=Avg("progress_percentage"))
-        new_progress = progress_data["avg_progress"] or Decimal("0.00")
+        # 1. Tes calculs existants (garde ton code actuel ici)
+        from .models import Task
+        progress_data = Task.objects.filter(site=self).aggregate(avg_progress=Avg('progress_percentage'))
+        new_progress = progress_data['avg_progress'] or Decimal('0.00')
 
+        # 2. LA SÉCURITÉ : On vérifie si l'objet existe toujours en base de données
+        # Si on est en train de supprimer le Site, cette ligne renverra False
+        if not type(self).objects.filter(pk=self.pk).exists():
+            return  # On arrête tout, inutile de sauvegarder un fantôme
+
+        # 3. Mise à jour des champs
         self.progress_percentage = new_progress
-
-        if new_progress >= 100:
+        
+        # Logique de statut (exemple à adapter selon ton code)
+        if self.progress_percentage >= 100:
             self.status = 'COMPLETED'
-        elif new_progress > 0:
+        elif self.progress_percentage > 0:
             self.status = 'IN_PROGRESS'
         else:
             self.status = 'TO_DO'
 
-        # Utilise super().save() pour éviter les boucles de signaux infinies
-        super().save(update_fields=['progress_percentage', 'status'])
-        
-        if self.project:
-            self.project.update_progress()
+        # 4. Sauvegarde sécurisée avec gestion d'erreur au cas où
+        try:
+            super().save(update_fields=['progress_percentage', 'status'])
+        except Exception:
+            # Si le site disparaît entre le test .exists() et le .save()
+            pass
 
     def _get_task_status(self, task_type_code):
         task = self.tasks.filter(task_type__code=task_type_code).first()
